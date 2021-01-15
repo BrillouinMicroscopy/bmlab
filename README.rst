@@ -25,31 +25,10 @@ For more options, please check out the `documentation
 <https://bmlab.readthedocs.io/en/latest/sec_getting_started.html#installation>`__.
 
 
-Information for developers
---------------------------
-
-
-
-Tests
-~~~~~
-bmlab is tested using pytest. If you have the time, please write test
-methods for your code and put them in the ``tests`` directory.
-
-
-Incrementing version
-~~~~~~~~~~~~~~~~~~~~
-bmlab currently gets its version from the latest git tag.
-If you think that a new version should be published,
-create a tag on the main branch (if you have the necessary
-permissions to do so):
-
-::
-
-    git tag -a "0.1.3"
-    git push --tags origin
-
-CI jobs will then automatically build source package and wheels 
-and publish them on PyPI.
+Contributing
+------------
+Please read our `information for developers
+<https://bmlab.readthedocs.io/en/latest/sec_develop.html>`
 
 
 .. |bmlab| image:: https://raw.github.com/BrillouinMicroscopy/bmlab/main/docs/logo/bmlab.png
