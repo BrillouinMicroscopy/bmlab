@@ -1,17 +1,17 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 from os.path import exists, dirname, realpath
-from setuptools import setup, Extension, find_packages
+from setuptools import setup, find_packages
 import sys
 
 author = u"bmlab developers"
 # authors in alphabetical order
 authors = [
-    "Matthias Bär",    
+    "Matthias Bär",
     "Paul Müller",
     "Raimund Schlüßler",
     "Timon Beck",
-    ]
+]
 description = 'Library for Brillouin microscopy data analysis'
 name = 'bmlab'
 year = "2021"
@@ -51,5 +51,4 @@ setup(
                  'Intended Audience :: Science/Research',
                  ],
     platforms=['ALL'],
-    )
-
+)
