@@ -1,6 +1,6 @@
 .. _index:
 
-This is bmlab, a Python library for the Brillouin microscopy data analysis.
+This is bmlab, a Python library for Brillouin microscopy data analysis.
 This is the documentation of bmlab version |release|.
 
 Documentation
@@ -12,6 +12,7 @@ Documentation
 
    sec_getting_started
    sec_code_reference
+   sec_develop
 
 .. toctree::
    :maxdepth: 1
