@@ -28,7 +28,7 @@ For more options, please check out the `documentation
 Contributing
 ------------
 Please read our `information for developers
-<https://bmlab.readthedocs.io/en/latest/sec_develop.html>`__
+<https://bmlab.readthedocs.io/en/latest/sec_develop.html>`__.
 
 
 .. |bmlab| image:: https://raw.github.com/BrillouinMicroscopy/bmlab/main/docs/logo/bmlab.png
