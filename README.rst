@@ -19,7 +19,7 @@ Installation
 
 ::
 
-    pip install bmlab[all]
+    pip install bmlab
 
 For more options, please check out the `documentation
 <https://bmlab.readthedocs.io/en/latest/sec_getting_started.html#installation>`__.
