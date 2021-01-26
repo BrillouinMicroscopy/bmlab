@@ -1,0 +1,116 @@
+import datetime
+
+import numpy as np
+import h5py
+
+BRILLOUIN_GROUP = 'Brillouin'
+
+
+class BrillouinFile(object):
+
+    def __init__(self, path):
+        """
+        Load a HDF file with Brillouin microscopy data.
+
+        Parameters
+        ----------
+        path : str
+            path of the file to load
+
+        Raises
+        ------
+        OSError
+            when trying to open non-existing or bad file
+        """
+        self.path = path
+        self.file = None
+        self.file = h5py.File(self.path, 'r')
+        if BRILLOUIN_GROUP not in self.file:
+            raise BadFileException('File does not contain any Brillouin data')
+        self.comment = self.file.attrs.get('comment')[0].decode('utf-8')
+
+    def __del__(self):
+        """
+        Destructor. Closes hdf file when object runs out of scope.
+        """
+        if self.file:
+            self.file.close()
+
+    def repetition_count(self):
+        """
+        Get the number of repetitions in the data file.
+
+        Returns
+        -------
+        out : int
+            Number of repetitions in the data file
+        """
+        return len(self.file.get(BRILLOUIN_GROUP, 0))
+
+    def repetition_keys(self):
+        """
+        Returns list of keys for the various repetitions in the file.
+
+        Returns
+        -------
+        out: list of str
+        """
+        return list(self.file[BRILLOUIN_GROUP].keys())
+
+    def get_repetition(self, repetition_key):
+        """
+        Get a repetition from the data file based on given key.
+
+        Parameters
+        ----------
+        repetition_key : str
+            key to identify the repetition in the Brillouin group
+
+        Returns
+        -------
+        out : Repetition
+            the repetition
+        """
+        return Repetition(self.file[BRILLOUIN_GROUP].get(repetition_key))
+
+
+class Repetition(object):
+
+    def __init__(self, repetition_group):
+        self.date = self._get_datetime(repetition_group.attrs.get('date')[0])
+        self.payload = Payload(repetition_group.get('payload'))
+        calibration_group = repetition_group.get('calibration')
+        self.calibration = Calibration(calibration_group)
+
+    def _get_datetime(self, time_stamp):
+        time_stamp = time_stamp.decode('utf-8')
+        try:
+            return datetime.datetime.fromisoformat(time_stamp)
+        except:
+            return None
+
+
+class Payload(object):
+
+    def __init__(self, payload_group):
+        self.resolution = tuple(payload_group.attrs.get('resolution-%s' % axis)[0] for axis in ['x', 'y', 'z'])
+        self.data = payload_group.get('data')
+
+    def image_keys(self):
+        return list(self.data.keys())
+
+    def get_image(self, image_key):
+        return np.array(self.data.get(image_key))
+
+
+class Calibration(object):
+
+    def __init__(self, calibration_group):
+        self.data = calibration_group.get('data')
+
+    def is_empty(self):
+        return self.data is None or len(self.data) == 0
+
+
+class BadFileException(Exception):
+    pass
