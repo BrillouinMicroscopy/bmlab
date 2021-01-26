@@ -4,6 +4,7 @@ import pathlib
 
 from bmlab.file import BrillouinFile, BadFileException
 
+
 def data_file_path(file_name):
     return pathlib.Path(__file__).parent / 'data' / file_name
 
@@ -49,7 +50,7 @@ def test_file_get_resolution():
 def test_file_repetition_has_calibration():
     bf = BrillouinFile(data_file_path('Water.h5'))
     rep = bf.get_repetition('0')
-    assert rep.calibration.is_empty() == False
+    assert not rep.calibration.is_empty()
 
 
 def test_file_payload_image_keys():
