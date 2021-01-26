@@ -124,6 +124,7 @@ class Payload(object):
         Returns
         -------
         out: list of str
+            Keys of images in payload.
         """
         return list(self.data.keys())
 
