@@ -86,7 +86,7 @@ class Repetition(object):
         time_stamp = time_stamp.decode('utf-8')
         try:
             return datetime.datetime.fromisoformat(time_stamp)
-        except:
+        except Exception:
             return None
 
 
