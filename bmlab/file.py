@@ -92,7 +92,7 @@ class Repetition(object):
         self.calibration = Calibration(calibration_group)
 
     def _get_datetime(self, time_stamp):
-        """ Convert the time stamp in the HDF file to Python datetime format """
+        """ Convert the time stamp in the HDF file to Python datetime """
         time_stamp = time_stamp.decode('utf-8')
         try:
             return datetime.datetime.fromisoformat(time_stamp)
@@ -104,7 +104,8 @@ class Payload(object):
 
     def __init__(self, payload_group):
         """
-        Creates a payload representation from the corresponding group of a HDF file.
+        Creates a payload representation from the corresponding group of a
+        HDF file.
 
         Parameters
         ----------
@@ -147,7 +148,8 @@ class Calibration(object):
 
     def __init__(self, calibration_group):
         """
-        Creates a calibration representation from the corresponding group of a HDF file.
+        Creates a calibration representation from the corresponding group of
+        a HDF file.
 
         Parameters
         ----------
