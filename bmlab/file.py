@@ -93,7 +93,8 @@ class Repetition(object):
 class Payload(object):
 
     def __init__(self, payload_group):
-        self.resolution = tuple(payload_group.attrs.get('resolution-%s' % axis)[0] for axis in ['x', 'y', 'z'])
+        self.resolution = tuple(payload_group.attrs.get(
+            'resolution-%s' % axis)[0] for axis in ['x', 'y', 'z'])
         self.data = payload_group.get('data')
 
     def image_keys(self):
