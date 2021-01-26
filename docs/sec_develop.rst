@@ -4,54 +4,8 @@
 Development
 ===========
 
-This section gives on overview about everything you need to know if you
-wish to contribute to bmlab.
-
-
-Development workflow
-====================
-The main branch for developing bmlab is ``main``.
-If you want to make small changes like one-liners,
-documentation, or default values in the configuration,
-you may work on the ``main`` branch. If you want to change
-more, please (fork bmlab and) create a separate branch,
-e.g. ``my_new_feature_dev``, and create a pull-request
-once you are done making your changes.
-Please make sure to edit the
-`Changelog <https://github.com/BrillouinMicroscopy/bmlab/blob/main/CHANGELOG>`__.
-
-**Very important:** Please try to always pull with rebase
-
-::
-
-    git pull --rebase
-
-instead of
-
-::
-
-    git pull
-
-to prevent confusions in the commit history.
-
-
-Documentation
-=============
-It is always helpful to have code examples and thorough descriptions
-in a documentation. We use sphinx-autodoc for the
-:ref:`code reference <sec_coderef>`, which means that the docstrings
-of your functions and classes are automatically rendered. Please
-make sure that this is working properly - go to the ``docs`` directory
-and execute:
-
-::
-
-    pip install -r requirements.txt
-    sphinx-build . _build
-
-This will create a a file ``_build/index.html`` which you can open in
-your favorite browser.
-
+For the general workflow, please refer to the
+`BMicro docs <https://bmicro.readthedocs.io/en/latest/sec_develop.html>`_.
 
 
 Tests
@@ -67,7 +21,7 @@ functions for your code. You can run all tests via
 Making a new release
 ====================
 The release process of bmlab is completely automated. All you need to know
-is that you have to create an incremental tag:
+is that you have to create an incremental tag on the main branch:
 
 ::
 
