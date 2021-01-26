@@ -77,12 +77,22 @@ class BrillouinFile(object):
 class Repetition(object):
 
     def __init__(self, repetition_group):
+        """
+        Creates a repetition from the corresponding group of a HDF file.
+
+        Parameters
+        ----------
+        repetition_group : HDF group
+            The HDF group representing a Repetition. Consists of payload,
+            calibration and background.
+        """
         self.date = self._get_datetime(repetition_group.attrs.get('date')[0])
         self.payload = Payload(repetition_group.get('payload'))
         calibration_group = repetition_group.get('calibration')
         self.calibration = Calibration(calibration_group)
 
     def _get_datetime(self, time_stamp):
+        """ Convert the time stamp in the HDF file to Python datetime format """
         time_stamp = time_stamp.decode('utf-8')
         try:
             return datetime.datetime.fromisoformat(time_stamp)
@@ -93,20 +103,57 @@ class Repetition(object):
 class Payload(object):
 
     def __init__(self, payload_group):
+        """
+        Creates a payload representation from the corresponding group of a HDF file.
+
+        Parameters
+        ----------
+        payload_group : HDF group
+            The payload of a repetition, basically a set of images
+
+        """
         self.resolution = tuple(payload_group.attrs.get(
             'resolution-%s' % axis)[0] for axis in ['x', 'y', 'z'])
         self.data = payload_group.get('data')
 
     def image_keys(self):
+        """
+        Returns the keys of the images stored in the payload.
+
+        Returns
+        -------
+        out: list of str
+        """
         return list(self.data.keys())
 
     def get_image(self, image_key):
+        """
+        Returns the image from the payload for given key.
+
+        Parameters
+        ----------
+        image_key: str
+            Key for the image.
+
+        Returns
+        -------
+        out: numpy.ndarray
+            Array representing the image.
+        """
         return np.array(self.data.get(image_key))
 
 
 class Calibration(object):
 
     def __init__(self, calibration_group):
+        """
+        Creates a calibration representation from the corresponding group of a HDF file.
+
+        Parameters
+        ----------
+        calibration_group : HDF group
+            Calibration data of a repetition from an HDF file.
+        """
         self.data = calibration_group.get('data')
 
     def is_empty(self):

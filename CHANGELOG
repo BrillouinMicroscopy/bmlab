@@ -1,3 +1,7 @@
+0.0.4
+ - get metadata from HDF file
+0.0.3
+ - testing connection with BMicro
 0.0.2
  - CI test release
 0.0.1
