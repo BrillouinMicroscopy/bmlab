@@ -42,8 +42,10 @@ class BrillouinFile(object):
         """
         Destructor. Closes hdf file when object runs out of scope.
         """
-        if self.file:
+        try:
             self.file.close()
+        except Exception:
+            pass
 
     def repetition_count(self):
         """
