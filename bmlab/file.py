@@ -1,3 +1,12 @@
+"""
+Module for interacting with files containing Brillouin microscopy
+data.
+
+NOTE: Ideally, the users of bmlab should not have to know about
+the file format in which the data are stored. So, if possible,
+do not expose HDF objects to the outside (like BMicro).
+"""
+
 import datetime
 
 import numpy as np

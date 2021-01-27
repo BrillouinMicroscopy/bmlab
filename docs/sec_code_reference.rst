@@ -8,9 +8,6 @@ Code reference
   :maxdepth: 2
 
 
-.. automodule:: bmlab.file
-   :members:
-
 .. autoclass:: bmlab.file.BrillouinFile
    :members:
 
@@ -21,4 +18,7 @@ Code reference
    :members:
 
 .. autoclass:: bmlab.file.Calibration
+   :members:
+
+.. automodule:: bmlab.file
    :members:
