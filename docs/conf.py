@@ -16,17 +16,13 @@
 # documentation root, use os.path.abspath to make it absolute, like shown here.
 
 import os.path as op
-import os
 import sys
+import bmlab
 
 # include parent directory
-sys.path.insert(0, os.path.abspath('..'))
 pdir = op.dirname(op.dirname(op.abspath(__file__)))
 # include extensions
 sys.path.append(op.abspath('extensions'))
-
-import bmlab
-
 
 # http://www.sphinx-doc.org/en/stable/ext/autodoc.html#confval-autodoc_member_order
 # Order class attributes and functions in separate blocks
