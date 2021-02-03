@@ -137,7 +137,9 @@ class Payload(object):
         out: list of str
             Keys of images in payload.
         """
-        return list(self.data.keys())
+        if self.data:
+            return list(self.data.keys())
+        return []
 
     def get_image(self, image_key):
         """
