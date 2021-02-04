@@ -1,6 +1,6 @@
 """
-Module to rotate the raw images. The orientation of the raw images is setup dependent.
-
+Module to rotate the raw images. The orientation
+of the raw images is setup dependent.
 """
 
 import numpy as np
@@ -24,8 +24,9 @@ def set_orientation(image, rotate=0, flip_ud=False, flip_lr=False):
     Returns
     -------
     image: array_like
-        The input image in the requested orientation. The order of the operations is equal to the order of the input
-        arguments: rotate, flip up-down, flip left right
+        The input image in the requested orientation. The order
+        of the operations is equal to the order
+        of the input arguments: rotate, flip up-down, flip left right
 
     See Also
     --------
