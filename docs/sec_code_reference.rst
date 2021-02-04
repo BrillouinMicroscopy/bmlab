@@ -8,4 +8,17 @@ Code reference
   :maxdepth: 2
 
 
-TODO
+.. autoclass:: bmlab.file.BrillouinFile
+   :members:
+
+.. autoclass:: bmlab.file.Repetition
+   :members:
+
+.. autoclass:: bmlab.file.Payload
+   :members:
+
+.. autoclass:: bmlab.file.Calibration
+   :members:
+
+.. automodule:: bmlab.file
+   :members:

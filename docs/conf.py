@@ -17,8 +17,8 @@
 
 import os.path as op
 import sys
-
 import bmlab
+
 # include parent directory
 pdir = op.dirname(op.dirname(op.abspath(__file__)))
 # include extensions
