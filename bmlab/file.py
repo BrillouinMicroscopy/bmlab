@@ -175,6 +175,11 @@ class Calibration(object):
     def is_empty(self):
         return self.data is None or len(self.data) == 0
 
+    def calibration_keys(self):
+        if self.data:
+            return self.data.keys()
+        return []
+
 
 class BadFileException(Exception):
     pass
