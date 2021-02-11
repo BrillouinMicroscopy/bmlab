@@ -24,6 +24,7 @@ def test_set_orientation():
     np.testing.assert_array_equal(test_image_b, np.array([[0., 0., 0.],
                                                           [0., 0., 1.]]))
 
+
 def test_find_max_in_radius():
     img = np.zeros((100, 100))
     img[20, 30] = 1
