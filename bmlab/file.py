@@ -175,10 +175,26 @@ class Calibration(object):
     def is_empty(self):
         return self.data is None or len(self.data) == 0
 
-    def calibration_keys(self):
+    def image_keys(self):
         if self.data:
-            return self.data.keys()
+            return list(self.data.keys())
         return []
+
+    def get_image(self, image_key):
+        """
+        Returns the image from the payload for given key.
+
+        Parameters
+        ----------
+        image_key: str
+            Key for the image.
+
+        Returns
+        -------
+        out: numpy.ndarray
+            Array representing the image.
+        """
+        return np.array(self.data.get(image_key))
 
 
 class BadFileException(Exception):
