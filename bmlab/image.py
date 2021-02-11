@@ -1,6 +1,5 @@
 """
-Module to rotate the raw images. The orientation
-of the raw images is setup dependent.
+Module to perform common image operations.
 """
 
 import numpy as np
@@ -9,6 +8,8 @@ import numpy as np
 def set_orientation(image, rotate=0, flip_ud=False, flip_lr=False):
     """
     Change the orientation of an image.
+
+    The orientation of the raw images is setup dependent.
 
     Parameters
     ----------
@@ -45,3 +46,33 @@ def set_orientation(image, rotate=0, flip_ud=False, flip_lr=False):
         image = np.fliplr(image)
 
     return image
+
+
+def find_max_in_radius(img, xy0, radius):
+    """
+    Returns the index of the max. value in a circle around given point.
+
+    Parameters
+    ----------
+    img: numpy.ndarray (2D)
+        the image data
+    xy0: tuple
+        x-y indices of point around which to search for maximum
+    radius: float
+        the radius of the search
+
+    Returns
+    -------
+    out: tuple
+        x-y indices of the point of max. value
+    """
+    x, y = list(range(img.shape[0])), list(range(img.shape[1]))
+    X, Y = np.meshgrid(x, y, indexing='ij')
+    x0, y0 = xy0
+    peak_0 = img[int(x0), int(y0)]
+    flat_img = np.ones_like(img) * peak_0
+    mask = (X - x0)**2 + (Y - y0)**2 <= radius**2
+    flat_img[mask] = img[mask]
+    peak_idx = np.argmax(flat_img)
+    peak_x, peak_y = np.unravel_index(peak_idx, img.shape)
+    return peak_x, peak_y

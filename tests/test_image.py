@@ -1,7 +1,7 @@
 import numpy as np
 import pytest
 
-from bmlab.image_operations import set_orientation
+from bmlab.image import set_orientation, find_max_in_radius
 
 
 def test_set_orientation_valid_argument():
@@ -23,3 +23,11 @@ def test_set_orientation():
 
     np.testing.assert_array_equal(test_image_b, np.array([[0., 0., 0.],
                                                           [0., 0., 1.]]))
+
+def test_find_max_in_radius():
+    img = np.zeros((100, 100))
+    img[20, 30] = 1
+    xy0 = 25, 35
+    actual = find_max_in_radius(img, xy0, 15)
+    expected = 20, 30
+    assert actual == expected
