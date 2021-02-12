@@ -69,10 +69,9 @@ def find_max_in_radius(img, xy0, radius):
     x, y = list(range(img.shape[0])), list(range(img.shape[1]))
     X, Y = np.meshgrid(x, y, indexing='ij')
     x0, y0 = xy0
-    peak_0 = img[int(x0), int(y0)]
-    flat_img = np.ones_like(img) * peak_0
+    flat_img = np.nan * np.ones_like(img)
     mask = (X - x0)**2 + (Y - y0)**2 <= radius**2
     flat_img[mask] = img[mask]
-    peak_idx = np.argmax(flat_img)
+    peak_idx = np.nanargmax(flat_img)
     peak_x, peak_y = np.unravel_index(peak_idx, img.shape, order='C')
     return peak_x, peak_y
