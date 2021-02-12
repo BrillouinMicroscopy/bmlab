@@ -32,3 +32,6 @@ def test_find_max_in_radius():
     actual = find_max_in_radius(img, xy0, 15)
     expected = 20, 30
     assert actual == expected
+
+    actual = find_max_in_radius(img, expected, 15)
+    assert actual == expected
