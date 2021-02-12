@@ -74,5 +74,5 @@ def find_max_in_radius(img, xy0, radius):
     mask = (X - x0)**2 + (Y - y0)**2 <= radius**2
     flat_img[mask] = img[mask]
     peak_idx = np.argmax(flat_img)
-    peak_x, peak_y = np.unravel_index(peak_idx, img.shape)
+    peak_x, peak_y = np.unravel_index(peak_idx, img.shape, order='C')
     return peak_x, peak_y
