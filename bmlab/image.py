@@ -75,3 +75,10 @@ def find_max_in_radius(img, xy0, radius):
     peak_idx = np.nanargmax(flat_img)
     peak_x, peak_y = np.unravel_index(peak_idx, img.shape, order='C')
     return peak_x, peak_y
+
+
+def fit_circle(points):
+    # TODO: Implement
+    center = (-250., -250.)
+    radius = 600.
+    return center, radius
