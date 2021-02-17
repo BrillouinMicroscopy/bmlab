@@ -12,6 +12,8 @@ import datetime
 import numpy as np
 import h5py
 
+from packaging import version
+
 BRILLOUIN_GROUP = 'Brillouin'
 
 
@@ -34,8 +36,24 @@ class BrillouinFile(object):
         self.path = path
         self.file = None
         self.file = h5py.File(self.path, 'r')
-        if BRILLOUIN_GROUP not in self.file:
+        self.file_version_string = self.file.attrs.get('version')[
+            0].decode('utf-8')
+        if not self.file_version_string.startswith('H5BM'):
             raise BadFileException('File does not contain any Brillouin data')
+        self.file_version = self.file_version_string[-5:]
+
+        if version.parse(self.file_version) >= version.parse("0.0.4"):
+            """"
+            New Brillouin file format,
+            supporting different modes and repetitions
+            """
+            if BRILLOUIN_GROUP not in self.file:
+                raise BadFileException(
+                    'File does not contain any Brillouin data')
+            self.Brillouin_group = self.file[BRILLOUIN_GROUP]
+        else:
+            """ Old Brillouin file format """
+            self.Brillouin_group = self.file
         self.comment = self.file.attrs.get('comment')[0].decode('utf-8')
 
     def __del__(self):
@@ -56,7 +74,7 @@ class BrillouinFile(object):
         out : int
             Number of repetitions in the data file
         """
-        return len(self.file.get(BRILLOUIN_GROUP, 0))
+        return len(self.repetition_keys())
 
     def repetition_keys(self):
         """
@@ -66,7 +84,10 @@ class BrillouinFile(object):
         -------
         out: list of str
         """
-        return list(self.file[BRILLOUIN_GROUP].keys())
+        if version.parse(self.file_version) >= version.parse("0.0.4"):
+            return list(self.Brillouin_group.keys())
+        else:
+            return list(['0'])
 
     def get_repetition(self, repetition_key):
         """
@@ -82,7 +103,10 @@ class BrillouinFile(object):
         out : Repetition
             the repetition
         """
-        return Repetition(self.file[BRILLOUIN_GROUP].get(repetition_key))
+        if version.parse(self.file_version) >= version.parse("0.0.4"):
+            return Repetition(self.Brillouin_group.get(repetition_key))
+        else:
+            return Repetition(self.file)
 
 
 class Repetition(object):
@@ -171,6 +195,12 @@ class Calibration(object):
             Calibration data of a repetition from an HDF file.
         """
         self.data = calibration_group.get('data')
+        """
+        For H5BM files < 0.0.4
+        there was an inconsistency with the group naming
+        """
+        if self.data is None:
+            self.data = calibration_group.get('calibrationData')
 
     def is_empty(self):
         return self.data is None or len(self.data) == 0
