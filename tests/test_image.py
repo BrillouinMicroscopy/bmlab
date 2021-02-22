@@ -1,7 +1,7 @@
 import numpy as np
 import pytest
 
-from bmlab.image import set_orientation, find_max_in_radius
+from bmlab.image import set_orientation, find_max_in_radius, fit_circle
 
 
 def test_set_orientation_valid_argument():
@@ -35,3 +35,23 @@ def test_find_max_in_radius():
 
     actual = find_max_in_radius(img, expected, 15)
     assert actual == expected
+
+
+def test_circle_fit():
+    expect_r = 550
+    expect_c = (-180, -220)
+    n_test_data_points = 6
+    noise_strength = 10
+
+    x_noise = np.random.random(n_test_data_points) * noise_strength
+    y_noise = np.random.random(n_test_data_points) * noise_strength
+    test_points = [(expect_r * np.cos(phi) + x_noise[i] + expect_c[0],
+                    expect_r * np.sin(phi) + y_noise[i] + expect_c[1])
+                   for i, phi in enumerate(
+            np.linspace(0, np.pi / 2, n_test_data_points))
+                   ]
+    actual_c, actual_r = fit_circle(test_points)
+
+    np.testing.assert_allclose(actual_c, expect_c, rtol=0.05)
+
+    np.testing.assert_allclose(actual_r, expect_r, rtol=0.05)

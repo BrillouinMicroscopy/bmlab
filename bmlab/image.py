@@ -3,6 +3,7 @@ Module to perform common image operations.
 """
 
 import numpy as np
+from scipy import optimize
 
 
 def set_orientation(image, rotate=0, flip_ud=False, flip_lr=False):
@@ -70,15 +71,78 @@ def find_max_in_radius(img, xy0, radius):
     X, Y = np.meshgrid(x, y, indexing='ij')
     x0, y0 = xy0
     flat_img = np.nan * np.ones_like(img)
-    mask = (X - x0)**2 + (Y - y0)**2 <= radius**2
+    mask = (X - x0) ** 2 + (Y - y0) ** 2 <= radius ** 2
     flat_img[mask] = img[mask]
     peak_idx = np.nanargmax(flat_img)
     peak_x, peak_y = np.unravel_index(peak_idx, img.shape, order='C')
     return peak_x, peak_y
 
 
+def calc_R(x, y, x_c, y_c):
+    """
+    Calculates the distances of a given set of points in a 2D space to a
+    given center point.
+
+    Parameters
+    ----------
+    x: array like
+        x coordinates of the given points
+    y: array like
+        y coordinates of the given points
+    xc: float
+        x coordinate of the center
+    yc: float
+        y coordinate of the center
+
+    Returns
+    -------
+    out: numpy array
+    """
+    return np.sqrt((x - x_c) ** 2 + (y - y_c) ** 2)
+
+
+def f_opt(c, x, y):
+    """
+    Calculates the distance of a given set of points to a given center point
+    and returns the deviaton to the mean distance.
+
+    Parameters
+    ----------
+    c: parameter to be optimized, contains center coordinates (x,y)
+    x: x coordinates of the given points
+    y: y coordinates of the given points
+
+    Returns
+    -------
+    out: numpy array containing the deviations of the calculated distances for
+    given center coordinates to the mean distance
+    """
+    ri = calc_R(x, y, *c)
+    print(ri, ri.mean(), ri - ri.mean())
+    return ri - ri.mean()
+
+
 def fit_circle(points):
-    # TODO: Implement
-    center = (-250., -250.)
-    radius = 600.
-    return center, radius
+    """
+    Fits a circle to a given set of points.Returnes the center and the radius
+    of a given set of points.
+
+    Parameters
+    ----------
+    points: list of tuples
+
+    Returns
+    -------
+    center_opt: tuple
+                Coordinates of the circle center (x,y)
+    radius_opt: float
+                Radius of the circle
+    """
+    center_0 = (-250., -250.)
+    x_coords = [xy[0] for xy in points]
+    y_coords = [xy[1] for xy in points]
+    opt_result = optimize.least_squares(f_opt,
+                                        center_0, args=(x_coords, y_coords))
+    center_opt = (opt_result['x'][0], opt_result['x'][1])
+    radius_opt = calc_R(x_coords, y_coords, *center_opt).mean()
+    return center_opt, radius_opt
