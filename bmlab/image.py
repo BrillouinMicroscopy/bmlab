@@ -118,7 +118,6 @@ def f_opt(c, x, y):
     given center coordinates to the mean distance
     """
     ri = calc_R(x, y, *c)
-    print(ri, ri.mean(), ri - ri.mean())
     return ri - ri.mean()
 
 
