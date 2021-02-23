@@ -117,8 +117,9 @@ class Circle(object):
         phi_degree = phi / np.pi * 180.
         mask[pt[0] - width // 2:pt[0] + width // 2,
              pt[1] - length // 2:pt[1] + length // 2] = True
-        return skimage.transform.rotate(mask, phi_degree + 90,
+        mask = skimage.transform.rotate(mask, phi_degree + 90,
                                         center=(pt[1], pt[0]))
+        return np.array(mask, dtype=np.bool)
 
 
 class Rectangle(object):
