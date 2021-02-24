@@ -50,8 +50,8 @@ def test_circle_fit():
     test_points_noise = [(expect_r * np.cos(phi) + x_noise[i] + expect_c[0],
                           expect_r * np.sin(phi) + y_noise[i] + expect_c[1])
                          for i, phi in enumerate(
-            np.linspace(0, np.pi / 2, n_test_data_points))
-                         ]
+        np.linspace(0, np.pi / 2, n_test_data_points))
+    ]
 
     actual_c_noise, actual_r_noise = fit_circle(test_points_noise)
     np.testing.assert_allclose(actual_c_noise, expect_c, rtol=0.1)
@@ -60,8 +60,8 @@ def test_circle_fit():
     test_points = [(expect_r * np.cos(phi) + expect_c[0],
                     expect_r * np.sin(phi) + expect_c[1])
                    for i, phi in enumerate(
-            np.linspace(0, np.pi / 2, int(n_test_data_points / 2)))
-                   ]
+        np.linspace(0, np.pi / 2, int(n_test_data_points / 2)))
+    ]
 
     actual_c, actual_r = fit_circle(test_points)
     np.testing.assert_allclose(actual_c, expect_c, rtol=1e-10)
