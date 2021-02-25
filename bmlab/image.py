@@ -98,7 +98,7 @@ def circle_opt(c, x_coord, y_coord):
         Cost value representing the deviation of the given set of points to
         the circle, which is represented by the parameter vector c.
     """
-    return sum(
+    return np.sum(
         ((x_coord - c[0]) ** 2
          + (y_coord - c[1]) ** 2
          - c[2] ** 2) ** 2)
@@ -122,13 +122,10 @@ def fit_circle(points):
                 Radius of the circle
     """
     param_guess = [-50., -50., 500.]
-    x_coords = np.array([xy[1] for xy in points])
-    y_coords = np.array([xy[0] for xy in points])
-    opt_result = optimize.least_squares(circle_opt,
-                                        param_guess,
-                                        args=(x_coords, y_coords),
-                                        bounds=([-np.inf, -np.inf, 0],
-                                                [max(x_coords), max(x_coords),
-                                                 np.inf]))
+    x_coords = np.array([xy[0] for xy in points])
+    y_coords = np.array([xy[1] for xy in points])
+    opt_result = optimize.minimize(circle_opt,
+                                   param_guess,
+                                   args=(x_coords, y_coords))
 
     return (opt_result['x'][0], opt_result['x'][1]), opt_result['x'][2]

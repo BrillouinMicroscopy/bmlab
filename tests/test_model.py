@@ -19,8 +19,8 @@ def test_extraction_model_triggers_circle_fit():
     cf = em.get_circle_fit('0')
     center, radius = cf
 
-    np.testing.assert_array_almost_equal(center, (0, 0))
-    np.testing.assert_almost_equal(radius, 1)
+    np.testing.assert_allclose(center, (0, 0), atol=1.E-3)
+    np.testing.assert_almost_equal(radius, 1, decimal=4)
 
 
 def test_optimize_points_in_extraction_model():
