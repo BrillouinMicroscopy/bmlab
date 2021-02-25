@@ -1,5 +1,5 @@
 import numpy as np
-from bmlab.geometry import Circle, Rectangle
+from bmlab.geometry import Circle, Rectangle, discretize_arc
 
 
 def test_intersect_circle_rectangle():
@@ -27,3 +27,12 @@ def test_circle_point():
     actual = circle.point(np.pi / 4.)
     sq2 = np.sqrt(2.)
     np.testing.assert_array_almost_equal(actual, (sq2/2., sq2/2.))
+
+
+def test_discretize_arc():
+    circle = Circle((0, 0), 100)
+    img_shape = (100, 100)
+    num_points = 100
+    expected = np.linspace(0, np.pi/2., num_points)
+    actual = discretize_arc(circle, img_shape, num_points)
+    np.testing.assert_array_equal(actual, expected)

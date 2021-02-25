@@ -9,6 +9,7 @@ class Circle(object):
 
     Wraps shapely-API for reduced complexity.
     """
+
     def __init__(self, center, radius):
         """
         Creates a circle instance.
@@ -117,11 +118,40 @@ class Circle(object):
         phi_degree = phi / np.pi * 180.
         mask[pt[0] - width // 2:pt[0] + width // 2,
              pt[1] - length // 2:pt[1] + length // 2] = True
-        return skimage.transform.rotate(mask, phi_degree + 90,
+        mask = skimage.transform.rotate(mask, phi_degree + 90,
                                         center=(pt[1], pt[0]))
+        return np.array(mask, dtype=np.bool)
 
 
 class Rectangle(object):
     def __init__(self, shape):
         self.poly = Polygon(
             [(0, 0), (0, shape[1]), (shape[0], shape[1]), (shape[0], 0)])
+
+
+def discretize_arc(circle, img_shape, num_points=200):
+    """
+    Returns a list of equidistant (in polar angle) points along a circle
+    intersecting an image.
+
+    Parameters
+    ----------
+    circle: Circle
+        Circle that intersects the image.
+    img_shape: 2-tuple
+        Shape of the image.
+    num_points: int
+        How many points along the circle.
+
+    Returns
+    -------
+    phis: numpy.ndarray
+        polar angles of the discrete points on circular arc
+    """
+    rect = Rectangle(img_shape)
+    cut_edges = circle.intersection(rect)
+    phis_edges = [circle.angle(p) for p in cut_edges]
+    phi_0 = min(phis_edges)
+    phi_1 = max(phis_edges)
+    phis = np.linspace(phi_0, phi_1, num_points)
+    return phis
