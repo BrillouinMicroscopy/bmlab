@@ -1,7 +1,8 @@
 import numpy as np
 import pytest
 
-from bmlab.image import set_orientation, find_max_in_radius, fit_circle
+from bmlab.image import set_orientation, find_max_in_radius
+from bmlab.fits import fit_circle
 
 
 def test_set_orientation_valid_argument():

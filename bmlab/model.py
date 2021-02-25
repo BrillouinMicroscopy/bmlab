@@ -1,6 +1,7 @@
 import numpy as np
 
-from bmlab.image import fit_circle, find_max_in_radius
+from bmlab.image import find_max_in_radius
+from bmlab.fits import fit_circle
 from bmlab.image import set_orientation
 
 
