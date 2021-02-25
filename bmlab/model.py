@@ -1,6 +1,7 @@
 import numpy as np
 
 from bmlab.image import fit_circle, find_max_in_radius
+from bmlab.image import set_orientation
 
 
 class Orientation(object):
@@ -18,6 +19,11 @@ class Orientation(object):
         for a in axes:
             if a in kwargs:
                 self.reflection[a] = kwargs[a]
+
+    def apply(self, img):
+        return set_orientation(img, self.rotation,
+                               self.reflection['vertically'],
+                               self.reflection['horizontally'])
 
 
 class ExtractionModel(object):
