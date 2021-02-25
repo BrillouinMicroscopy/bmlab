@@ -39,12 +39,12 @@ class ExtractionModel(object):
             return self.points[calib_key]
         return []
 
-    def optimize_points(self, calib_key, img):
+    def optimize_points(self, calib_key, img, radius=10):
         points = self.get_points(calib_key)
         self.clear_points(calib_key)
 
         for p in points:
-            new_point = find_max_in_radius(img, p, 10)
+            new_point = find_max_in_radius(img, p, radius)
             # Warning: x-axis in imshow is 1-axis in img, y-axis is 0-axis
             self.add_point(
                 calib_key, new_point[0], new_point[1])
