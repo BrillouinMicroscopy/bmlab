@@ -1,6 +1,11 @@
+import logging
+
 import numpy as np
 from scipy import optimize
 from scipy.optimize import least_squares
+
+
+logger = logging.getLogger(__name__)
 
 
 class FitError(Exception):
@@ -81,3 +86,12 @@ def _circle_opt(c, x_coord, y_coord):
         ((x_coord - c[0]) ** 2
          + (y_coord - c[1]) ** 2
          - c[2] ** 2) ** 2)
+
+
+def fit_spectral_region(region, xdata, ydata):
+    mask = (region[0] < xdata) & (xdata < region[1])
+    w0, gam, offset = fit_lorentz(xdata[mask], ydata[mask])
+    logger.debug('Lorentz fit: w0 = %f, gam = %f, offset = %f' % (
+        w0, gam, offset
+    ))
+    return gam, offset, w0
