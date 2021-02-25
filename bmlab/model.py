@@ -78,13 +78,25 @@ class CalibrationModel(object):
 
     def __init__(self):
         self.brillouin_regions = {}
+        self.rayleigh_regions = {}
 
     def add_brillouin_region(self, calib_key, region):
-
         if calib_key not in self.brillouin_regions:
             self.brillouin_regions[calib_key] = []
 
         self.brillouin_regions[calib_key].append(region)
+
+    def clear_brillouin_regions(self, calib_key):
+        self.brillouin_regions[calib_key] = []
+
+    def clear_rayleigh_regions(self, calib_key):
+        self.rayleigh_regions[calib_key] = []
+
+    def add_rayleigh_region(self, calib_key, region):
+        if calib_key not in self.rayleigh_regions:
+            self.rayleigh_regions[calib_key] = []
+
+        self.rayleigh_regions[calib_key].append(region)
 
 
 class Setup(object):
