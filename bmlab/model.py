@@ -100,6 +100,24 @@ class CalibrationModel(object):
             return self.brillouin_fits[calib_key]
         return {}
 
+    def add_rayleigh_fit(self, calib_key, w0, gam, offset):
+        if calib_key not in self.rayleigh_fits:
+            self.rayleigh_fits[calib_key] = []
+        self.rayleigh_fits[calib_key].append({
+            'w0': w0, 'gam': gam,
+            'offset': offset})
+
+    def get_rayleigh_fits(self, calib_key):
+        if calib_key in self.rayleigh_fits:
+            return self.rayleigh_fits[calib_key]
+        return {}
+
+    def clear_brillouin_fits(self, calib_key):
+        self.brillouin_fits[calib_key] = []
+
+    def clear_rayleigh_fits(self, calib_key):
+        self.rayleigh_fits[calib_key] = []
+
     def clear_brillouin_regions(self, calib_key):
         self.brillouin_regions[calib_key] = []
 
