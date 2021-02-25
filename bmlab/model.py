@@ -110,6 +110,7 @@ class CalibrationModel(object):
             return []
         return regions
 
+
 class Setup(object):
 
     def __init__(self, key, name, pixel_size, lambda0, focal_length,
