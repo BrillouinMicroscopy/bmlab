@@ -98,6 +98,17 @@ class CalibrationModel(object):
 
         self.rayleigh_regions[calib_key].append(region)
 
+    def get_brillouin_regions(self, calib_key):
+        regions = self.brillouin_regions.get(calib_key)
+        if regions is None:
+            return []
+        return regions
+
+    def get_rayleigh_regions(self, calib_key):
+        regions = self.rayleigh_regions.get(calib_key)
+        if regions is None:
+            return []
+        return regions
 
 class Setup(object):
 
