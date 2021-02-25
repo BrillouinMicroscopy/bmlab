@@ -78,53 +78,37 @@ def find_max_in_radius(img, xy0, radius):
     return peak_x, peak_y
 
 
-def calc_R(x, y, x_c, y_c):
+def circle_opt(c, x_coord, y_coord):
     """
-    Calculates the distances of a given set of points in a 2D space to a
-    given center point.
+    Cost function to fit a circle to a given set of points.
 
     Parameters
     ----------
-    x: array like
-        x coordinates of the given points
-    y: array like
-        y coordinates of the given points
-    xc: float
-        x coordinate of the center
-    yc: float
-        y coordinate of the center
+    c: array like
+        Parameters to optimize: [x coordinates of circle center,
+        y coordinates of circle center, radius of the cricle]
+    x_coord:
+        x coordinates of the points to fit
+    y_coord
+        y coordinates of the points to fit
 
     Returns
     -------
-    out: numpy array
+    out: float
+        Cost value representing the deviation of the given set of points to
+        the circle, which is represented by the parameter vector c.
     """
-    return np.sqrt((x - x_c) ** 2 + (y - y_c) ** 2)
-
-
-def f_opt(c, x, y):
-    """
-    Calculates the distance of a given set of points to a given center point
-    and returns the deviaton to the mean distance.
-
-    Parameters
-    ----------
-    c: parameter to be optimized, contains center coordinates (x,y)
-    x: x coordinates of the given points
-    y: y coordinates of the given points
-
-    Returns
-    -------
-    out: numpy array containing the deviations of the calculated distances for
-    given center coordinates to the mean distance
-    """
-    ri = calc_R(x, y, *c)
-    return ri - ri.mean()
+    return sum(
+        ((x_coord - c[0]) ** 2
+         + (y_coord - c[1]) ** 2
+         - c[2] ** 2) ** 2)
 
 
 def fit_circle(points):
     """
-    Fits a circle to a given set of points.Returnes the center and the radius
-    of a given set of points.
+    Fits a circle to a given set of points. Returnes the center and the radius
+    of the cricle. The inital parameters for the fiting process are arbitrarily
+    chosen.
 
     Parameters
     ----------
@@ -137,11 +121,14 @@ def fit_circle(points):
     radius_opt: float
                 Radius of the circle
     """
-    center_0 = (-250., -250.)
-    x_coords = [xy[0] for xy in points]
-    y_coords = [xy[1] for xy in points]
-    opt_result = optimize.least_squares(f_opt,
-                                        center_0, args=(x_coords, y_coords))
-    center_opt = (opt_result['x'][0], opt_result['x'][1])
-    radius_opt = calc_R(x_coords, y_coords, *center_opt).mean()
-    return center_opt, radius_opt
+    param_guess = [-50., -50., 500.]
+    x_coords = np.array([xy[1] for xy in points])
+    y_coords = np.array([xy[0] for xy in points])
+    opt_result = optimize.least_squares(circle_opt,
+                                        param_guess,
+                                        args=(x_coords, y_coords),
+                                        bounds=([-np.inf, -np.inf, 0],
+                                                [max(x_coords), max(x_coords),
+                                                 np.inf]))
+
+    return (opt_result['x'][0], opt_result['x'][1]), opt_result['x'][2]
