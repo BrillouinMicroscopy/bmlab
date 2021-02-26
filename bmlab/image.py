@@ -58,7 +58,6 @@ def autofind_orientation(img):
 
     orient = Orientation()
     if np.all(blob_matrix == np.array([[2, 1], [1, 2]])):
-
         orient.set_reflection(vertically=True)
     elif np.all(blob_matrix == np.array([[1, 2], [2, 1]])):
         pass
@@ -142,6 +141,9 @@ def find_max_in_radius(img, xy0, radius):
 
 
 def get_extraction_masks(images, phis, length, circle, width):
+
+    # TODO: This function is time consuming (500 phis ~ 0.5s). Improve it.
+
     img = images[0, ...]
     masks = []
     for phi in phis:
@@ -150,11 +152,14 @@ def get_extraction_masks(images, phis, length, circle, width):
 
 
 def extract_values_along_arc(images, orientation, phis, circle, length, width):
+
+    # This method is quite time consuming.
+    # From profiling: determining the masks takes about 75%, the rest 25%
+
     masks = get_extraction_masks(images, phis, length, circle, width)
-    num_images = len(images)
-    values_by_img = np.zeros((num_images, len(phis)), dtype=np.float)
-    for i in range(num_images):
-        img = orientation.apply(images[i])
+    values_by_img = np.zeros((len(images), len(phis)), dtype=np.float)
+    for i, img_raw in enumerate(images):
+        img = orientation.apply(img_raw)
         values_by_img[i, :] = np.array(
             [np.sum(img[mask]) for mask in masks])
     return values_by_img.mean(axis=0)

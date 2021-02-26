@@ -1,6 +1,7 @@
 import numpy as np
 import skimage.transform
 from shapely.geometry import Polygon, Point
+from bmlab.utils import debug_timer
 
 
 class Circle(object):
@@ -129,6 +130,7 @@ class Rectangle(object):
             [(0, 0), (0, shape[1]), (shape[0], shape[1]), (shape[0], 0)])
 
 
+@debug_timer
 def discretize_arc(circle, img_shape, num_points=200):
     """
     Returns a list of equidistant (in polar angle) points along a circle
