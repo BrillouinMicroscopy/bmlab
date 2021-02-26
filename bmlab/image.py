@@ -2,6 +2,8 @@
 Module to perform common image operations.
 """
 
+import logging
+
 import numpy as np
 from skimage.feature import blob_dog
 
@@ -10,6 +12,9 @@ from bmlab.model import Orientation
 
 class AutofindException(Exception):
     pass
+
+
+logger = logging.getLogger(__name__)
 
 
 def autofind_orientation(img):
@@ -53,12 +58,14 @@ def autofind_orientation(img):
 
     orient = Orientation()
     if np.all(blob_matrix == np.array([[2, 1], [1, 2]])):
+
         orient.set_reflection(vertically=True)
     elif np.all(blob_matrix == np.array([[1, 2], [2, 1]])):
         pass
     else:
         raise AutofindException('Unable to set orientation')
 
+    logger.debug('Autofound orientation: %s' % orient)
     return orient
 
 
