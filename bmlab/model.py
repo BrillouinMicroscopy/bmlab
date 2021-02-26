@@ -1,8 +1,6 @@
 import numpy as np
 
-from bmlab.image import find_max_in_radius
 from bmlab.fits import fit_circle
-from bmlab.image import set_orientation
 
 
 class Orientation(object):
@@ -22,6 +20,7 @@ class Orientation(object):
                 self.reflection[a] = kwargs[a]
 
     def apply(self, img):
+        from bmlab.image import set_orientation
         return set_orientation(img, self.rotation,
                                self.reflection['vertically'],
                                self.reflection['horizontally'])
@@ -47,6 +46,10 @@ class ExtractionModel(object):
         return []
 
     def optimize_points(self, calib_key, img, radius=10):
+
+        from bmlab.image import find_max_in_radius
+        # local import because to break circular dependency
+
         points = self.get_points(calib_key)
         self.clear_points(calib_key)
 

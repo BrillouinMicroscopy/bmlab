@@ -1,8 +1,16 @@
+import pathlib
+
 import numpy as np
 import pytest
 
 from bmlab.image import set_orientation, find_max_in_radius
-from bmlab.fits import fit_circle
+from bmlab.image import autofind_orientation
+from bmlab.file import BrillouinFile
+from bmlab.model import Orientation
+
+
+def data_file_path(file_name):
+    return pathlib.Path(__file__).parent / 'data' / file_name
 
 
 def test_set_orientation_valid_argument():
@@ -38,32 +46,16 @@ def test_find_max_in_radius():
     assert actual == expected
 
 
-def test_circle_fit():
-    expect_r = 550
-    expect_c = (-200, -220)
-    n_test_data_points = 6
-    noise_strength = 15
-    np.random.seed(1)
-    x_noise = np.random.random(n_test_data_points) * noise_strength
-    y_noise = np.random.random(n_test_data_points) * noise_strength
+def test_autofind_orientation():
 
-    test_points_noise = [(expect_r * np.cos(phi) + x_noise[i] + expect_c[0],
-                          expect_r * np.sin(phi) + y_noise[i] + expect_c[1])
-                         for i, phi in enumerate(
-        np.linspace(0.1, np.pi / 2, n_test_data_points))
-    ]
+    bf = BrillouinFile(data_file_path('Water.h5'))
+    imgs = bf.get_repetition('0').calibration.get_image('1')
+    img = imgs[0, ...]
 
-    actual_c_noise, actual_r_noise = fit_circle(test_points_noise)
+    actual = autofind_orientation(img)
 
-    np.testing.assert_allclose(actual_c_noise, expect_c, rtol=0.05)
-    np.testing.assert_allclose(actual_r_noise, expect_r, rtol=0.05)
+    expected = Orientation()
+    expected.set_reflection(vertically=True)
 
-    test_points = [(expect_r * np.cos(phi) + 0 * x_noise[i] + expect_c[0],
-                    expect_r * np.sin(phi) + 0 * y_noise[i] + expect_c[1])
-                   for i, phi in enumerate(
-        np.linspace(0.1, np.pi / 2, int(n_test_data_points / 2) + 1))
-    ]
-
-    actual_c, actual_r = fit_circle(test_points)
-    np.testing.assert_allclose(actual_c, expect_c, rtol=1e-2)
-    np.testing.assert_allclose(actual_r, expect_r, rtol=1e-2)
+    assert actual.rotation == expected.rotation
+    assert actual.reflection == expected.reflection
