@@ -32,6 +32,7 @@ class ExtractionModel(object):
         self.points = {}
         self.circle_fits = {}
         self.extracted_values = {}
+        self.extraction_angles = {}
 
     def add_point(self, calib_key, xdata, ydata):
         if calib_key not in self.points:
@@ -67,14 +68,20 @@ class ExtractionModel(object):
         return self.circle_fits.get(calib_key)
 
     def set_extracted_values(self, calib_key, phis, values):
-        self.extracted_values[calib_key] = [(phi, value)
-                                            for phi, value in
-                                            zip(phis, values)]
+        self.extracted_values[calib_key] = phis, values
 
     def get_extracted_values(self, calib_key):
         values = self.extracted_values.get(calib_key)
         if values:
-            return np.array(values)
+            return values
+        return None, None
+
+    def set_extraction_angles(self, calib_key, phis):
+        self.extraction_angles[calib_key] = phis
+
+    def get_extraction_angles(self, calib_key):
+        if calib_key in self.extraction_angles:
+            return self.extraction_angles[calib_key]
         return []
 
 

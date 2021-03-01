@@ -94,6 +94,9 @@ class Circle(object):
             return 3 * np.pi / 2.
         return np.arctan(delta[1] / delta[0])
 
+    def e_r(self, phi):
+        return np.array([np.cos(phi), np.sin(phi)], dtype=np.float)
+
     def rect_mask(self, img_shape, phi, length, width):
         """
         Returns a mask to extract a (rotated) rectangle along the circle.

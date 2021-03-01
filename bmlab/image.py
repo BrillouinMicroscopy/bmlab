@@ -18,7 +18,6 @@ logger = logging.getLogger(__name__)
 
 
 def autofind_orientation(img):
-
     min_threshold = 1.E-6
     max_threshold = 0.01
     step_size = np.log10(2.)
@@ -140,26 +139,33 @@ def find_max_in_radius(img, xy0, radius):
     return peak_x, peak_y
 
 
-def get_extraction_masks(images, phis, length, circle, width):
-
-    # TODO: This function is time consuming (500 phis ~ 0.5s). Improve it.
-
-    img = images[0, ...]
-    masks = []
+def extract_lines_along_arc(img, orientation, phis, circle, num_points):
+    img = orientation.apply(img)
+    values = []
     for phi in phis:
-        masks.append(circle.rect_mask(img.shape, phi, length, width))
-    return masks
+        e_r = circle.e_r(phi)
+        mid_point = circle.point(phi)
+        points = [mid_point + e_r *
+                  k for k in np.arange(-num_points, num_points+1)]
+        points = np.array(points)
+        values.append(sum(interpolate(img, p) for p in points))
+    return np.array(values)
 
 
-def extract_values_along_arc(images, orientation, phis, circle, length, width):
+def interpolate(img, xy):
+    xy0 = np.array(xy, dtype=np.int)
+    dxy = xy - xy0
+    dxy = dxy.T
+    ex = np.array([1, 0], dtype=np.int)
+    ey = np.array([0, 1], dtype=np.int)
+    nx, ny = img.shape
 
-    # This method is quite time consuming.
-    # From profiling: determining the masks takes about 75%, the rest 25%
-
-    masks = get_extraction_masks(images, phis, length, circle, width)
-    values_by_img = np.zeros((len(images), len(phis)), dtype=np.float)
-    for i, img_raw in enumerate(images):
-        img = orientation.apply(img_raw)
-        values_by_img[i, :] = np.array(
-            [np.sum(img[mask]) for mask in masks])
-    return values_by_img.mean(axis=0)
+    if xy0[0] < 0 or xy0[0] >= nx - 1:
+        return np.nan
+    if xy0[1] < 0 or xy0[1] >= ny - 1:
+        return np.nan
+    res = img[tuple(xy0)] * (1 - dxy[0]) * (1 - dxy[1])
+    res += img[tuple(xy0 + ex)] * dxy[0] * (1 - dxy[1])
+    res += img[tuple(xy0 + ey)] * (1 - dxy[0]) * dxy[1]
+    res += img[tuple(xy0 + ex + ey)] * dxy[0] * dxy[1]
+    return res
