@@ -2,7 +2,7 @@ import logging
 
 import numpy as np
 from scipy import optimize
-from scipy.optimize import least_squares
+from scipy.optimize import least_squares, minimize
 
 
 logger = logging.getLogger(__name__)
@@ -33,6 +33,31 @@ def fit_lorentz(w, y):
     w_0, gam, offset = opt_result.x
 
     return w_0, gam, offset
+
+
+def fit_double_lorentz(w, y):
+    w_0_guess = w[np.argmax(y)]
+    offset_guess = (y[0] + y[-1]) / 2.
+    gam_guess = (w_0_guess**2 * ((np.max(y) - offset_guess))) ** -0.5
+    n = len(w)
+    w_0_guess_left = w[n // 3]
+    w_0_guess_right = w[2 * n // 3]
+
+    def error(x, w, y):
+        return np.sum(
+            (y - lorentz(w, *x[0:2], 0) - lorentz(w, *x[2:4], 0) - x[4])**2
+        )
+
+    opt_result = minimize(error, x0=(
+        w_0_guess_left, gam_guess,
+        w_0_guess_right, gam_guess, offset_guess),
+        args=(w, y))
+
+    if not opt_result.success:
+        raise FitError('Lorentz fit failed.')
+
+    return (*opt_result.x[0:2], opt_result.x[4]), \
+           (*opt_result.x[2:4], opt_result.x[4])
 
 
 def fit_circle(points):

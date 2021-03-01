@@ -1,7 +1,7 @@
 import numpy as np
 # import matplotlib.pyplot as plt
 
-from bmlab.fits import lorentz, fit_lorentz, fit_circle
+from bmlab.fits import lorentz, fit_lorentz, fit_circle, fit_double_lorentz
 
 
 def test_fit_lorentz():
@@ -19,6 +19,30 @@ def test_fit_lorentz():
     np.testing.assert_almost_equal(actual_w0, w_0, decimal=3)
     np.testing.assert_almost_equal(actual_gam, gam, decimal=3)
     np.testing.assert_almost_equal(actual_offset, offset, decimal=3)
+
+
+def test_fit_double_lorentz():
+    # Arrange
+    w = np.linspace(10, 20, 100)
+    w0_left = 14.
+    w0_right = 16.
+    gam = 0.5
+    offset = 10.
+    y_data = lorentz(w, w0_left, gam, offset)
+    y_data += lorentz(w, w0_right, gam, 0)
+
+    # plt.plot(w, y_data)
+    # plt.show()
+
+    fit_left, fit_right = fit_double_lorentz(w, y_data)
+
+    np.testing.assert_almost_equal(fit_left[0], w0_left, decimal=3)
+    np.testing.assert_almost_equal(fit_left[1], gam, decimal=3)
+    np.testing.assert_almost_equal(fit_left[2], offset, decimal=3)
+
+    np.testing.assert_almost_equal(fit_right[0], w0_right, decimal=3)
+    np.testing.assert_almost_equal(fit_right[1], gam, decimal=3)
+    np.testing.assert_almost_equal(fit_right[2], offset, decimal=3)
 
 
 def test_circle_fit():
