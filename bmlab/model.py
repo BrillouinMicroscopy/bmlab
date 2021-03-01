@@ -67,8 +67,8 @@ class ExtractionModel(object):
     def get_circle_fit(self, calib_key):
         return self.circle_fits.get(calib_key)
 
-    def set_extracted_values(self, calib_key, phis, values):
-        self.extracted_values[calib_key] = phis, values
+    def set_extracted_values(self, calib_key, values):
+        self.extracted_values[calib_key] = values
 
     def get_extracted_values(self, calib_key):
         values = self.extracted_values.get(calib_key)
