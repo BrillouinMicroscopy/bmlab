@@ -1,3 +1,5 @@
+0.0.5
+ - basic extraction tab
 0.0.4
  - get metadata from HDF file
  - set image orientation
