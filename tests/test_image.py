@@ -98,9 +98,8 @@ def test_extract_lines_along_arc():
 
     # Assert
     one = np.ones_like(phis)
-    # 7 = 3 + 1 + 3 points, one in the middle, three inside, three outside
-    np.testing.assert_allclose(actual, 7*100*one, rtol=1.E-4)
-    np.testing.assert_allclose(actual_2, 7 * 10**4 * one, rtol=1.E-3)
+    np.testing.assert_allclose(actual, 100*one, rtol=1.E-4)
+    np.testing.assert_allclose(actual_2, 10**4 * one, rtol=1.E-3)
 
     # Quadratic scaling should shift the sum to the outside
     assert np.all(actual_2 > actual)
