@@ -148,7 +148,8 @@ def extract_lines_along_arc(img, orientation, phis, circle, num_points):
         points = [mid_point + e_r *
                   k for k in np.arange(-num_points, num_points+1)]
         points = np.array(points)
-        values.append(sum(interpolate(img, p) for p in points) / (points.size / 2))
+        values.append(sum(interpolate(img, p) for p in points)
+                      / (points.size / 2))
     return np.array(values)
 
 
