@@ -99,6 +99,12 @@ class CalibrationModel(object):
 
         self.brillouin_regions[calib_key].append(region)
 
+    def set_brillouin_region(self, calib_key, index, region):
+        if calib_key not in self.brillouin_regions:
+            self.brillouin_regions[calib_key] = []
+
+        self.brillouin_regions[calib_key][index] = region
+
     def add_brillouin_fit(self, calib_key, w0, gam, offset):
         if calib_key not in self.brillouin_fits:
             self.brillouin_fits[calib_key] = []
@@ -140,6 +146,12 @@ class CalibrationModel(object):
             self.rayleigh_regions[calib_key] = []
 
         self.rayleigh_regions[calib_key].append(region)
+
+    def set_rayleigh_region(self, calib_key, index, region):
+        if calib_key not in self.rayleigh_regions:
+            self.rayleigh_regions[calib_key] = []
+
+        self.rayleigh_regions[calib_key][index] = region
 
     def get_brillouin_regions(self, calib_key):
         regions = self.brillouin_regions.get(calib_key)
