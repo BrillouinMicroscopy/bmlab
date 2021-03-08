@@ -1,6 +1,6 @@
 import numpy as np
 
-from bmlab.model import ExtractionModel
+from bmlab.models.extraction_model import ExtractionModel
 
 
 def test_extraction_model_triggers_circle_fit():

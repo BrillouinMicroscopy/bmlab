@@ -7,7 +7,7 @@ import logging
 import numpy as np
 from skimage.feature import blob_dog
 
-from bmlab.model import Orientation
+from bmlab.models.orientation import Orientation
 
 
 class AutofindException(Exception):

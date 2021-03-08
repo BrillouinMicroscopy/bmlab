@@ -7,7 +7,7 @@ from bmlab.image import set_orientation, find_max_in_radius
 from bmlab.image import autofind_orientation, interpolate
 from bmlab.image import extract_lines_along_arc
 from bmlab.file import BrillouinFile
-from bmlab.model import Orientation
+from bmlab.models.orientation import Orientation
 from bmlab.geometry import Circle
 
 
