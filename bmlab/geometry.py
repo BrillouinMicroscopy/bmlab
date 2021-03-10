@@ -95,7 +95,7 @@ class Circle(object):
         return np.arctan(delta[1] / delta[0])
 
     def e_r(self, phi):
-        return np.array([np.cos(phi), np.sin(phi)], dtype=np.float)
+        return np.array([np.cos(phi), np.sin(phi)], dtype=float)
 
     def rect_mask(self, img_shape, phi, length, width):
         """

@@ -41,7 +41,7 @@ def autofind_orientation(img):
     nx, ny = img.shape
     nx2, ny2 = nx // 2, ny // 2
 
-    blob_matrix = np.zeros((2, 2), dtype=np.int)
+    blob_matrix = np.zeros((2, 2), dtype=int)
     for blob in blobs:
         x, y, _ = blob
         x = round(x)
@@ -77,11 +77,11 @@ def set_orientation(image, rotate=0, flip_ud=False, flip_lr=False):
     ----------
     image: array_like
         Array of two dimensions.
-    rotate: integer, default = 0
+    rotate: int
         Number of times the array is rotated by 90 degrees (clockwise).
-    flip_ud: bool, default = False
+    flip_ud: bool
         If True, flip the image up-down
-    flip_lr: bool, default = False
+    flip_lr: bool
         If True, flip the image left-right
 
     Returns
@@ -154,11 +154,11 @@ def extract_lines_along_arc(img, orientation, phis, circle, num_points):
 
 
 def interpolate(img, xy):
-    xy0 = np.array(xy, dtype=np.int)
+    xy0 = np.array(xy, dtype=int)
     dxy = xy - xy0
     dxy = dxy.T
-    ex = np.array([1, 0], dtype=np.int)
-    ey = np.array([0, 1], dtype=np.int)
+    ex = np.array([1, 0], dtype=int)
+    ey = np.array([0, 1], dtype=int)
     nx, ny = img.shape
 
     if xy0[0] < 0 or xy0[0] >= nx - 1:

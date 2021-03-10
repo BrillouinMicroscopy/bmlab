@@ -86,7 +86,7 @@ def test_extract_lines_along_arc():
     orient = Orientation(reflection={'vertically': False,
                                      'horizontally': False})
     circle = Circle((0, 0), 100)
-    x = y = np.arange(110, dtype=np.int)
+    x = y = np.arange(110, dtype=int)
     X, Y = np.meshgrid(x, y, indexing='ij')
     phis = np.linspace(0, np.pi/2., 30)
     img = np.sqrt(X**2 + Y**2)

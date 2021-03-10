@@ -25,7 +25,7 @@ def test_extraction_model_triggers_circle_fit():
 
 def test_optimize_points_in_extraction_model():
 
-    img = np.zeros((100, 100), dtype=np.int)
+    img = np.zeros((100, 100), dtype=int)
     img[20, 20] = 1
     img[80, 80] = 1
 
