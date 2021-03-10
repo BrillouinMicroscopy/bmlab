@@ -11,11 +11,14 @@ For the general workflow, please refer to the
 Tests
 =====
 We try to adhere to test-driven development. Please always write test
-functions for your code. You can run all tests via
+functions for your code. Please make sure the `pytest` package is
+installed::
 
-::
+    pip install pytest
 
-    python setup.py test
+You can run all tests via::
+
+    py.test tests
 
 
 Making a new release
