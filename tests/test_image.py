@@ -92,9 +92,18 @@ def test_extract_lines_along_arc():
     img = np.sqrt(X**2 + Y**2)
     img_2 = X**2 + Y**2
 
+    arc = []
+    num_points = 3
+    for phi in phis:
+        e_r = circle.e_r(phi)
+        mid_point = circle.point(phi)
+        points = [mid_point + e_r *
+                  k for k in np.arange(-num_points, num_points + 1)]
+        arc.append(np.array(points))
+
     # Act
-    actual = extract_lines_along_arc(img, orient, phis, circle, 3)
-    actual_2 = extract_lines_along_arc(img_2, orient, phis, circle, 3)
+    actual = extract_lines_along_arc(img, orient, arc)
+    actual_2 = extract_lines_along_arc(img_2, orient, arc)
 
     # Assert
     one = np.ones_like(phis)

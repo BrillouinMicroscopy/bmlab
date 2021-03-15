@@ -139,15 +139,10 @@ def find_max_in_radius(img, xy0, radius):
     return peak_x, peak_y
 
 
-def extract_lines_along_arc(img, orientation, phis, circle, num_points):
+def extract_lines_along_arc(img, orientation, arc):
     img = orientation.apply(img)
     values = []
-    for phi in phis:
-        e_r = circle.e_r(phi)
-        mid_point = circle.point(phi)
-        points = [mid_point + e_r *
-                  k for k in np.arange(-num_points, num_points+1)]
-        points = np.array(points)
+    for points in arc:
         values.append(sum(interpolate(img, p) for p in points)
                       / (points.size / 2))
     return np.array(values)

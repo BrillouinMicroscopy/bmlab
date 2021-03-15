@@ -1,4 +1,6 @@
 from bmlab.fits import fit_circle
+from bmlab.geometry import Circle
+import numpy as np
 
 
 class ExtractionModel(object):
@@ -41,6 +43,22 @@ class ExtractionModel(object):
 
     def get_circle_fit(self, calib_key):
         return self.circle_fits.get(calib_key)
+
+# TODO Needs to accept time instead of calib_key
+    def get_arc_by_time(self, calib_key):
+        center, radius = self.circle_fits.get(calib_key)
+        circle = Circle(center, radius)
+        phis = self.get_extraction_angles(calib_key)
+
+        arc = []
+        num_points = 3
+        for phi in phis:
+            e_r = circle.e_r(phi)
+            mid_point = circle.point(phi)
+            points = [mid_point + e_r *
+                      k for k in np.arange(-num_points, num_points + 1)]
+            arc.append(np.array(points))
+        return arc
 
     def set_extracted_values(self, calib_key, values):
         self.extracted_values[calib_key] = values
