@@ -17,6 +17,14 @@ from packaging import version
 BRILLOUIN_GROUP = 'Brillouin'
 
 
+def _get_datetime(time_stamp):
+    """ Convert the time stamp in the HDF file to Python datetime """
+    try:
+        return datetime.datetime.fromisoformat(time_stamp)
+    except Exception:
+        return None
+
+
 class BrillouinFile(object):
 
     def __init__(self, path):
@@ -55,6 +63,8 @@ class BrillouinFile(object):
             """ Old Brillouin file format """
             self.Brillouin_group = self.file
         self.comment = self.file.attrs.get('comment')[0].decode('utf-8')
+        self.date = _get_datetime(
+            self.file.attrs.get('date')[0].decode('utf-8'))
 
     def __del__(self):
         """
@@ -121,18 +131,11 @@ class Repetition(object):
             The HDF group representing a Repetition. Consists of payload,
             calibration and background.
         """
-        self.date = self._get_datetime(repetition_group.attrs.get('date')[0])
+        self.date = _get_datetime(
+            repetition_group.attrs.get('date')[0].decode('utf-8'))
         self.payload = Payload(repetition_group.get('payload'))
         calibration_group = repetition_group.get('calibration')
         self.calibration = Calibration(calibration_group)
-
-    def _get_datetime(self, time_stamp):
-        """ Convert the time stamp in the HDF file to Python datetime """
-        time_stamp = time_stamp.decode('utf-8')
-        try:
-            return datetime.datetime.fromisoformat(time_stamp)
-        except Exception:
-            return None
 
 
 class Payload(object):
@@ -181,6 +184,17 @@ class Payload(object):
         """
         return np.array(self.data.get(image_key))
 
+    def get_date(self, image_key):
+        """"
+        Returns the date of a payload image
+        with the given key
+        """
+        try:
+            return _get_datetime(
+                self.data.get(image_key).attrs.get('date')[0].decode('utf-8'))
+        except Exception:
+            return ''
+
 
 class Calibration(object):
 
@@ -212,7 +226,7 @@ class Calibration(object):
 
     def get_image(self, image_key):
         """
-        Returns the image from the payload for given key.
+        Returns the image from the calibration for given key.
 
         Parameters
         ----------
@@ -225,6 +239,17 @@ class Calibration(object):
             Array representing the image.
         """
         return np.array(self.data.get(image_key))
+
+    def get_date(self, image_key):
+        """"
+        Returns the date of a calibration image
+        with the given key
+        """
+        try:
+            return _get_datetime(
+                self.data.get(image_key).attrs.get('date')[0].decode('utf-8'))
+        except Exception:
+            return ''
 
 
 class BadFileException(Exception):
