@@ -1,3 +1,6 @@
+import numpy as np
+
+
 class CalibrationModel(object):
 
     def __init__(self):
@@ -10,7 +13,21 @@ class CalibrationModel(object):
         if calib_key not in self.brillouin_regions:
             self.brillouin_regions[calib_key] = []
 
-        self.brillouin_regions[calib_key].append(region)
+        regions_fused = False
+        # check if the selected regions overlap
+        for n, saved_region in enumerate(self.brillouin_regions[calib_key]):
+
+            if (np.min(region) < np.max(saved_region) < np.max(region)
+                    or (np.min(region) < np.min(saved_region) < np.max(
+                        region))):
+                # fuse overlapping regions
+                self.brillouin_regions[calib_key][n] = (
+                    np.min([region, saved_region]),
+                    np.max([region, saved_region]))
+                regions_fused = True
+
+        if not regions_fused:
+            self.brillouin_regions[calib_key].append(region)
 
     def set_brillouin_region(self, calib_key, index, region):
         if calib_key not in self.brillouin_regions:
