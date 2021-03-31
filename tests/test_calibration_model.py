@@ -13,3 +13,7 @@ def test_calibration_model_add_brillouin_region():
     cm.add_brillouin_region(0, (7, 9))
 
     assert brillouin_region_0 == [(1, 5), (7, 9)]
+
+    cm.add_brillouin_region(0, (2, 3))
+
+    assert brillouin_region_0 == [(1, 5), (7, 9)]

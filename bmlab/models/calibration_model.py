@@ -17,9 +17,8 @@ class CalibrationModel(object):
         # check if the selected regions overlap
         for n, saved_region in enumerate(self.brillouin_regions[calib_key]):
 
-            if (np.min(region) < np.max(saved_region) < np.max(region)
-                    or (np.min(region) < np.min(saved_region) < np.max(
-                        region))):
+            if (np.min(region) < np.max(saved_region)
+                    and (np.max(region) > np.min(saved_region))):
                 # fuse overlapping regions
                 self.brillouin_regions[calib_key][n] = (
                     np.min([region, saved_region]),
