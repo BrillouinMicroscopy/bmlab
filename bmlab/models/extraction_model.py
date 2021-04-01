@@ -4,9 +4,9 @@ import numpy as np
 
 
 class ExtractionModel(object):
+    arc_width = 3      # [pix] the width of the extraction arc
 
     def __init__(self):
-        self.arc_width = 3      # [pix] the width of the extraction arc
         self.points = {}
         self.circle_fits = {}
         self.extracted_values = {}
