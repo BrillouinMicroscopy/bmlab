@@ -49,6 +49,17 @@ def test_clear_points_from_extraction_model():
     assert em.get_points('0') == []
 
 
+def test_set_arc_width():
+    em = ExtractionModel()
+
+    # Test default width
+    assert em.arc_width == 3
+
+    em.set_arc_width(2)
+
+    assert em.arc_width == 2
+
+
 def test_get_arc_by_calib_key():
     calib_key = '0'
     image_shape = (20,20)
@@ -68,7 +79,8 @@ def test_get_arc_by_calib_key():
     em.set_extraction_angles(calib_key, phis)
 
     # Get the arc
-    arc = em.get_arc_by_calib_key(calib_key, width=2)
+    em.set_arc_width(2)
+    arc = em.get_arc_by_calib_key(calib_key)
 
     expected_arc = [
         np.array([[8.0, 0.0], [9.0, 0.0], [10.0, 0.0], [11.0, 0.0], [12.0, 0.0]]),

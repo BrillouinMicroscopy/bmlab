@@ -6,6 +6,7 @@ import numpy as np
 class ExtractionModel(object):
 
     def __init__(self):
+        self.arc_width = 3      # [pix] the width of the extraction arc
         self.points = {}
         self.circle_fits = {}
         self.extracted_values = {}
@@ -44,12 +45,11 @@ class ExtractionModel(object):
     def get_circle_fit(self, calib_key):
         return self.circle_fits.get(calib_key)
 
-    def get_arc_by_calib_key(self, calib_key, width=3):
+    def get_arc_by_calib_key(self, calib_key):
         """
         Returns the arc at which to interpolate the 2D image for
         the 1D spectrum
         :param calib_key: the calibration number
-        :param width: the width of the arc
         :return: the arc with pixel positions
         """
         center, radius = self.circle_fits.get(calib_key)
@@ -61,7 +61,7 @@ class ExtractionModel(object):
             e_r = circle.e_r(phi)
             mid_point = circle.point(phi)
             points = [mid_point + e_r *
-                      k for k in np.arange(-width, width + 1)]
+                      k for k in np.arange(-self.arc_width, self.arc_width + 1)]
             arc.append(np.array(points))
         return arc
 
@@ -81,3 +81,6 @@ class ExtractionModel(object):
         if calib_key in self.extraction_angles:
             return self.extraction_angles[calib_key]
         return []
+
+    def set_arc_width(self, width):
+        self.arc_width = width
