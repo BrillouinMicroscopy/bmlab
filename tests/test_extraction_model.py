@@ -1,7 +1,7 @@
 import numpy as np
 
 from bmlab.models.extraction_model import ExtractionModel
-
+from bmlab.geometry import Circle, discretize_arc
 
 def test_extraction_model_triggers_circle_fit():
 
@@ -47,3 +47,36 @@ def test_clear_points_from_extraction_model():
 
     em.clear_points('0')
     assert em.get_points('0') == []
+
+
+def test_get_arc_by_calib_key():
+    calib_key = '0'
+    image_shape = (20,20)
+    tolerance = 0.0001
+
+    em = ExtractionModel()
+
+    circle = Circle((0, 0), 10)
+
+    phis = [0, np.pi/4, np.pi/2]
+    for phi in phis:
+        (xdata, ydata) = circle.point(phi)
+        em.add_point('0', xdata, ydata)
+
+    # Create angles at which to calculate the arc
+    phis = discretize_arc(circle, image_shape, num_points=2)
+    em.set_extraction_angles(calib_key, phis)
+
+    # Get the arc
+    arc = em.get_arc_by_calib_key(calib_key, width=2)
+
+    expected_arc = [
+        np.array([[8.0, 0.0], [9.0, 0.0], [10.0, 0.0], [11.0, 0.0], [12.0, 0.0]]),
+        np.array([[0.0, 8.0], [0.0, 9.0], [0.0, 10.0], [0.0, 11.0], [0.0, 12.0]])
+    ]
+
+    assert len(arc) == len(expected_arc)
+
+    # Check that every line matches expected result
+    for i in range(len(arc)):
+        assert (abs(arc[i] - expected_arc[i]) < tolerance).all()

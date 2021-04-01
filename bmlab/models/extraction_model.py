@@ -44,19 +44,24 @@ class ExtractionModel(object):
     def get_circle_fit(self, calib_key):
         return self.circle_fits.get(calib_key)
 
-# TODO Needs to accept time instead of calib_key
-    def get_arc_by_time(self, calib_key):
+    def get_arc_by_calib_key(self, calib_key, width=3):
+        """
+        Returns the arc at which to interpolate the 2D image for
+        the 1D spectrum
+        :param calib_key: the calibration number
+        :param width: the width of the arc
+        :return: the arc with pixel positions
+        """
         center, radius = self.circle_fits.get(calib_key)
         circle = Circle(center, radius)
         phis = self.get_extraction_angles(calib_key)
 
         arc = []
-        num_points = 3
         for phi in phis:
             e_r = circle.e_r(phi)
             mid_point = circle.point(phi)
             points = [mid_point + e_r *
-                      k for k in np.arange(-num_points, num_points + 1)]
+                      k for k in np.arange(-width, width + 1)]
             arc.append(np.array(points))
         return arc
 
