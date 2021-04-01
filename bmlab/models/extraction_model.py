@@ -52,22 +52,24 @@ class ExtractionModel(object):
         :param calib_key: the calibration number
         :return: the arc with pixel positions
         """
-        center, radius = self.circle_fits.get(calib_key)
-        circle = Circle(center, radius)
-        phis = self.get_extraction_angles(calib_key)
-
         arc = []
-        for phi in phis:
-            e_r = circle.e_r(phi)
-            mid_point = circle.point(phi)
-            points = [
-                mid_point + e_r *
-                k for k in np.arange(
-                    -self.arc_width, self.arc_width + 1
-                )
-            ]
-            arc.append(np.array(points))
-        return arc
+        try:
+            center, radius = self.get_circle_fit(calib_key)
+            circle = Circle(center, radius)
+            phis = self.get_extraction_angles(calib_key)
+
+            for phi in phis:
+                e_r = circle.e_r(phi)
+                mid_point = circle.point(phi)
+                points = [
+                    mid_point + e_r *
+                    k for k in np.arange(
+                        -self.arc_width, self.arc_width + 1
+                    )
+                ]
+                arc.append(np.array(points))
+        finally:
+            return arc
 
     def set_extracted_values(self, calib_key, values):
         self.extracted_values[calib_key] = values
