@@ -3,6 +3,7 @@ import numpy as np
 from bmlab.models.extraction_model import ExtractionModel
 from bmlab.geometry import Circle, discretize_arc
 
+
 def test_extraction_model_triggers_circle_fit():
 
     em = ExtractionModel()
@@ -62,7 +63,7 @@ def test_set_arc_width():
 
 def test_get_arc_by_calib_key():
     calib_key = '0'
-    image_shape = (20,20)
+    image_shape = (20, 20)
     tolerance = 0.0001
 
     em = ExtractionModel()
@@ -83,8 +84,12 @@ def test_get_arc_by_calib_key():
     arc = em.get_arc_by_calib_key(calib_key)
 
     expected_arc = [
-        np.array([[8.0, 0.0], [9.0, 0.0], [10.0, 0.0], [11.0, 0.0], [12.0, 0.0]]),
-        np.array([[0.0, 8.0], [0.0, 9.0], [0.0, 10.0], [0.0, 11.0], [0.0, 12.0]])
+        np.array(
+            [[8.0, 0.0], [9.0, 0.0], [10.0, 0.0], [11.0, 0.0], [12.0, 0.0]]
+        ),
+        np.array(
+            [[0.0, 8.0], [0.0, 9.0], [0.0, 10.0], [0.0, 11.0], [0.0, 12.0]]
+        )
     ]
 
     assert len(arc) == len(expected_arc)

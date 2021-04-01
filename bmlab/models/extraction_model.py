@@ -60,8 +60,12 @@ class ExtractionModel(object):
         for phi in phis:
             e_r = circle.e_r(phi)
             mid_point = circle.point(phi)
-            points = [mid_point + e_r *
-                      k for k in np.arange(-self.arc_width, self.arc_width + 1)]
+            points = [
+                mid_point + e_r *
+                k for k in np.arange(
+                    -self.arc_width, self.arc_width + 1
+                )
+            ]
             arc.append(np.array(points))
         return arc
 
