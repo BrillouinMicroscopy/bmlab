@@ -62,38 +62,54 @@ def test_set_arc_width():
 
 
 def test_get_arc_by_calib_key():
-    calib_key = '0'
+    calib_keys = ['0', '1']
+    circle_center = (0, 0)
+    circle_radii = [9, 10]
     image_shape = (20, 20)
     tolerance = 0.0001
 
     em = ExtractionModel()
+    for i, calib_key in enumerate(calib_keys):
+        radius = circle_radii[i]
 
-    circle = Circle((0, 0), 10)
+        circle = Circle(circle_center, radius)
 
-    phis = [0, np.pi/4, np.pi/2]
-    for phi in phis:
-        (xdata, ydata) = circle.point(phi)
-        em.add_point('0', xdata, ydata)
+        phis = [0, np.pi/4, np.pi/2]
+        for phi in phis:
+            (xdata, ydata) = circle.point(phi)
+            em.add_point(calib_key, xdata, ydata)
 
-    # Create angles at which to calculate the arc
-    phis = discretize_arc(circle, image_shape, num_points=2)
-    em.set_extraction_angles(calib_key, phis)
+        # Create angles at which to calculate the arc
+        phis = discretize_arc(circle, image_shape, num_points=2)
+        em.set_extraction_angles(calib_key, phis)
 
-    # Get the arc
-    em.set_arc_width(2)
-    arc = em.get_arc_by_calib_key(calib_key)
+        # Get the arc
+        em.set_arc_width(2)
+        arc = em.get_arc_by_calib_key(calib_key)
 
-    expected_arc = [
-        np.array(
-            [[8.0, 0.0], [9.0, 0.0], [10.0, 0.0], [11.0, 0.0], [12.0, 0.0]]
-        ),
-        np.array(
-            [[0.0, 8.0], [0.0, 9.0], [0.0, 10.0], [0.0, 11.0], [0.0, 12.0]]
-        )
-    ]
+        expected_arc = [
+            np.array(
+                [
+                    [radius-2, 0.0],
+                    [radius-1, 0.0],
+                    [radius, 0.0],
+                    [radius+1, 0.0],
+                    [radius+2, 0.0]
+                ]
+            ),
+            np.array(
+                [
+                    [0.0, radius-2],
+                    [0.0, radius-1],
+                    [0.0, radius],
+                    [0.0, radius+1],
+                    [0.0, radius+2]
+                ]
+            )
+        ]
 
-    assert len(arc) == len(expected_arc)
+        assert len(arc) == len(expected_arc)
 
-    # Check that every line matches expected result
-    for i in range(len(arc)):
-        assert (abs(arc[i] - expected_arc[i]) < tolerance).all()
+        # Check that every line matches expected result
+        for i in range(len(arc)):
+            assert (abs(arc[i] - expected_arc[i]) < tolerance).all()
