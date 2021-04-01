@@ -17,3 +17,21 @@ def test_calibration_model_add_brillouin_region():
     cm.add_brillouin_region(0, (2, 3))
 
     assert brillouin_region_0 == [(1, 5), (7, 9)]
+
+
+def test_calibration_model_add_rayleigh_region():
+    cm = CalibrationModel()
+    cm.add_rayleigh_region(0, [1, 3])
+    cm.add_rayleigh_region(0, [2, 5])
+
+    rayleigh_region_0 = cm.get_rayleigh_regions(0)
+
+    assert rayleigh_region_0 == [(1, 5)]
+
+    cm.add_rayleigh_region(0, (7, 9))
+
+    assert rayleigh_region_0 == [(1, 5), (7, 9)]
+
+    cm.add_rayleigh_region(0, (2, 3))
+
+    assert rayleigh_region_0 == [(1, 5), (7, 9)]
