@@ -83,7 +83,7 @@ def fit_circle(points):
                           param_guess,
                           args=(x_coords, y_coords))
 
-    return (opt_result['x'][0], opt_result['x'][1]), opt_result['x'][2]
+    return (opt_result['x'][0], opt_result['x'][1]), abs(opt_result['x'][2])
 
 
 def _circle_opt(c, x_coord, y_coord):

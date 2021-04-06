@@ -74,3 +74,18 @@ def test_circle_fit():
     actual_c, actual_r = fit_circle(test_points)
     np.testing.assert_allclose(actual_c, expect_c, rtol=1e-2)
     np.testing.assert_allclose(actual_r, expect_r, rtol=1e-2)
+
+    # Test that radius is always positive
+    test_points_2 = [(np.sqrt(2), 0), (1, 1), (0, np.sqrt(2))]
+    actual_c_2, actual_r_2 = fit_circle(test_points_2)
+
+    np.testing.assert_allclose(actual_c_2, (0, 0), rtol=0.001, atol=0.0001)
+    assert(actual_r_2 > 0)
+    np.testing.assert_allclose(actual_r_2, np.sqrt(2), rtol=0.0001, atol=0.000001)
+
+    test_points_3 = [(10.0, 0.0), (7.0710678118654755, 7.0710678118654755), (6.123233995736766e-16, 10.0)]
+    actual_c_3, actual_r_3 = fit_circle(test_points_3)
+
+    np.testing.assert_allclose(actual_c_3, (0, 0), rtol=0.001, atol=0.0001)
+    assert(actual_r_3 > 0)
+    np.testing.assert_allclose(actual_r_3, 10, rtol=0.0001, atol=0.000001)
