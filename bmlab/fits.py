@@ -76,12 +76,17 @@ def fit_circle(points):
     radius_opt: float
                 Radius of the circle
     """
-    param_guess = [-50., -50., 500.]
+
+    center, radius = calculate_exact_circle(points)
+
+    param_guess = [center[0], center[1], radius]
     x_coords = np.array([xy[0] for xy in points])
     y_coords = np.array([xy[1] for xy in points])
+    bnds = ((None, None), (None, None), (0.0, None))
     opt_result = minimize(_circle_opt,
                           param_guess,
-                          args=(x_coords, y_coords))
+                          args=(x_coords, y_coords),
+                          bounds=bnds)
 
     return (opt_result['x'][0], opt_result['x'][1]), abs(opt_result['x'][2])
 
@@ -119,3 +124,47 @@ def fit_spectral_region(region, xdata, ydata):
         w0, gam, offset
     ))
     return gam, offset, w0
+
+
+def calculate_exact_circle(points):
+    # We only consider the first three points given
+    if len(points) < 3:
+        return
+
+    x1 = points[0][0]
+    y1 = points[0][1]
+    x2 = points[1][0]
+    y2 = points[1][1]
+    x3 = points[2][0]
+    y3 = points[2][1]
+
+    x12 = x1 - x2
+    x13 = x1 - x3
+
+    y12 = y1 - y2
+    y13 = y1 - y3
+
+    sx13 = x1 ** 2 - x3 ** 2
+    sy13 = y1 ** 2 - y3 ** 2
+
+    sx21 = x2 ** 2 - x1 ** 2
+    sy21 = y2 ** 2 - y1 ** 2
+
+    x0 = -(sx13 * y12 +
+           sy13 * y12 +
+           sx21 * y13 +
+           sy21 * y13) /\
+        (2 * (x12 * y13 - x13 * y12))
+
+    y0 = -(sx13 * x12 +
+           sy13 * x12 +
+           sx21 * x13 +
+           sy21 * x13) /\
+        (2 * (y12 * x13 - y13 * x12))
+
+    c = (-x1 ** 2 - y1 ** 2 +
+         2 * x0 * x1 + 2 * y0 * y1)
+
+    r = np.sqrt(x0 ** 2 + y0 ** 2 - c)
+
+    return (x0, y0), r

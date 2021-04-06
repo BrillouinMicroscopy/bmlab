@@ -1,7 +1,8 @@
 import numpy as np
 # import matplotlib.pyplot as plt
 
-from bmlab.fits import lorentz, fit_lorentz, fit_circle, fit_double_lorentz
+from bmlab.fits import lorentz, fit_lorentz, fit_circle,\
+    fit_double_lorentz, calculate_exact_circle
 
 
 def test_fit_lorentz():
@@ -94,3 +95,23 @@ def test_circle_fit():
     np.testing.assert_allclose(actual_c_3, (0, 0), rtol=0.001, atol=0.0001)
     assert(actual_r_3 > 0)
     np.testing.assert_allclose(actual_r_3, 10, rtol=0.0001, atol=0.000001)
+
+
+def test_calculate_exact_circle():
+    points = [[1, 0], [0, 1], [-1, 0]]
+    center, radius = calculate_exact_circle(points)
+
+    np.testing.assert_allclose(center, [0, 0], rtol=1e-2)
+    np.testing.assert_allclose(radius, 1, rtol=1e-2)
+
+    points = [[-1, -2], [-2, -1], [-3, -2]]
+    center, radius = calculate_exact_circle(points)
+
+    np.testing.assert_allclose(center, [-2, -2], rtol=1e-2)
+    np.testing.assert_allclose(radius, 1, rtol=1e-2)
+
+    points = [[8, -2], [-2, 8], [-12, -2]]
+    center, radius = calculate_exact_circle(points)
+
+    np.testing.assert_allclose(center, [-2, -2], rtol=1e-2)
+    np.testing.assert_allclose(radius, 10, rtol=1e-2)
