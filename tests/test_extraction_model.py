@@ -110,6 +110,5 @@ def test_get_arc_by_calib_key():
 
         assert len(arc) == len(expected_arc)
 
-        # Check that every line matches expected result
-        for i in range(len(arc)):
-            assert (abs(arc[i] - expected_arc[i]) < tolerance).all()
+        np.testing.assert_allclose(arc, expected_arc,
+                                   rtol=0.05, atol=0.000001)
