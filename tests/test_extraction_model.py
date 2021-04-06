@@ -66,7 +66,6 @@ def test_get_arc_by_calib_key():
     circle_center = (0, 0)
     circle_radii = [9, 10]
     image_shape = (20, 20)
-    tolerance = 0.0001
 
     em = ExtractionModel()
     for i, calib_key in enumerate(calib_keys):
