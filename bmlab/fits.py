@@ -1,7 +1,6 @@
 import logging
 
 import numpy as np
-from scipy import optimize
 from scipy.optimize import least_squares, minimize
 
 
@@ -80,9 +79,9 @@ def fit_circle(points):
     param_guess = [-50., -50., 500.]
     x_coords = np.array([xy[0] for xy in points])
     y_coords = np.array([xy[1] for xy in points])
-    opt_result = optimize.minimize(_circle_opt,
-                                   param_guess,
-                                   args=(x_coords, y_coords))
+    opt_result = minimize(_circle_opt,
+                          param_guess,
+                          args=(x_coords, y_coords))
 
     return (opt_result['x'][0], opt_result['x'][1]), opt_result['x'][2]
 
