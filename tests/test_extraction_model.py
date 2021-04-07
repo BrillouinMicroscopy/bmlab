@@ -62,16 +62,15 @@ def test_set_arc_width():
 
 
 def test_get_arc_by_calib_key():
-    calib_keys = ['0', '1']
-    circle_center = (0, 0)
-    circle_radii = [9, 10]
-    image_shape = (20, 20)
+    calib_keys = ['0', '1', '2']
+    circle_center = [(0, 0), (10, 0), (10, 10)]
+    circle_radii = [9, 10, 11]
 
     em = ExtractionModel()
     for i, calib_key in enumerate(calib_keys):
         radius = circle_radii[i]
 
-        circle = Circle(circle_center, radius)
+        circle = Circle(circle_center[i], radius)
 
         phis = [0, np.pi/4, np.pi/2]
         for phi in phis:
@@ -79,7 +78,7 @@ def test_get_arc_by_calib_key():
             em.add_point(calib_key, xdata, ydata)
 
         # Create angles at which to calculate the arc
-        phis = discretize_arc(circle, image_shape, num_points=2)
+        phis = [0, np.pi/2]
         em.set_extraction_angles(calib_key, phis)
 
         # Get the arc
@@ -95,7 +94,7 @@ def test_get_arc_by_calib_key():
                     [radius+1, 0.0],
                     [radius+2, 0.0]
                 ]
-            ),
+            ) + circle_center[i],
             np.array(
                 [
                     [0.0, radius-2],
@@ -104,7 +103,7 @@ def test_get_arc_by_calib_key():
                     [0.0, radius+1],
                     [0.0, radius+2]
                 ]
-            )
+            ) + circle_center[i]
         ]
 
         assert len(arc) == len(expected_arc)
