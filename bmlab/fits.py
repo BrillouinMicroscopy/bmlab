@@ -79,6 +79,10 @@ def fit_circle(points):
 
     center, radius = calculate_exact_circle(points)
 
+    # No need to fit if we only have three points
+    if len(points) <= 3:
+        return center, radius
+
     param_guess = [center[0], center[1], radius]
     x_coords = np.array([xy[0] for xy in points])
     y_coords = np.array([xy[1] for xy in points])
