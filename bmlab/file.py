@@ -114,14 +114,14 @@ class BrillouinFile(object):
             the repetition
         """
         if version.parse(self.file_version) >= version.parse("0.0.4"):
-            return Repetition(self.Brillouin_group.get(repetition_key))
+            return Repetition(self.Brillouin_group.get(repetition_key), self)
         else:
-            return Repetition(self.file)
+            return Repetition(self.file, self)
 
 
 class Repetition(object):
 
-    def __init__(self, repetition_group):
+    def __init__(self, repetition_group, file):
         """
         Creates a repetition from the corresponding group of a HDF file.
 
@@ -133,14 +133,15 @@ class Repetition(object):
         """
         self.date = _get_datetime(
             repetition_group.attrs.get('date')[0].decode('utf-8'))
-        self.payload = Payload(repetition_group.get('payload'))
+        self.payload = Payload(repetition_group.get('payload'), self)
         calibration_group = repetition_group.get('calibration')
-        self.calibration = Calibration(calibration_group)
+        self.calibration = Calibration(calibration_group, self)
+        self.file = file
 
 
 class Payload(object):
 
-    def __init__(self, payload_group):
+    def __init__(self, payload_group, repetition):
         """
         Creates a payload representation from the corresponding group of a
         HDF file.
@@ -151,6 +152,7 @@ class Payload(object):
             The payload of a repetition, basically a set of images
 
         """
+        self.repetition = repetition
         self.resolution = tuple(payload_group.attrs.get(
             'resolution-%s' % axis)[0] for axis in ['x', 'y', 'z'])
         self.data = payload_group.get('data')
@@ -195,10 +197,21 @@ class Payload(object):
         except Exception:
             return ''
 
+    def get_time(self, image_key):
+        try:
+            # Get date of the calibration
+            date = self.get_date(image_key)
+            # Get the reference date
+            ref = self.repetition.file.date
+            # return the difference in seconds
+            return (date - ref).total_seconds()
+        except Exception:
+            return None
+
 
 class Calibration(object):
 
-    def __init__(self, calibration_group):
+    def __init__(self, calibration_group, repetition):
         """
         Creates a calibration representation from the corresponding group of
         a HDF file.
@@ -208,6 +221,7 @@ class Calibration(object):
         calibration_group : HDF group
             Calibration data of a repetition from an HDF file.
         """
+        self.repetition = repetition
         self.data = calibration_group.get('data')
         """
         For H5BM files < 0.0.4
@@ -250,6 +264,17 @@ class Calibration(object):
                 self.data.get(image_key).attrs.get('date')[0].decode('utf-8'))
         except Exception:
             return ''
+
+    def get_time(self, image_key):
+        try:
+            # Get date of the calibration
+            date = self.get_date(image_key)
+            # Get the reference date
+            ref = self.repetition.file.date
+            # return the difference in seconds
+            return (date - ref).total_seconds()
+        except Exception:
+            return None
 
 
 class BadFileException(Exception):

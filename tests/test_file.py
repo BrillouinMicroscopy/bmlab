@@ -98,6 +98,12 @@ def test_file_payload_get_date():
         '2020-11-03T15:21:10.568+01:00')
 
 
+def test_file_payload_get_time():
+    bf = BrillouinFile(data_file_path('Water.h5'))
+    time = bf.get_repetition('0').payload.get_time('0')
+    assert time == 39.886
+
+
 def test_file_calibration_image_keys():
     bf = BrillouinFile(data_file_path('Water.h5'))
     rep = bf.get_repetition('0')
@@ -113,3 +119,9 @@ def test_file_calibration_get_date():
     date = bf.get_repetition('0').calibration.get_date('1')
     assert date == datetime.datetime.fromisoformat(
         '2020-11-03T15:21:07.484+01:00')
+
+
+def test_file_calibration_get_time():
+    bf = BrillouinFile(data_file_path('Water.h5'))
+    time = bf.get_repetition('0').calibration.get_time('1')
+    assert time == 36.802
