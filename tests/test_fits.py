@@ -7,43 +7,52 @@ from bmlab.fits import lorentz, fit_lorentz, fit_circle,\
 
 def test_fit_lorentz():
     # Arrange
-    w = np.linspace(10, 20, 100)
-    w_0 = 14.
-    gam = 0.2
+    x = np.linspace(0, 30, 100)
+    w0 = 15.
+    fwhm = 4
     offset = 10.
-    y_data = lorentz(w, w_0, gam, offset)
+    intensity = 10.
+    y_data = lorentz(x, w0, fwhm, intensity) + offset
 
-    # plt.plot(w, y_data)
+    # plt.plot(x, y_data)
     # plt.show()
 
-    actual_w0, actual_gam, actual_offset = fit_lorentz(w, y_data)
-    np.testing.assert_almost_equal(actual_w0, w_0, decimal=3)
-    np.testing.assert_almost_equal(actual_gam, gam, decimal=3)
+    actual_w0, actual_fwhm, actual_intensity, actual_offset =\
+        fit_lorentz(x, y_data)
+    np.testing.assert_almost_equal(actual_w0, w0, decimal=3)
+    np.testing.assert_almost_equal(actual_fwhm, fwhm, decimal=3)
+    np.testing.assert_almost_equal(actual_intensity, intensity, decimal=3)
     np.testing.assert_almost_equal(actual_offset, offset, decimal=3)
 
 
 def test_fit_double_lorentz():
     # Arrange
-    w = np.linspace(10, 20, 100)
-    w0_left = 14.
-    w0_right = 16.
-    gam = 0.5
+    x = np.linspace(0, 30, 100)
+    w0_left = 10.
+    intensity_left = 8.
+    fwhm_left = 2.
+    w0_right = 20.
+    intensity_right = 12.
+    fwhm_right = 4.
     offset = 10.
-    y_data = lorentz(w, w0_left, gam, offset)
-    y_data += lorentz(w, w0_right, gam, 0)
+    y_data = lorentz(x, w0_left, fwhm_left, intensity_left)
+    y_data += lorentz(x, w0_right, fwhm_right, intensity_right) + offset
 
     # plt.plot(w, y_data)
     # plt.show()
 
-    fit_left, fit_right = fit_double_lorentz(w, y_data)
+    fit_left, fit_right, actual_offset\
+        = fit_double_lorentz(x, y_data)
 
     np.testing.assert_almost_equal(fit_left[0], w0_left, decimal=3)
-    np.testing.assert_almost_equal(fit_left[1], gam, decimal=3)
-    np.testing.assert_almost_equal(fit_left[2], offset, decimal=3)
+    np.testing.assert_almost_equal(fit_left[1], fwhm_left, decimal=3)
+    np.testing.assert_almost_equal(fit_left[2], intensity_left, decimal=3)
 
     np.testing.assert_almost_equal(fit_right[0], w0_right, decimal=3)
-    np.testing.assert_almost_equal(fit_right[1], gam, decimal=3)
-    np.testing.assert_almost_equal(fit_right[2], offset, decimal=3)
+    np.testing.assert_almost_equal(fit_right[1], fwhm_right, decimal=3)
+    np.testing.assert_almost_equal(fit_right[2], intensity_right, decimal=3)
+
+    np.testing.assert_almost_equal(actual_offset, offset, decimal=3)
 
 
 def test_circle_fit():

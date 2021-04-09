@@ -11,52 +11,70 @@ class FitError(Exception):
     pass
 
 
-def lorentz(w, w_0, gam, offset):
-    return 1. / ((w**2 - w_0**2)**2 + gam**2 * w_0**2) + offset
+def lorentz(x, w0, fwhm, intensity):
+    return intensity * ((fwhm / 2) ** 2) / ((x - w0) ** 2 + (fwhm / 2) ** 2)
 
 
-def fit_lorentz(w, y):
-    w_0_guess = w[np.argmax(y)]
+def fit_lorentz(x, y):
+    w0_guess = x[np.argmax(y)]
     offset_guess = (y[0] + y[-1]) / 2.
-    gam_guess = (w_0_guess ** 2 * (np.max(y) - offset_guess)) ** -0.5
+    intensity_guess = np.max(y) - offset_guess
+    fwhm_guess = 2 * np.abs(
+        w0_guess - x[np.argmax(y > (offset_guess + intensity_guess / 2))])
 
-    def error(x, w, y): return np.sum((y - lorentz(w, *x)) ** 2)
-
-    opt_result = least_squares(error, x0=(
-        w_0_guess, gam_guess, offset_guess),
-        args=(w, y))
-
-    if not opt_result.success:
-        raise FitError('Lorentz fit failed.')
-
-    w_0, gam, offset = opt_result.x
-
-    return w_0, gam, offset
-
-
-def fit_double_lorentz(w, y):
-    w_0_guess = w[np.argmax(y)]
-    offset_guess = (y[0] + y[-1]) / 2.
-    gam_guess = (w_0_guess ** 2 * (np.max(y) - offset_guess)) ** -0.5
-    n = len(w)
-    w_0_guess_left = w[n // 3]
-    w_0_guess_right = w[2 * n // 3]
-
-    def error(x, w, y):
+    def error(params, xdata, ydata):
         return np.sum(
-            (y - lorentz(w, *x[0:2], 0) - lorentz(w, *x[2:4], 0) - x[4])**2
+            (ydata
+             - lorentz(xdata, *params[0:3])
+             - params[3]) ** 2
         )
 
-    opt_result = minimize(error, x0=(
-        w_0_guess_left, gam_guess,
-        w_0_guess_right, gam_guess, offset_guess),
-        args=(w, y))
+    opt_result = least_squares(
+        error,
+        x0=(w0_guess, fwhm_guess, intensity_guess, offset_guess),
+        args=(x, y)
+    )
 
     if not opt_result.success:
         raise FitError('Lorentz fit failed.')
 
-    return (*opt_result.x[0:2], opt_result.x[4]), \
-           (*opt_result.x[2:4], opt_result.x[4])
+    w0, fwhm, intensity, offset = opt_result.x
+
+    return w0, fwhm, intensity, offset
+
+
+def fit_double_lorentz(x, y):
+    # w0_guess = x[np.argmax(y)]
+    offset_guess = (y[0] + y[-1]) / 2.
+    # gam_guess = (w0_guess ** 2 * (np.max(y) - offset_guess)) ** -0.5
+    n = len(x)
+    w0_guess_left = x[n // 3]
+    w0_guess_right = x[2 * n // 3]
+    fwhm_guess = 4
+    intensity_guess = np.max(y) - offset_guess
+
+    def error(params, xdata, ydata):
+        return np.sum(
+            (ydata
+             - lorentz(xdata, *params[0:3])
+             - lorentz(xdata, *params[3:6])
+             - params[6]) ** 2
+        )
+
+    opt_result = least_squares(
+        error,
+        x0=(w0_guess_left, fwhm_guess, intensity_guess,
+            w0_guess_right, fwhm_guess, intensity_guess,
+            offset_guess
+            ),
+        args=(x, y)
+    )
+
+    if not opt_result.success:
+        raise FitError('Lorentz fit failed.')
+
+    return tuple(opt_result.x[0:3]),\
+        tuple(opt_result.x[3:6]), opt_result.x[6]
 
 
 def fit_circle(points):
@@ -122,12 +140,11 @@ def _circle_opt(c, x_coord, y_coord):
 
 
 def fit_spectral_region(region, xdata, ydata):
-    mask = (region[0] < xdata) & (xdata < region[1])
-    w0, gam, offset = fit_lorentz(xdata[mask], ydata[mask])
+    w0, gam, offset = fit_lorentz(xdata[range(*region)], ydata[range(*region)])
     logger.debug('Lorentz fit: w0 = %f, gam = %f, offset = %f' % (
         w0, gam, offset
     ))
-    return gam, offset, w0
+    return w0, gam, offset
 
 
 def calculate_exact_circle(points):
