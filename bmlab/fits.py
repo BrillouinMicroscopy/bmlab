@@ -16,18 +16,16 @@ def lorentz(x, w0, fwhm, intensity):
 
 
 def fit_lorentz(x, y):
-    w0_guess = x[np.argmax(y)]
+    w0_guess = float(x[np.argmax(y)])
     offset_guess = (y[0] + y[-1]) / 2.
     intensity_guess = np.max(y) - offset_guess
-    fwhm_guess = 2 * np.abs(
-        w0_guess - x[np.argmax(y > (offset_guess + intensity_guess / 2))])
+    fwhm_guess = float(2 * np.abs(
+        w0_guess - x[np.argmax(y > (offset_guess + intensity_guess / 2))]))
 
     def error(params, xdata, ydata):
-        return np.sum(
-            (ydata
-             - lorentz(xdata, *params[0:3])
-             - params[3]) ** 2
-        )
+        return (ydata
+                - lorentz(xdata, *params[0:3])
+                - params[3]) ** 2
 
     opt_result = least_squares(
         error,
@@ -54,12 +52,10 @@ def fit_double_lorentz(x, y):
     intensity_guess = np.max(y) - offset_guess
 
     def error(params, xdata, ydata):
-        return np.sum(
-            (ydata
-             - lorentz(xdata, *params[0:3])
-             - lorentz(xdata, *params[3:6])
-             - params[6]) ** 2
-        )
+        return (ydata
+                - lorentz(xdata, *params[0:3])
+                - lorentz(xdata, *params[3:6])
+                - params[6]) ** 2
 
     opt_result = least_squares(
         error,
