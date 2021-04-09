@@ -158,5 +158,5 @@ def discretize_arc(circle, img_shape, num_points=200):
     phis_edges = [circle.angle(p) for p in cut_edges]
     phi_0 = min(phis_edges)
     phi_1 = max(phis_edges)
-    phis = np.linspace(phi_0, phi_1, num_points)
+    phis = np.linspace(phi_1, phi_0, num_points)
     return phis
