@@ -13,12 +13,16 @@ class CalibrationModel(object):
         if calib_key not in self.brillouin_regions:
             self.brillouin_regions[calib_key] = []
 
+        region = tuple(round(x) for x in region)
+
         self.regions_merge_add_region(
             self.brillouin_regions[calib_key], region)
 
     def set_brillouin_region(self, calib_key, index, region):
         if calib_key not in self.brillouin_regions:
             self.brillouin_regions[calib_key] = []
+
+        region = tuple(round(x) for x in region)
 
         self.brillouin_regions[calib_key][index] = region
 
@@ -50,12 +54,16 @@ class CalibrationModel(object):
         if calib_key not in self.rayleigh_regions:
             self.rayleigh_regions[calib_key] = []
 
+        region = tuple(round(x) for x in region)
+
         self.regions_merge_add_region(
             self.rayleigh_regions[calib_key], region)
 
     def set_rayleigh_region(self, calib_key, index, region):
         if calib_key not in self.rayleigh_regions:
             self.rayleigh_regions[calib_key] = []
+
+        region = tuple(round(x) for x in region)
 
         self.rayleigh_regions[calib_key][index] = region
 
