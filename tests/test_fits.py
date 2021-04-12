@@ -6,6 +6,8 @@ import numpy as np
 from bmlab.fits import lorentz, fit_lorentz, fit_circle,\
     fit_double_lorentz, calculate_exact_circle
 
+import pytest
+
 
 def test_fit_lorentz():
     # Arrange
@@ -27,7 +29,7 @@ def test_fit_lorentz():
     np.testing.assert_almost_equal(actual_offset, offset, decimal=3)
 
 
-def _test_fit_spectral_range():
+def test_fit_lorentz_real_image_data():
     """ The data for this test case has been extracted manually from the running
         BMicro application.
     """
@@ -38,7 +40,14 @@ def _test_fit_spectral_range():
     xdata = np.load(data_dir / 'rayleigh_reg0_xdata.npy')
     ydata = np.load(data_dir / 'rayleigh_reg0_ydata.npy')
 
-    fit_lorentz(xdata[range(*region)], ydata[range(*region)])
+    w0, fwhm, intensity, offset = fit_lorentz(xdata[range(*region)],
+                                              ydata[range(*region)])
+
+    assert w0 == pytest.approx(115, 0.2)
+    assert fwhm == pytest.approx(6, 0.5)
+    assert intensity == pytest.approx(1186, 1)
+    assert offset == pytest.approx(47, 1)
+    print(w0, fwhm, intensity, offset)
 
     # import matplotlib.pyplot as plt
     # plt.plot(xdata[range(*region)], ydata[range(*region)])
