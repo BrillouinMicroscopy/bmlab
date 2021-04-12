@@ -47,7 +47,6 @@ def test_fit_lorentz_real_image_data():
     assert fwhm == pytest.approx(6, 0.5)
     assert intensity == pytest.approx(1186, 1)
     assert offset == pytest.approx(47, 1)
-    print(w0, fwhm, intensity, offset)
 
     # import matplotlib.pyplot as plt
     # plt.plot(xdata[range(*region)], ydata[range(*region)])
