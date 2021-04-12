@@ -1,3 +1,5 @@
+import pathlib
+
 import numpy as np
 # import matplotlib.pyplot as plt
 
@@ -23,6 +25,24 @@ def test_fit_lorentz():
     np.testing.assert_almost_equal(actual_fwhm, fwhm, decimal=3)
     np.testing.assert_almost_equal(actual_intensity, intensity, decimal=3)
     np.testing.assert_almost_equal(actual_offset, offset, decimal=3)
+
+
+def _test_fit_spectral_range():
+    """ The data for this test case has been extracted manually from the running
+        BMicro application.
+    """
+
+    data_dir = pathlib.Path(__file__).parent / 'data'
+
+    region = np.load(data_dir / 'rayleigh_reg0_region.npy')
+    xdata = np.load(data_dir / 'rayleigh_reg0_xdata.npy')
+    ydata = np.load(data_dir / 'rayleigh_reg0_ydata.npy')
+
+    fit_lorentz(xdata[range(*region)], ydata[range(*region)])
+
+    # import matplotlib.pyplot as plt
+    # plt.plot(xdata[range(*region)], ydata[range(*region)])
+    # plt.show()
 
 
 def test_fit_double_lorentz():
