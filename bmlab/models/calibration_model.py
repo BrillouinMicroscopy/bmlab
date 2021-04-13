@@ -39,7 +39,8 @@ class CalibrationModel(object):
     def clear_brillouin_regions(self, calib_key):
         self.brillouin_regions[calib_key] = []
 
-    def add_brillouin_fit(self, calib_key, region, frame_num, w0s, fwhms, intensities, offset):
+    def add_brillouin_fit(self, calib_key, region, frame_num,
+                          w0s, fwhms, intensities, offset):
         fit = BrillouinFit(calib_key, region, frame_num,
                            w0s, fwhms, intensities, offset)
         self.brillouin_fits.add_fit(fit)
@@ -76,7 +77,8 @@ class CalibrationModel(object):
     def clear_rayleigh_regions(self, calib_key):
         self.rayleigh_regions[calib_key] = []
 
-    def add_rayleigh_fit(self, calib_key, region, frame_num, w0, fwhm, intensity, offset):
+    def add_rayleigh_fit(self, calib_key, region, frame_num,
+                         w0, fwhm, intensity, offset):
         fit = RayleighFit(calib_key, region, frame_num,
                           w0, fwhm, intensity, offset)
         self.rayleigh_fits.add_fit(fit)
@@ -130,7 +132,8 @@ class FitSet(object):
 class RayleighFitSet(FitSet):
 
     def average_fits(self, calib_key, region):
-        w0s = [fit.w0 for (calib_key_, region_, frame_num_), fit in self.fits.items()
+        w0s = [fit.w0
+               for (calib_key_, region_, frame_num_), fit in self.fits.items()
                if calib_key == calib_key_ and region == region_]
         logger.debug('w0s = ', w0s)
         if w0s:
@@ -140,7 +143,8 @@ class RayleighFitSet(FitSet):
 
 class BrillouinFitSet(FitSet):
     def average_fits(self, calib_key, region):
-        w0s = [fit.w0s for (calib_key_, region_, frame_num_), fit in self.fits.items()
+        w0s = [fit.w0s
+               for (calib_key_, region_, frame_num_), fit in self.fits.items()
                if calib_key == calib_key_ and region == region_]
         logger.debug('w0s = ', w0s)
         if w0s:
@@ -151,7 +155,8 @@ class BrillouinFitSet(FitSet):
 
 class RayleighFit(object):
 
-    def __init__(self, calib_key, region, frame_num, w0, fwhm, intensity, offset):
+    def __init__(self, calib_key, region, frame_num,
+                 w0, fwhm, intensity, offset):
         self.calib_key = calib_key
         self.region = region
         self.frame_num = frame_num
@@ -163,7 +168,8 @@ class RayleighFit(object):
 
 class BrillouinFit(object):
 
-    def __init__(self, calib_key, region, frame_num, w0s, fwhms, intensities, offset):
+    def __init__(self, calib_key, region, frame_num,
+                 w0s, fwhms, intensities, offset):
         self.calib_key = calib_key
         self.region = region
         self.frame_num = frame_num

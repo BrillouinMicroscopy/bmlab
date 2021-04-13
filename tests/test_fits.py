@@ -48,11 +48,6 @@ def test_fit_lorentz_real_image_data():
     assert intensity == pytest.approx(1186, 1)
     assert offset == pytest.approx(47, 1)
 
-    # import matplotlib.pyplot as plt
-    # plt.plot(xdata[range(*region)], ydata[range(*region)])
-    # plt.plot(xdata[range(*region)], lorentz(xdata[range(*region)], w0, fwhm, intensity))
-    # plt.show()
-
 
 def test_fit_double_lorentz():
     # Arrange

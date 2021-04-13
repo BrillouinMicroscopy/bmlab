@@ -140,9 +140,6 @@ def _circle_opt(c, x_coord, y_coord):
 def fit_rayleigh_region(region, xdata, ydata):
     w0, fwhm, intensity, offset = fit_lorentz(
         xdata[range(*region)], ydata[range(*region)])
-    logger.debug('Lorentz fit: w0 = %f, fwhm = %f, intensity = %f, offset = %f' % (
-        w0, fwhm, intensity, offset
-    ))
     return w0, fwhm, intensity, offset
 
 
