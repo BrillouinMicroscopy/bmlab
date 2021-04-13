@@ -158,7 +158,7 @@ class ExtractionModel(object):
         values = self.extracted_values.get(calib_key)
         if values:
             return values
-        return None, None
+        return None
 
     def set_extraction_angles(self, calib_key, phis):
         self.extraction_angles[calib_key] = phis
@@ -208,3 +208,7 @@ class ExtractionModel(object):
 
     def set_arc_width(self, width):
         self.arc_width = width
+
+
+class ExtractionException(Exception):
+    pass

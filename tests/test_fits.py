@@ -50,6 +50,7 @@ def test_fit_lorentz_real_image_data():
 
     # import matplotlib.pyplot as plt
     # plt.plot(xdata[range(*region)], ydata[range(*region)])
+    # plt.plot(xdata[range(*region)], lorentz(xdata[range(*region)], w0, fwhm, intensity))
     # plt.show()
 
 
@@ -69,16 +70,16 @@ def test_fit_double_lorentz():
     # plt.plot(w, y_data)
     # plt.show()
 
-    fit_left, fit_right, actual_offset\
+    w0s, fwhms, intens, actual_offset\
         = fit_double_lorentz(x, y_data)
 
-    np.testing.assert_almost_equal(fit_left[0], w0_left, decimal=3)
-    np.testing.assert_almost_equal(fit_left[1], fwhm_left, decimal=3)
-    np.testing.assert_almost_equal(fit_left[2], intensity_left, decimal=3)
+    np.testing.assert_almost_equal(w0s[0], w0_left, decimal=3)
+    np.testing.assert_almost_equal(fwhms[0], fwhm_left, decimal=3)
+    np.testing.assert_almost_equal(intens[0], intensity_left, decimal=3)
 
-    np.testing.assert_almost_equal(fit_right[0], w0_right, decimal=3)
-    np.testing.assert_almost_equal(fit_right[1], fwhm_right, decimal=3)
-    np.testing.assert_almost_equal(fit_right[2], intensity_right, decimal=3)
+    np.testing.assert_almost_equal(w0s[1], w0_right, decimal=3)
+    np.testing.assert_almost_equal(fwhms[1], fwhm_right, decimal=3)
+    np.testing.assert_almost_equal(intens[1], intensity_right, decimal=3)
 
     np.testing.assert_almost_equal(actual_offset, offset, decimal=3)
 

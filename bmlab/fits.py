@@ -69,8 +69,10 @@ def fit_double_lorentz(x, y):
     if not opt_result.success:
         raise FitError('Lorentz fit failed.')
 
-    return tuple(opt_result.x[0:3]),\
-        tuple(opt_result.x[3:6]), opt_result.x[6]
+    res = opt_result.x
+    w0s, fwhms, intens = (res[0], res[3]), (res[1], res[4]), (res[2], res[5])
+    offset = res[6]
+    return w0s, fwhms, intens, offset
 
 
 def fit_circle(points):
@@ -135,12 +137,19 @@ def _circle_opt(c, x_coord, y_coord):
          - c[2] ** 2) ** 2)
 
 
-def fit_spectral_region(region, xdata, ydata):
-    w0, gam, offset = fit_lorentz(xdata[range(*region)], ydata[range(*region)])
-    logger.debug('Lorentz fit: w0 = %f, gam = %f, offset = %f' % (
-        w0, gam, offset
+def fit_rayleigh_region(region, xdata, ydata):
+    w0, fwhm, intensity, offset = fit_lorentz(
+        xdata[range(*region)], ydata[range(*region)])
+    logger.debug('Lorentz fit: w0 = %f, fwhm = %f, intensity = %f, offset = %f' % (
+        w0, fwhm, intensity, offset
     ))
-    return w0, gam, offset
+    return w0, fwhm, intensity, offset
+
+
+def fit_brillouin_region(region, xdata, ydata):
+    w0s, fwhms, intensities, offset = fit_double_lorentz(
+        xdata[range(*region)], ydata[range(*region)])
+    return w0s, fwhms, intensities, offset
 
 
 def calculate_exact_circle(points):

@@ -1,4 +1,8 @@
+import logging
+
 import numpy as np
+
+logger = logging.getLogger(__name__)
 
 
 class CalibrationModel(object):
@@ -6,8 +10,8 @@ class CalibrationModel(object):
     def __init__(self):
         self.brillouin_regions = {}
         self.rayleigh_regions = {}
-        self.brillouin_fits = {}
-        self.rayleigh_fits = {}
+        self.brillouin_fits = BrillouinFitSet()
+        self.rayleigh_fits = RayleighFitSet()
 
     def add_brillouin_region(self, calib_key, region):
         if calib_key not in self.brillouin_regions:
@@ -35,20 +39,16 @@ class CalibrationModel(object):
     def clear_brillouin_regions(self, calib_key):
         self.brillouin_regions[calib_key] = []
 
-    def add_brillouin_fit(self, calib_key, w0, gam, offset):
-        if calib_key not in self.brillouin_fits:
-            self.brillouin_fits[calib_key] = []
-        self.brillouin_fits[calib_key].append({
-            'w0': w0, 'gam': gam,
-            'offset': offset})
+    def add_brillouin_fit(self, calib_key, region, frame_num, w0s, fwhms, intensities, offset):
+        fit = BrillouinFit(calib_key, region, frame_num,
+                           w0s, fwhms, intensities, offset)
+        self.brillouin_fits.add_fit(fit)
 
-    def get_brillouin_fits(self, calib_key):
-        if calib_key in self.brillouin_fits:
-            return self.brillouin_fits[calib_key]
-        return {}
+    def get_brillouin_fit(self, calib_key, region, frame_num):
+        return self.brillouin_fits.get_fit(calib_key, region, frame_num)
 
     def clear_brillouin_fits(self, calib_key):
-        self.brillouin_fits[calib_key] = []
+        self.brillouin_fits.clear(calib_key)
 
     def add_rayleigh_region(self, calib_key, region):
         if calib_key not in self.rayleigh_regions:
@@ -76,20 +76,16 @@ class CalibrationModel(object):
     def clear_rayleigh_regions(self, calib_key):
         self.rayleigh_regions[calib_key] = []
 
-    def add_rayleigh_fit(self, calib_key, w0, gam, offset):
-        if calib_key not in self.rayleigh_fits:
-            self.rayleigh_fits[calib_key] = []
-        self.rayleigh_fits[calib_key].append({
-            'w0': w0, 'gam': gam,
-            'offset': offset})
+    def add_rayleigh_fit(self, calib_key, region, frame_num, w0, fwhm, intensity, offset):
+        fit = RayleighFit(calib_key, region, frame_num,
+                          w0, fwhm, intensity, offset)
+        self.rayleigh_fits.add_fit(fit)
 
-    def get_rayleigh_fits(self, calib_key):
-        if calib_key in self.rayleigh_fits:
-            return self.rayleigh_fits[calib_key]
-        return {}
+    def get_rayleigh_fit(self, calib_key, region, frame_num):
+        return self.rayleigh_fits.get_fit(calib_key, region, frame_num)
 
     def clear_rayleigh_fits(self, calib_key):
-        self.rayleigh_fits[calib_key] = []
+        self.rayleigh_fits.clear(calib_key)
 
     @staticmethod
     def regions_merge_add_region(regions, region):
@@ -107,3 +103,71 @@ class CalibrationModel(object):
 
         if not regions_fused:
             regions.append(region)
+
+
+class FitSet(object):
+
+    def __init__(self):
+        self.fits = {}
+
+    def add_fit(self, fit):
+        key = (fit.calib_key, fit.region, fit.frame_num)
+        self.fits[key] = fit
+
+    def get_fit(self, calib_key, region, frame_num=None):
+        key = (calib_key, region, frame_num)
+        return self.fits.get(key)
+
+    def clear(self, calib_key):
+        keys = []
+        for key, value in self.fits.items():
+            if calib_key == key[0]:
+                keys.append(key)
+        for key in keys:
+            del self.fits[key]
+
+
+class RayleighFitSet(FitSet):
+
+    def average_fits(self, calib_key, region):
+        w0s = [fit.w0 for (calib_key_, region_, frame_num_), fit in self.fits.items()
+               if calib_key == calib_key_ and region == region_]
+        logger.debug('w0s = ', w0s)
+        if w0s:
+            return np.mean(w0s)
+        return None
+
+
+class BrillouinFitSet(FitSet):
+    def average_fits(self, calib_key, region):
+        w0s = [fit.w0s for (calib_key_, region_, frame_num_), fit in self.fits.items()
+               if calib_key == calib_key_ and region == region_]
+        logger.debug('w0s = ', w0s)
+        if w0s:
+            w0s = np.array(w0s)
+            return np.mean(w0s, axis=0)
+        return None
+
+
+class RayleighFit(object):
+
+    def __init__(self, calib_key, region, frame_num, w0, fwhm, intensity, offset):
+        self.calib_key = calib_key
+        self.region = region
+        self.frame_num = frame_num
+        self.w0 = w0
+        self.fwhm = fwhm
+        self.intensity = intensity
+        self.offset = offset
+
+
+class BrillouinFit(object):
+
+    def __init__(self, calib_key, region, frame_num, w0s, fwhms, intensities, offset):
+        self.calib_key = calib_key
+        self.region = region
+        self.frame_num = frame_num
+        self.w0s = w0s
+        self.fwhms = fwhms
+        self.intensities = intensities
+        self.offset = offset
