@@ -7,7 +7,7 @@ from scipy import interpolate
 class ExtractionModel(object):
 
     def __init__(self):
-        self.arc_width = 3      # [pix] the width of the extraction arc
+        self.arc_width = 2      # [pix] the width of the extraction arc
         self.points = {}
         self.calib_times = {}
         self.circle_fits = {}
