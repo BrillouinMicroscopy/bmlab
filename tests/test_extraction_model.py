@@ -110,11 +110,11 @@ def test_set_arc_width():
     em = ExtractionModel()
 
     # Test default width
-    assert em.arc_width == 3
-
-    em.set_arc_width(2)
-
     assert em.arc_width == 2
+
+    em.set_arc_width(3)
+
+    assert em.arc_width == 3
 
 
 def test_get_arc_by_x():
