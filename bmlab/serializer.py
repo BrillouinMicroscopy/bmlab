@@ -17,6 +17,10 @@ class ModelSerializerMixin(object):
     deserialization to/from HDF files.
     """
 
+    def __init__(self):
+        """ Do not allow to instantiate objects of this class. """
+        raise NotImplementedError('No instantiation possible, only mixin.')
+
     def serialize(self, parent, as_name=None):
         """
         Store the object in an HDF group.
@@ -75,14 +79,14 @@ class ModelSerializerMixin(object):
             class_name = cls.__name__
 
         # Create object without calling the constructor:
-        raw_object = init_raw_object(class_name)
+        raw_object = _init_raw_object(class_name)
 
         # Each child item (group or dataset) of the given group
         # is either another class, a dict or simple data:
         for key, value in group.items():
             prop_full_class_name = value.attrs.get('type')
             if prop_full_class_name:
-                prop_class = class_from_full_class_name(prop_full_class_name)
+                prop_class = _class_from_full_class_name(prop_full_class_name)
                 prop = prop_class.deserialize(value)
                 if isinstance(raw_object, dict):
                     raw_object[key] = prop
@@ -90,9 +94,9 @@ class ModelSerializerMixin(object):
                     raw_object.__dict__[key] = prop
             else:
                 if isinstance(raw_object, dict):
-                    raw_object[key] = unwrap(value)
+                    raw_object[key] = _unwrap(value)
                 else:
-                    raw_object.__dict__[key] = unwrap(value)
+                    raw_object.__dict__[key] = _unwrap(value)
 
         return raw_object
 
@@ -108,27 +112,43 @@ class SerializableDict(dict, ModelSerializerMixin):
             self[key] = value
 
 
-def init_raw_object(full_class_name):
-    class_ = class_from_full_class_name(full_class_name)
+def _init_raw_object(full_class_name):
+    """
+    Create an object without calling its constructor.
+
+    Parameters
+    ----------
+    full_class_name: str
+        fully qualified name of the class (package.classname)
+
+    Returns
+    -------
+    Instance of the requested class with no properties
+    initialized.
+    """
+    class_ = _class_from_full_class_name(full_class_name)
     return class_.__new__(class_)
 
 
-def class_from_full_class_name(full_class_name):
+def _class_from_full_class_name(full_class_name):
+
     pattern = re.compile('(.+)[.]([^.]+)')
     match = pattern.match(full_class_name)
     module_name = match[1]
     class_name = match[2]
     module = importlib.import_module(module_name)
-    return class_in_module(module, class_name)
+    return _class_in_module(module, class_name)
 
 
-def class_in_module(module, class_name):
+def _class_in_module(module, class_name):
+
     for name, class_ in inspect.getmembers(module, inspect.isclass):
         if name == class_name:
             return class_
 
 
-def unwrap(value):
+def _unwrap(value):
+
     if hasattr(value, '__len__'):
         return value[()]
     else:
