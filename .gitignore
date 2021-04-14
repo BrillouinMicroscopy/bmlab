@@ -132,3 +132,4 @@ _version_save.py
 .idea
 
 .DS_Store
+tmp*.h5

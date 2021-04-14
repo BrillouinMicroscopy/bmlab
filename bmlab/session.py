@@ -1,8 +1,9 @@
 import pickle
 import os
 
-from bmlab.file import BrillouinFile
+import h5py
 
+from bmlab.file import BrillouinFile
 from bmlab.models.extraction_model import ExtractionModel
 from bmlab.models.orientation import Orientation
 from bmlab.models.calibration_model import CalibrationModel
@@ -128,3 +129,11 @@ class Session(object):
             self.orientation = pickle.load(fh)
             self.extraction_models = pickle.load(fh)
             self.setup = pickle.load(fh)
+
+    def save_to_hdf(self, file_name):
+        with h5py.File(file_name, 'w') as f:
+            self.orientation.serialize(self.orientation, f, 'orientation')
+
+    def load_from_hdf(self, file_name):
+        with h5py.File(file_name, 'r') as f:
+            self.orientation = self.orientation.deserialize(f['orientation'])
