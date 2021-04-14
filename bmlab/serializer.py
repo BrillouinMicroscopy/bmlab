@@ -44,18 +44,18 @@ class ModelSerializerMixin(object):
                                                  self.__class__.__name__)
 
         if isinstance(self, SerializableDict):
-            vars = self
+            properties = self
         else:
-            vars = dict(self.__dict__)
+            properties = dict(self.__dict__)
 
-        for var_name, var_value in vars.items():
-            if isinstance(var_value, ModelSerializerMixin):
-                var_value.serialize(self_as_group, var_name)
-            elif isinstance(var_value, dict):
-                wrapped = SerializableDict(var_value)
-                wrapped.serialize(self_as_group, var_name)
+        for name, value in properties.items():
+            if isinstance(value, ModelSerializerMixin):
+                value.serialize(self_as_group, name)
+            elif isinstance(value, dict):
+                wrapped = SerializableDict(value)
+                wrapped.serialize(self_as_group, name)
             else:
-                self_as_group.create_dataset(var_name, data=var_value)
+                self_as_group.create_dataset(name, data=value)
 
     @classmethod
     def deserialize(cls, group):
