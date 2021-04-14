@@ -131,9 +131,11 @@ class Session(object):
             self.setup = pickle.load(fh)
 
     def save_to_hdf(self, file_name):
+        # TODO: Finish implementation
         with h5py.File(file_name, 'w') as f:
             self.orientation.serialize(f, 'orientation')
 
     def load_from_hdf(self, file_name):
+        # TODO: Finish implementation
         with h5py.File(file_name, 'r') as f:
             self.orientation = self.orientation.deserialize(f['orientation'])
