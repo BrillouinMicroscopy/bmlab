@@ -1,7 +1,7 @@
 import logging
 
 import numpy as np
-from scipy.optimize import least_squares, minimize
+from scipy.optimize import least_squares, minimize, fmin
 
 
 logger = logging.getLogger(__name__)
@@ -191,3 +191,71 @@ def calculate_exact_circle(points):
     r = np.sqrt(x0 ** 2 + y0 ** 2 - c)
 
     return (x0, y0), r
+
+
+def fit_vipa(peaks, setup):
+    """
+
+    :param peaks:
+    :param setup:
+    :return:
+    """
+    # Calculate the start parameters for the VIPA fit
+    r0 = peaks[0] * setup.pixel_size
+
+    v1 = (setup.VIPA_PARAMS[0] +
+          setup.VIPA_PARAMS[1] * r0 +
+          setup.VIPA_PARAMS[2] * r0 ** 2) /\
+         ((setup.vipa.m + setup.vipa.order) * np.pi)
+    v2 = (setup.VIPA_PARAMS[1] +
+          setup.VIPA_PARAMS[2] * 2 * r0) /\
+         ((setup.vipa.m + setup.vipa.order) * np.pi) *\
+        setup.pixel_size
+    v3 = setup.VIPA_PARAMS[2] /\
+        ((setup.vipa.m + setup.vipa.order) * np.pi) *\
+        setup.pixel_size ** 2
+    vipa_start = np.array([v1, v2, v3, setup.vipa.FSR])
+
+    def error(vipa_params, peaks1, shifts1):
+        fsr = vipa_params[3]
+        frequencies = VIPA(peaks1, vipa_params) - setup.f0
+
+        # Should match the expected frequencies
+        d1 = frequencies - shifts1 - fsr * setup.calibration.orders
+
+        # Should give equal values for Stokes and Anti-Stokes
+        d2 = np.array([
+            (frequencies[1] - frequencies[0]) -
+            (frequencies[-1] - frequencies[-2]),
+            (frequencies[2] - frequencies[0]) -
+            (frequencies[-1] - frequencies[-3])
+        ])
+
+        # Should match the Brillouin shifts
+        d3 = np.array([
+            shifts1[1] - frequencies[1] + frequencies[0],
+            shifts1[2] - frequencies[2] + frequencies[0],
+            shifts1[2] - frequencies[5] + frequencies[3],
+            shifts1[1] - frequencies[5] + frequencies[4]])
+
+        return np.sum(d1 ** 2) + np.sum(d2 ** 2) + np.sum(d3 ** 2)
+
+    opt_result = fmin(error,
+                      vipa_start,
+                      args=(peaks, setup.calibration.shifts))
+
+    return opt_result[0], opt_result[1], opt_result[2], opt_result[3]
+
+
+def VIPA(x, vipa_params):
+    """
+    Returns the absolute frequency in Hz of a given point
+    on the spectrum in pixels.
+    Subtract the absolute laser frequency from this value
+    to get the relative shift.
+
+    :param x:   [pix]   The point on the spectrum
+    :param vipa_params: Fit parameters of the VIPA fit
+    :return:    [Hz]   The frequency of the given point on the spectrum
+    """
+    return 1. / (vipa_params[0] + vipa_params[1] * x + vipa_params[2] * x ** 2)

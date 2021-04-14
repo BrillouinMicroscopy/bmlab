@@ -4,7 +4,9 @@ import numpy as np
 # import matplotlib.pyplot as plt
 
 from bmlab.fits import lorentz, fit_lorentz, fit_circle,\
-    fit_double_lorentz, calculate_exact_circle
+    fit_double_lorentz, calculate_exact_circle, fit_vipa, VIPA
+
+from bmlab.models.setup import AVAILABLE_SETUPS
 
 import pytest
 
@@ -148,3 +150,30 @@ def test_calculate_exact_circle():
 
     np.testing.assert_allclose(center, [-2, -2], rtol=1e-2)
     np.testing.assert_allclose(radius, 10, rtol=1e-2)
+
+
+def test_fit_vipa():
+    setup = AVAILABLE_SETUPS[0]
+    peaks = np.array([
+        84.2957567375179,
+        147.651886970066,
+        166.035559534916,
+        229.678232333124,
+        244.118149639528,
+        287.316083765756
+    ])
+
+    vipa_params = fit_vipa(peaks, setup)
+
+    # Values extracted from the previous Matlab version
+    vipa_params_expected =\
+        np.array([
+            2.602626743299098e-15, -2.565391389072813e-22,
+            -6.473779072623057e-25, 14.89190812511701e+9
+        ])
+
+    actual = VIPA(peaks, vipa_params) - setup.f0
+    expected = VIPA(peaks, vipa_params_expected) - setup.f0
+
+    # Values are in GHz, differences below 5 MHz should be good
+    np.testing.assert_allclose(actual, expected, atol=5e3)
