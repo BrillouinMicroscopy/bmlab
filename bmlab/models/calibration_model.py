@@ -115,11 +115,11 @@ class FitSet(ModelSerializerMixin):
         self.fits = {}
 
     def add_fit(self, fit):
-        key = (fit.calib_key, fit.region, fit.frame_num)
+        key = (fit.calib_key, fit.region_key, fit.frame_num)
         self.fits[key] = fit
 
-    def get_fit(self, calib_key, region, frame_num=None):
-        key = (calib_key, region, frame_num)
+    def get_fit(self, calib_key, region_key, frame_num=None):
+        key = (calib_key, region_key, frame_num)
         return self.fits.get(key)
 
     def clear(self, calib_key):
@@ -133,10 +133,11 @@ class FitSet(ModelSerializerMixin):
 
 class RayleighFitSet(FitSet, ModelSerializerMixin):
 
-    def average_fits(self, calib_key, region):
+    def average_fits(self, calib_key, region_key):
         w0s = [fit.w0
-               for (calib_key_, region_, frame_num_), fit in self.fits.items()
-               if calib_key == calib_key_ and region == region_]
+               for (calib_key_, region_key_, frame_num_), fit
+               in self.fits.items()
+               if calib_key == calib_key_ and region_key == region_key_]
         logger.debug('w0s = ', w0s)
         if w0s:
             return np.mean(w0s)
@@ -145,10 +146,11 @@ class RayleighFitSet(FitSet, ModelSerializerMixin):
 
 class BrillouinFitSet(FitSet, ModelSerializerMixin):
 
-    def average_fits(self, calib_key, region):
+    def average_fits(self, calib_key, region_key):
         w0s = [fit.w0s
-               for (calib_key_, region_, frame_num_), fit in self.fits.items()
-               if calib_key == calib_key_ and region == region_]
+               for (calib_key_, region_key_, frame_num_), fit
+               in self.fits.items()
+               if calib_key == calib_key_ and region_key == region_key_]
         logger.debug('w0s = ', w0s)
         if w0s:
             w0s = np.array(w0s)
@@ -158,10 +160,10 @@ class BrillouinFitSet(FitSet, ModelSerializerMixin):
 
 class RayleighFit(ModelSerializerMixin):
 
-    def __init__(self, calib_key, region, frame_num,
+    def __init__(self, calib_key, region_key, frame_num,
                  w0, fwhm, intensity, offset):
         self.calib_key = calib_key
-        self.region = region
+        self.region_key = region_key
         self.frame_num = frame_num
         self.w0 = w0
         self.fwhm = fwhm
@@ -171,10 +173,10 @@ class RayleighFit(ModelSerializerMixin):
 
 class BrillouinFit(ModelSerializerMixin):
 
-    def __init__(self, calib_key, region, frame_num,
+    def __init__(self, calib_key, region_key, frame_num,
                  w0s, fwhms, intensities, offset):
         self.calib_key = calib_key
-        self.region = region
+        self.region_key = region_key
         self.frame_num = frame_num
         self.w0s = w0s
         self.fwhms = fwhms
