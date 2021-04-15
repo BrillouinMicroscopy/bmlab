@@ -15,6 +15,9 @@ class CalibrationModel(ModelSerializerMixin):
         self.brillouin_fits = BrillouinFitSet()
         self.rayleigh_fits = RayleighFitSet()
 
+        self.vipa_params = {}
+        self.frequencies = {}
+
     def add_brillouin_region(self, calib_key, region):
         if calib_key not in self.brillouin_regions:
             self.brillouin_regions[calib_key] = []
@@ -111,6 +114,16 @@ class CalibrationModel(ModelSerializerMixin):
                     peaks.append(w0)
 
         return np.sort(np.array(peaks))
+
+    def set_vipa_params(self, calib_key, vipa_params):
+        self.vipa_params[calib_key] = vipa_params
+
+    def set_frequencies(self, calib_key, frequencies):
+        self.frequencies[calib_key] = frequencies
+
+    def get_frequencies_by_calib_key(self, calib_key):
+        if calib_key in self.frequencies:
+            return self.frequencies[calib_key]
 
     @staticmethod
     def regions_merge_add_region(regions, region):
