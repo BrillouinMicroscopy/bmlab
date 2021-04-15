@@ -91,6 +91,27 @@ class CalibrationModel(ModelSerializerMixin):
     def clear_rayleigh_fits(self, calib_key):
         self.rayleigh_fits.clear(calib_key)
 
+    def get_sorted_peaks(self, calib_key, frame_num):
+        """
+        Returns the sorted centers of all fitted peaks
+        of a given calibration and frame.
+        :param calib_key: The calibration key
+        :param frame_num: The frame number
+        :return: sorted np.array of all peaks
+        """
+        peaks = []
+        # Search all fits for given calib_key and frame_num
+        for key, fit in self.rayleigh_fits.fits.items():
+            if (key[0] == calib_key) & (key[2] == frame_num):
+                peaks.append(fit.w0)
+
+        for key, fit in self.brillouin_fits.fits.items():
+            if (key[0] == calib_key) & (key[2] == frame_num):
+                for w0 in fit.w0s:
+                    peaks.append(w0)
+
+        return np.sort(np.array(peaks))
+
     @staticmethod
     def regions_merge_add_region(regions, region):
         regions_fused = False
