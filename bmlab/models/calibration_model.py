@@ -135,7 +135,8 @@ class RayleighFitSet(FitSet, ModelSerializerMixin):
 
     def average_fits(self, calib_key, region_key):
         w0s = [fit.w0
-               for (calib_key_, region_key_, frame_num_), fit in self.fits.items()
+               for (calib_key_, region_key_, frame_num_), fit
+               in self.fits.items()
                if calib_key == calib_key_ and region_key == region_key_]
         logger.debug('w0s = ', w0s)
         if w0s:
@@ -147,7 +148,8 @@ class BrillouinFitSet(FitSet, ModelSerializerMixin):
 
     def average_fits(self, calib_key, region_key):
         w0s = [fit.w0s
-               for (calib_key_, region_key_, frame_num_), fit in self.fits.items()
+               for (calib_key_, region_key_, frame_num_), fit
+               in self.fits.items()
                if calib_key == calib_key_ and region_key == region_key_]
         logger.debug('w0s = ', w0s)
         if w0s:
