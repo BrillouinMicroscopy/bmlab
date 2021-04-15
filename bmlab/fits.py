@@ -137,15 +137,24 @@ def _circle_opt(c, x_coord, y_coord):
          - c[2] ** 2) ** 2)
 
 
-def fit_rayleigh_region(region, xdata, ydata):
-    w0, fwhm, intensity, offset = fit_lorentz(
-        xdata[range(*region)], ydata[range(*region)])
-    return w0, fwhm, intensity, offset
+def fit_lorentz_region(region, xdata, ydata, nr_peaks=1):
+    """
+    Fits a lorentz or double lorentz fit to the given region
+    :param region: The section of the data to fit
+    :param xdata: The x-data
+    :param ydata: The y-data to fit
+    :param nr_peaks: The number of peaks to fit
+    :return: center, full-width-half-maximum, intensity and offset
+    """
+    if nr_peaks == 2:
+        w0s, fwhms, intensities, offset = fit_double_lorentz(
+            xdata[range(*region)], ydata[range(*region)])
+    elif nr_peaks == 1:
+        w0s, fwhms, intensities, offset = fit_lorentz(
+            xdata[range(*region)], ydata[range(*region)])
+    else:
+        return
 
-
-def fit_brillouin_region(region, xdata, ydata):
-    w0s, fwhms, intensities, offset = fit_double_lorentz(
-        xdata[range(*region)], ydata[range(*region)])
     return w0s, fwhms, intensities, offset
 
 
