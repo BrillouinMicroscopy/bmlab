@@ -1,4 +1,3 @@
-import pickle
 import os
 
 import h5py
@@ -7,6 +6,7 @@ from bmlab.file import BrillouinFile
 from bmlab.models.extraction_model import ExtractionModel
 from bmlab.models.orientation import Orientation
 from bmlab.models.calibration_model import CalibrationModel
+from bmlab.serializer import serialize, deserialize
 
 
 class Session(object):
@@ -108,34 +108,34 @@ class Session(object):
     def save(self):
         if self.file is None:
             return
+
         h5_file_name = str(self.file.path)
-        bms_file_name = h5_file_name[:-3] + '.bms'
+        session_file_name = h5_file_name[:-3] + '.session.h5'
 
-        with open(bms_file_name, 'wb') as fh:
-            pickle.dump(self.orientation, fh)
-            pickle.dump(self.extraction_models, fh)
-            pickle.dump(self.setup, fh)
+        with h5py.File(session_file_name, 'w') as f:
+            serialize(self.orientation, f, 'orientation')
+            serialize(self.extraction_models, f, 'extraction_models')
 
-    def load(self, bms_file_name):
+    def load(self, session_file_name):
 
-        h5_file_name = str(bms_file_name)[:-4] + '.h5'
+        h5_file_name = str(session_file_name)[:-11] + '.h5'
 
-        if not os.path.exists(bms_file_name):
+        if not os.path.exists(session_file_name):
             return
 
         self.set_file(h5_file_name)
 
-        with open(bms_file_name, 'rb') as fh:
-            self.orientation = pickle.load(fh)
-            self.extraction_models = pickle.load(fh)
-            self.setup = pickle.load(fh)
-
-    def save_to_hdf(self, file_name):
-        # TODO: Finish implementation
-        with h5py.File(file_name, 'w') as f:
-            self.orientation.serialize(f, 'orientation')
+        with h5py.File(session_file_name, 'r') as f:
+            self.orientation = deserialize(
+                self.orientation.__class__, f['orientation'])
+            self.extraction_models = deserialize(
+                self.extraction_models.__class__, f['extraction_models'])
 
     def load_from_hdf(self, file_name):
         # TODO: Finish implementation
         with h5py.File(file_name, 'r') as f:
-            self.orientation = self.orientation.deserialize(f['orientation'])
+
+            self.orientation = deserialize(
+                self.orientation.__class__, f['orientation'])
+            self.extraction_models = deserialize(
+                self.extraction_models.__class__, f['extraction_models'])

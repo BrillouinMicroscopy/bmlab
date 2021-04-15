@@ -1,4 +1,5 @@
 import pathlib
+import os
 
 from bmlab.session import Session
 
@@ -14,15 +15,15 @@ def test_serialize_and_deserialize_session():
     session.orientation.set_rotation(2)
     session.orientation.set_reflection(vertically=True, horizontally=True)
 
-    tmp_file_name = 'tmp_session.h5'
-
-    session.save_to_hdf(data_file_path(tmp_file_name))
+    session.save()
 
     session.orientation.set_reflection(vertically=False, horizontally=False)
     session.orientation.set_rotation(1)
 
-    session.load_from_hdf(data_file_path(tmp_file_name))
+    session.load(data_file_path('Water.session.h5'))
 
     assert session.orientation.rotation == 2
     assert session.orientation.reflection['vertically']
     assert session.orientation.reflection['horizontally']
+
+    os.remove(data_file_path('Water.session.h5'))

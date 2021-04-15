@@ -8,8 +8,12 @@ from bmlab.serializer import ModelSerializerMixin
 
 class ExtractionModel(ModelSerializerMixin):
 
+    excludes = ['circle_fits_interpolation',
+                'extraction_angles_interpolation'
+                ]
+
     def __init__(self):
-        self.arc_width = 2      # [pix] the width of the extraction arc
+        self.arc_width = 2  # [pix] the width of the extraction arc
         self.points = {}
         self.calib_times = {}
         self.circle_fits = {}
@@ -25,7 +29,8 @@ class ExtractionModel(ModelSerializerMixin):
             self.points[calib_key] = []
         self.points[calib_key].append((xdata, ydata))
         if len(self.points[calib_key]) >= 3:
-            self.circle_fits[calib_key] = fit_circle(self.points[calib_key])
+            center, radius = fit_circle(self.points[calib_key])
+            self.circle_fits[calib_key] = CircleFit(center, radius)
             self.calib_times[calib_key] = time
             self.refresh_circle_fits_interpolation()
 
@@ -61,10 +66,14 @@ class ExtractionModel(ModelSerializerMixin):
         self.refresh_circle_fits_interpolation()
 
     def get_circle_fit(self, calib_key):
-        return self.circle_fits.get(calib_key)
+        circle_fit = self.circle_fits.get(calib_key)
+        if circle_fit:
+            return circle_fit.center, circle_fit.radius
+        else:
+            return None
 
     def get_circle_fit_by_time(self, time):
-        if not self.circle_fits_interpolation:
+        if self.circle_fits_interpolation is None:
             return None
         fit = self.circle_fits_interpolation(self.circle_fits_index, time)
         return (fit[0], fit[1]), fit[2]
@@ -85,10 +94,9 @@ class ExtractionModel(ModelSerializerMixin):
         for key in sorted_keys:
             calib_times_array.append(self.calib_times[key])
             fit = []
-            center = self.circle_fits[key][0]
-            fit.append(center[0])
-            fit.append(center[1])
-            fit.append(self.circle_fits[key][1])
+            center, radius = self.get_circle_fit(key)
+            fit.extend(center)
+            fit.append(radius)
             fits.append(fit)
         circle_fits_array = np.array(fits)
 
@@ -210,6 +218,13 @@ class ExtractionModel(ModelSerializerMixin):
 
     def set_arc_width(self, width):
         self.arc_width = width
+
+
+class CircleFit(ModelSerializerMixin):
+
+    def __init__(self, center, radius):
+        self.center = center
+        self.radius = radius
 
 
 class ExtractionException(Exception):

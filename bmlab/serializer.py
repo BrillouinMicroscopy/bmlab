@@ -9,6 +9,9 @@ to the base class(es) of the given class.
 import importlib
 import inspect
 import re
+import logging
+
+logger = logging.getLogger(__name__)
 
 
 class ModelSerializerMixin(object):
@@ -21,95 +24,81 @@ class ModelSerializerMixin(object):
         """ Do not allow to instantiate objects of this class. """
         raise NotImplementedError('No instantiation possible, only mixin.')
 
-    def serialize(self, parent, as_name=None):
-        """
-        Store the object in an HDF group.
 
-        Parameters
-        ----------
-        parent: HDF group object
-            The parent group in which to store the current object
+def serialize(obj, parent, as_name=None):
 
-        as_name: str
-            The name under which to store the current object.
-            Properties of the current object will be automatically stored
-            under the name of the property.
-        """
-        if as_name is not None:
-            self_as_group = parent.create_group(as_name)
+    if as_name is not None:
+        self_as_group = parent.create_group(as_name)
+    else:
+        self_as_group = parent
+
+    if obj is None:
+        self_as_group.attrs['type'] = 'None'
+        return
+
+    self_as_group.attrs['type'] = '%s.%s' % (obj.__class__.__module__,
+                                             obj.__class__.__name__)
+
+    if isinstance(obj, dict):
+        properties = obj
+    else:
+        properties = dict(obj.__dict__)
+
+    for name, value in properties.items():
+        if isinstance(value, ModelSerializerMixin):
+            serialize(value, self_as_group, name)
+        elif isinstance(value, dict):
+            serialize(value, self_as_group, name)
+        elif value is None:
+            pass  # maybe better create an empty group?
         else:
-            self_as_group = parent
-
-        self_as_group.attrs['type'] = '%s.%s' % (self.__class__.__module__,
-                                                 self.__class__.__name__)
-
-        if isinstance(self, SerializableDict):
-            properties = self
-        else:
-            properties = dict(self.__dict__)
-
-        for name, value in properties.items():
-            if isinstance(value, ModelSerializerMixin):
-                value.serialize(self_as_group, name)
-            elif isinstance(value, dict):
-                wrapped = SerializableDict(value)
-                wrapped.serialize(self_as_group, name)
-            else:
-                self_as_group.create_dataset(name, data=value)
-
-    @classmethod
-    def deserialize(cls, group):
-        """
-        Build up object of given class by reading given HDF group.
-
-        Parameters
-        ----------
-        group: HDF group
-            The HDF group containing the data for the given class.
-
-        Returns
-        -------
-        Object of a class type specified in the attrs dict of the
-        given group.
-        """
-
-        # Determine class of object to build:
-        class_name = group.attrs.get('type')
-        if not class_name:
-            class_name = cls.__name__
-
-        # Create object without calling the constructor:
-        raw_object = _init_raw_object(class_name)
-
-        # Each child item (group or dataset) of the given group
-        # is either another class, a dict or simple data:
-        for key, value in group.items():
-            prop_full_class_name = value.attrs.get('type')
-            if prop_full_class_name:
-                prop_class = _class_from_full_class_name(prop_full_class_name)
-                prop = prop_class.deserialize(value)
-                if isinstance(raw_object, dict):
-                    raw_object[key] = prop
-                else:
-                    raw_object.__dict__[key] = prop
-            else:
-                if isinstance(raw_object, dict):
-                    raw_object[key] = _unwrap(value)
-                else:
-                    raw_object.__dict__[key] = _unwrap(value)
-
-        return raw_object
+            logger.debug(name, value)
+            self_as_group.create_dataset(name, data=value)
 
 
-class SerializableDict(dict, ModelSerializerMixin):
+def deserialize(cls, group):
     """
-    Wrapper around the built-in dict class.
+    Build up object of given class by reading given HDF group.
+
+    Parameters
+    ----------
+    cls: Python 3 class
+        The type of object to build.
+    group: HDF group
+        The HDF group containing the data for the given class.
+
+    Returns
+    -------
+    Object of a class type specified in the attrs dict of the
+    given group.
     """
 
-    def __init__(self, content):
-        dict.__init__(self)
-        for key, value in content.items():
-            self[key] = value
+    # Determine class of object to build:
+    class_name = group.attrs.get('type')
+    if not class_name:
+        class_name = cls.__name__
+
+    # Create object without calling the constructor:
+    raw_object = _init_raw_object(class_name)
+
+    # Each child item (group or dataset) of the given group
+    # is either another class, a dict or simple data:
+    for key, value in group.items():
+        prop_full_class_name = value.attrs.get('type')
+        if prop_full_class_name:
+            prop_class = _class_from_full_class_name(prop_full_class_name)
+            prop = deserialize(prop_class, value)
+            if isinstance(raw_object, dict):
+                raw_object[key] = prop
+            else:
+                raw_object.__dict__[key] = prop
+        else:
+            if isinstance(raw_object, dict):
+                raw_object[key] = _unwrap(value)
+            else:
+                raw_object.__dict__[key] = _unwrap(value)
+
+    return raw_object
 
 
 def _init_raw_object(full_class_name):
