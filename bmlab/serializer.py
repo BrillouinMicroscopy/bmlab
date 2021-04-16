@@ -10,19 +10,10 @@ import importlib
 import inspect
 import re
 import logging
+import numbers
+
 
 logger = logging.getLogger(__name__)
-
-
-class ModelSerializerMixin(object):
-    """
-    Mixin used for model classes to enable recursive serialization and
-    deserialization to/from HDF files.
-    """
-
-    def __init__(self):
-        """ Do not allow to instantiate objects of this class. """
-        raise NotImplementedError('No instantiation possible, only mixin.')
 
 
 def serialize(obj, parent, as_name=None):
@@ -45,15 +36,22 @@ def serialize(obj, parent, as_name=None):
         properties = dict(obj.__dict__)
 
     for name, value in properties.items():
-        if isinstance(value, ModelSerializerMixin):
-            serialize(value, self_as_group, name)
+        if is_scalar(value) or is_list_like(value):
+            self_as_group.create_dataset(name, data=value)
         elif isinstance(value, dict):
             serialize(value, self_as_group, name)
         elif value is None:
             pass  # maybe better create an empty group?
         else:
-            logger.debug(name, value)
-            self_as_group.create_dataset(name, data=value)
+            serialize(value, self_as_group, name)
+
+
+def is_scalar(value):
+    return isinstance(value, str) or isinstance(value, numbers.Number)
+
+
+def is_list_like(value):
+    return hasattr(value, '__len__') and not isinstance(value, dict)
 
 
 def deserialize(cls, group):

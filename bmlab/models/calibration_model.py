@@ -2,12 +2,10 @@ import logging
 
 import numpy as np
 
-from bmlab.serializer import ModelSerializerMixin
-
 logger = logging.getLogger(__name__)
 
 
-class CalibrationModel(ModelSerializerMixin):
+class CalibrationModel(object):
 
     def __init__(self):
         self.brillouin_regions = {}
@@ -143,7 +141,7 @@ class CalibrationModel(ModelSerializerMixin):
             regions.append(region)
 
 
-class FitSet(ModelSerializerMixin):
+class FitSet(object):
 
     def __init__(self):
         self.fits = {}
@@ -165,7 +163,7 @@ class FitSet(ModelSerializerMixin):
             del self.fits[key]
 
 
-class RayleighFitSet(FitSet, ModelSerializerMixin):
+class RayleighFitSet(FitSet):
 
     def average_fits(self, calib_key, region_key):
         w0s = [fit.w0
@@ -178,7 +176,7 @@ class RayleighFitSet(FitSet, ModelSerializerMixin):
         return None
 
 
-class BrillouinFitSet(FitSet, ModelSerializerMixin):
+class BrillouinFitSet(FitSet):
 
     def average_fits(self, calib_key, region_key):
         w0s = [fit.w0s
@@ -192,7 +190,7 @@ class BrillouinFitSet(FitSet, ModelSerializerMixin):
         return None
 
 
-class RayleighFit(ModelSerializerMixin):
+class RayleighFit(object):
 
     def __init__(self, calib_key, region_key, frame_num,
                  w0, fwhm, intensity, offset):
@@ -205,7 +203,7 @@ class RayleighFit(ModelSerializerMixin):
         self.offset = offset
 
 
-class BrillouinFit(ModelSerializerMixin):
+class BrillouinFit(object):
 
     def __init__(self, calib_key, region_key, frame_num,
                  w0s, fwhms, intensities, offset):
