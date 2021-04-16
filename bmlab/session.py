@@ -139,3 +139,6 @@ class Session(object):
                 self.orientation.__class__, f['orientation'])
             self.extraction_models = deserialize(
                 self.extraction_models.__class__, f['extraction_models'])
+
+            for em in self.extraction_models.values():
+                em.refresh_circle_fits_interpolation()

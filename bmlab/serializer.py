@@ -45,6 +45,10 @@ def serialize(obj, parent, as_name):
         properties = dict(obj.__dict__)
 
     for name, value in properties.items():
+
+        if callable(value):
+            continue
+
         if is_scalar(value) or is_list_like(value):
             self_as_group.create_dataset(name, data=value)
         elif isinstance(value, dict):

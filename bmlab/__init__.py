@@ -9,3 +9,5 @@ from .models import calibration_model
 from .models import extraction_model
 from .models import orientation
 from .models import setup
+
+from .session import Session
