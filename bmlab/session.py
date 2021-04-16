@@ -1,5 +1,6 @@
 import os
 
+import numpy as np
 import h5py
 
 from bmlab.file import BrillouinFile
@@ -7,6 +8,8 @@ from bmlab.models.extraction_model import ExtractionModel
 from bmlab.models.orientation import Orientation
 from bmlab.models.calibration_model import CalibrationModel
 from bmlab.serializer import serialize, deserialize
+from bmlab.image import extract_lines_along_arc
+from bmlab.fits import fit_lorentz_region
 
 
 class Session(object):
@@ -86,6 +89,59 @@ class Session(object):
                                   for key in self.file.repetition_keys()}
         self.calibration_models = {key: CalibrationModel()
                                    for key in self.file.repetition_keys()}
+
+    def extract(self, calib_key):
+        em = self.extraction_model()
+        arc = em.get_arc_by_calib_key(calib_key)
+        if not arc:
+            return
+
+        imgs = self.current_repetition().calibration.get_image(calib_key)
+
+        # Extract values from *all* frames in the current calibration
+        extracted_values = []
+        for img in imgs:
+            values_by_img = extract_lines_along_arc(img,
+                                                    self.orientation, arc)
+            extracted_values.append(values_by_img)
+        em.set_extracted_values(calib_key, extracted_values)
+        return extracted_values
+
+    def fit_rayleigh_regions(self, calib_key):
+        em = self.extraction_model()
+        cm = self.calibration_model()
+        extracted_values = em.get_extracted_values(calib_key)
+        regions = cm.get_rayleigh_regions(calib_key)
+
+        for frame_num, spectrum in enumerate(extracted_values):
+            for region_key, region in enumerate(regions):
+                spectrum = extracted_values[frame_num]
+                xdata = np.arange(len(spectrum))
+                w0, fwhm, intensity, offset = \
+                    fit_lorentz_region(region, xdata, spectrum)
+                cm.add_rayleigh_fit(calib_key, region_key, frame_num,
+                                    w0, fwhm, intensity, offset)
+
+    def fit_brillouin_regions(self, calib_key):
+        em = self.extraction_model()
+        cm = self.calibration_model()
+        extracted_values = em.get_extracted_values(calib_key)
+        regions = cm.get_brillouin_regions(calib_key)
+        for frame_num, spectrum in enumerate(extracted_values):
+            for region_key, region in enumerate(regions):
+                xdata = np.arange(len(spectrum))
+                w0s, fwhms, intensities, offset = \
+                    fit_lorentz_region(
+                        region,
+                        xdata,
+                        spectrum,
+                        self.setup.calibration.num_brillouin_samples
+                    )
+                cm.add_brillouin_fit(calib_key, region_key, frame_num,
+                                     w0s, fwhms, intensities, offset)
+
+    def get_calib_keys(self):
+        return self.current_repetition().calibration.image_keys()
 
     def clear(self):
         """
