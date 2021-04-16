@@ -1,9 +1,6 @@
 """
-The serializer module contains classes and functions that allow
+The serializer module contains functions that allow
 serialization / deserialization of custom objects to/from HDF files.
-
-In order to enable this feature for a given class, add the ModelSerializerMixin
-to the base class(es) of the given class.
 """
 
 import importlib
@@ -16,12 +13,24 @@ import numbers
 logger = logging.getLogger(__name__)
 
 
-def serialize(obj, parent, as_name=None):
+def serialize(obj, parent, as_name):
+    """
+    Saves a custom object to an HDF file or group.
 
-    if as_name is not None:
-        self_as_group = parent.create_group(as_name)
-    else:
-        self_as_group = parent
+    Parameters
+    ----------
+    obj: Python object
+        The object to save to HDF
+
+    parent: HDF group
+        The group under which to store the object. Can be a HDF file group.
+
+    as_name: str
+        The name under which to store the object.
+
+    """
+
+    self_as_group = parent.create_group(as_name)
 
     if obj is None:
         self_as_group.attrs['type'] = 'None'
