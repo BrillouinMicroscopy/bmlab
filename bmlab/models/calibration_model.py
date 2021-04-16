@@ -1,6 +1,7 @@
 import logging
 
 import numpy as np
+from scipy import interpolate
 
 logger = logging.getLogger(__name__)
 
@@ -122,6 +123,33 @@ class CalibrationModel(object):
     def get_frequencies_by_calib_key(self, calib_key):
         if calib_key in self.frequencies:
             return self.frequencies[calib_key]
+
+    def get_frequency_by_calib_key(self, position, calib_key):
+        """
+        :param position:
+        :param calib_key:
+        :return:
+        """
+        # TODO Move the interpolation out of this function
+        #  (only needs to be done once)
+        frequencies = self.get_frequencies_by_calib_key(calib_key)
+        frequency = np.mean(np.array(frequencies), axis=0)
+
+        xdata = np.arange(len(frequency))
+        f = interpolate.interp1d(xdata, frequency)
+        return f(position)
+
+    # TODO To be implemented
+    def get_frequency_by_time(self, position, time):
+        """
+        Returns the frequency of a given peak position
+        and time
+        :param position: The position of the peak on the
+        spectrum
+        :param time: The time the peak was acquired
+        :return: The corresponding frequency in Hz
+        """
+        return None
 
     @staticmethod
     def regions_merge_add_region(regions, region):
