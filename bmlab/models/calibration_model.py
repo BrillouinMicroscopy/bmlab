@@ -133,6 +133,8 @@ class CalibrationModel(object):
         # TODO Move the interpolation out of this function
         #  (only needs to be done once)
         frequencies = self.get_frequencies_by_calib_key(calib_key)
+        if not frequencies:
+            return
         frequency = np.mean(np.array(frequencies), axis=0)
 
         xdata = np.arange(len(frequency))
