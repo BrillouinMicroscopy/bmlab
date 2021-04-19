@@ -52,7 +52,7 @@ def test_typical_use_case():
         assert em.get_circle_fit(calib_key)
         assert em.get_extracted_values(calib_key) is None
 
-        session.extract(calib_key)
+        session.extract_calibration_spectrum(calib_key)
 
     # Calibration
     cm = session.calibration_model()
