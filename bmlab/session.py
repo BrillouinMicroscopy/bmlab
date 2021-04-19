@@ -90,8 +90,10 @@ class Session(object):
         self.calibration_models = {key: CalibrationModel()
                                    for key in self.file.repetition_keys()}
 
-    def extract(self, calib_key):
+    def extract_calibration_spectrum(self, calib_key):
         em = self.extraction_model()
+        if not em:
+            return
         arc = em.get_arc_by_calib_key(calib_key)
         if not arc:
             return
@@ -105,6 +107,26 @@ class Session(object):
                                                     self.orientation, arc)
             extracted_values.append(values_by_img)
         em.set_extracted_values(calib_key, extracted_values)
+        return extracted_values
+
+    def extract_measurement_spectrum(self, image_key):
+        em = self.extraction_model()
+        if not em:
+            return
+        time = self.current_repetition().payload.get_time(image_key)
+        arc = em.get_arc_by_time(time)
+        if not arc:
+            return
+
+        imgs = self.current_repetition().payload.get_image(image_key)
+
+        # Extract values from *all* frames in the current payload
+        extracted_values = []
+        for img in imgs:
+            values_by_img = extract_lines_along_arc(img,
+                                                    self.orientation, arc)
+            extracted_values.append(values_by_img)
+
         return extracted_values
 
     def fit_rayleigh_regions(self, calib_key):
