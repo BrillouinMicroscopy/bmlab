@@ -2,6 +2,7 @@ import logging
 
 import numpy as np
 from scipy.optimize import least_squares, minimize, fmin
+from scipy.signal import find_peaks
 
 
 logger = logging.getLogger(__name__)
@@ -42,14 +43,23 @@ def fit_lorentz(x, y):
 
 
 def fit_double_lorentz(x, y):
-    # w0_guess = x[np.argmax(y)]
     offset_guess = (y[0] + y[-1]) / 2.
     # gam_guess = (w0_guess ** 2 * (np.max(y) - offset_guess)) ** -0.5
-    n = len(x)
-    w0_guess_left = x[n // 3]
-    w0_guess_right = x[2 * n // 3]
     fwhm_guess = 4
     intensity_guess = np.max(y) - offset_guess
+
+    # We run peak finding to get a good guess of the peak positions
+    # and use the two peaks with highest prominence.
+    peaks, properties = find_peaks(y, prominence=1)
+    idx = np.argsort(properties['prominences'])[::-1]
+
+    # Return if we didn't find two peaks
+    if len(idx) < 2:
+        return
+
+    idx_sort = np.sort(peaks[idx[0:2]])
+    w0_guess_left = x[idx_sort[0]]
+    w0_guess_right = x[idx_sort[1]]
 
     def error(params, xdata, ydata):
         return (ydata

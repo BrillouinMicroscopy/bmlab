@@ -53,7 +53,7 @@ def test_fit_lorentz_real_image_data():
 
 def test_fit_double_lorentz():
     # Arrange
-    x = np.linspace(0, 30, 100)
+    x = np.linspace(0, 60, 200)
     w0_left = 10.
     intensity_left = 8.
     fwhm_left = 2.
