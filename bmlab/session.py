@@ -90,7 +90,7 @@ class Session(object):
         self.calibration_models = {key: CalibrationModel()
                                    for key in self.file.repetition_keys()}
 
-    def extract_calibration_spectrum(self, calib_key):
+    def extract_calibration_spectrum(self, calib_key, frame_num=None):
         em = self.extraction_model()
         if not em:
             return
@@ -99,6 +99,8 @@ class Session(object):
             return
 
         imgs = self.current_repetition().calibration.get_image(calib_key)
+        if frame_num is not None:
+            imgs = imgs[frame_num:1]
 
         # Extract values from *all* frames in the current calibration
         extracted_values = []
