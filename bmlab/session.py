@@ -135,6 +135,7 @@ class Session(object):
         extracted_values = em.get_extracted_values(calib_key)
         regions = cm.get_rayleigh_regions(calib_key)
 
+        cm.clear_rayleigh_fits(calib_key)
         for frame_num, spectrum in enumerate(extracted_values):
             for region_key, region in enumerate(regions):
                 spectrum = extracted_values[frame_num]
@@ -149,6 +150,8 @@ class Session(object):
         cm = self.calibration_model()
         extracted_values = em.get_extracted_values(calib_key)
         regions = cm.get_brillouin_regions(calib_key)
+
+        cm.clear_brillouin_fits(calib_key)
         for frame_num, spectrum in enumerate(extracted_values):
             for region_key, region in enumerate(regions):
                 xdata = np.arange(len(spectrum))
