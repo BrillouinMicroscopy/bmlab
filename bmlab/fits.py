@@ -219,6 +219,12 @@ def fit_vipa(peaks, setup):
     :param setup:
     :return:
     """
+    # Check that we were given enough peaks
+    if peaks is None:
+        return
+    if len(peaks) < (setup.calibration.num_brillouin_samples * 2 + 2):
+        return
+
     # Calculate the start parameters for the VIPA fit
     r0 = peaks[0] * setup.pixel_size
 
