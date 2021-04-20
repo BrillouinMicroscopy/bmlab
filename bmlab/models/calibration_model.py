@@ -11,6 +11,7 @@ logger = logging.getLogger(__name__)
 class CalibrationModel(object):
 
     def __init__(self):
+        self.calib_times = {}
         self.brillouin_regions = {}
         self.rayleigh_regions = {}
         self.brillouin_fits = BrillouinFitSet()
@@ -119,21 +120,33 @@ class CalibrationModel(object):
     def set_vipa_params(self, calib_key, vipa_params):
         self.vipa_params[calib_key] = vipa_params
 
-    def set_frequencies(self, calib_key, frequencies):
+    def set_frequencies(self, calib_key, time, frequencies):
         self.frequencies[calib_key] = frequencies
+        self.calib_times[calib_key] = time
 
     def get_frequencies_by_calib_key(self, calib_key):
+        """
+        Returns the complete frequency axis for a given
+        calibration
+        :param calib_key: The key of the calibration
+        :return: The frequency axis in Hz
+        """
         if calib_key in self.frequencies:
             return self.frequencies[calib_key]
 
     def get_frequency_by_calib_key(self, position, calib_key):
         """
-        :param position:
-        :param calib_key:
-        :return:
+        Returns the frequency of a peak position on the
+        spectrum for a given calibration
+        :param position: The position(s) of the peak(s)
+        on the spectrum
+        :param calib_key: The key of the calibration
+        :return: The corresponding frequency in Hz
         """
         # TODO Move the interpolation out of this function
-        #  (only needs to be done once)
+        #  (only needs to be done once for a calibration key)
+        #  (not so critical at the moment, since it's only done
+        #  for calibrating)
         frequencies = self.get_frequencies_by_calib_key(calib_key)
         if not frequencies:
             return
@@ -143,17 +156,85 @@ class CalibrationModel(object):
         f = interpolate.interp1d(xdata, frequency)
         return f(position)
 
-    # TODO To be implemented
-    def get_frequency_by_time(self, position, time):
+    def get_frequencies_by_time(self, time):
         """
-        Returns the frequency of a given peak position
-        and time
-        :param position: The position of the peak on the
-        spectrum
-        :param time: The time the peak was acquired
+        Returns the complete frequency axis for a given
+        time
+        :param time: The time
+        :return: The frequency axis in Hz
+        """
+
+        # Sort calibration keys by time
+        sorted_keys = sorted(self.calib_times,
+                             key=self.calib_times.get)
+        if not sorted_keys:
+            return None
+
+        # If we only have one time point, simply return
+        #  the complete frequency axis
+        if len(sorted_keys) < 2:
+            return np.nanmean(self.frequencies[sorted_keys[0]], 0)
+        else:
+            # TODO Move the interpolation out of this function
+            #  (only needs to be done once)
+            #  (not so critical at the moment, since this
+            #  function is only used for showing the frequency
+            #  axis in the peak-selection panel)
+            calib_times_array = []
+            frequencies = []
+            for key in sorted_keys:
+                calib_times_array.append(self.calib_times[key])
+                frequencies.append(np.nanmean(self.frequencies[key], 0))
+
+            calib_times_array = np.array(calib_times_array)
+            frequencies = np.squeeze(frequencies)
+
+            f = interpolate.interp1d(calib_times_array, frequencies, axis=0)
+            return f(time)
+
+    def get_frequency_by_time(self, time, position):
+        """
+        Returns the frequency of a peak position on the
+        spectrum for a given time
+        :param time: The time
+        :param position: The position(s) of the peak(s)
+        on the spectrum
         :return: The corresponding frequency in Hz
         """
-        return None
+        # TODO Move the interpolation out of this function
+        #  (only needs to be done once)
+        #  (!!! quite critical because this function is called
+        #  for every measurement point)
+        # Sort calibration keys by time
+        sorted_keys = sorted(self.calib_times,
+                             key=self.calib_times.get)
+        if not sorted_keys:
+            return None
+
+        calib_times_array = []
+        frequencies = []
+        for key in sorted_keys:
+            calib_times_array.append(self.calib_times[key])
+            frequencies.append(np.nanmean(self.frequencies[key], 0))
+
+        calib_times_array = np.array(calib_times_array)
+        frequencies = np.array(frequencies)
+
+        indices = np.arange(frequencies.shape[1])
+
+        # If we only have one time point, we
+        # interpolate by peak position only
+        if len(sorted_keys) < 2:
+            frequencies = np.squeeze(frequencies)
+            f = interpolate.interp1d(indices, frequencies)
+            return f(position)
+        # Otherwise we can interpolate by time as well
+        else:
+            f = interpolate.interp2d(
+                indices,
+                calib_times_array,
+                frequencies)
+            return f(position, time)
 
 
 class FitSet(object):
