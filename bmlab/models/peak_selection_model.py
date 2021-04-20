@@ -1,6 +1,6 @@
 import logging
 
-import numpy as np
+from bmlab.models.regions import regions_merge_add_region
 
 logger = logging.getLogger(__name__)
 
@@ -14,7 +14,7 @@ class PeakSelectionModel(object):
     def add_brillouin_region(self, region):
         region = tuple(round(x) for x in region)
 
-        self.regions_merge_add_region(
+        regions_merge_add_region(
             self.brillouin_regions, region)
 
     def set_brillouin_region(self, index, region):
@@ -31,7 +31,7 @@ class PeakSelectionModel(object):
     def add_rayleigh_region(self, region):
         region = tuple(round(x) for x in region)
 
-        self.regions_merge_add_region(
+        regions_merge_add_region(
             self.rayleigh_regions, region)
 
     def set_rayleigh_region(self, index, region):
@@ -44,20 +44,3 @@ class PeakSelectionModel(object):
 
     def clear_rayleigh_regions(self):
         self.rayleigh_regions = []
-
-    @staticmethod
-    def regions_merge_add_region(regions, region):
-        regions_fused = False
-
-        # check if the selected regions overlap
-        for i, saved_region in enumerate(regions):
-            if (np.min(region) < np.max(saved_region)
-                    and (np.max(region) > np.min(saved_region))):
-                # fuse overlapping regions
-                regions[i] = (
-                    np.min([region, saved_region]),
-                    np.max([region, saved_region]))
-                regions_fused = True
-
-        if not regions_fused:
-            regions.append(region)

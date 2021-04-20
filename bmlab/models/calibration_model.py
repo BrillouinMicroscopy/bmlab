@@ -3,6 +3,8 @@ import logging
 import numpy as np
 from scipy import interpolate
 
+from bmlab.models.regions import regions_merge_add_region
+
 logger = logging.getLogger(__name__)
 
 
@@ -23,7 +25,7 @@ class CalibrationModel(object):
 
         region = tuple(round(x) for x in region)
 
-        self.regions_merge_add_region(
+        regions_merge_add_region(
             self.brillouin_regions[calib_key], region)
 
     def set_brillouin_region(self, calib_key, index, region):
@@ -61,7 +63,7 @@ class CalibrationModel(object):
 
         region = tuple(round(x) for x in region)
 
-        self.regions_merge_add_region(
+        regions_merge_add_region(
             self.rayleigh_regions[calib_key], region)
 
     def set_rayleigh_region(self, calib_key, index, region):
@@ -152,23 +154,6 @@ class CalibrationModel(object):
         :return: The corresponding frequency in Hz
         """
         return None
-
-    @staticmethod
-    def regions_merge_add_region(regions, region):
-        regions_fused = False
-
-        # check if the selected regions overlap
-        for i, saved_region in enumerate(regions):
-            if (np.min(region) < np.max(saved_region)
-                    and (np.max(region) > np.min(saved_region))):
-                # fuse overlapping regions
-                regions[i] = (
-                    np.min([region, saved_region]),
-                    np.max([region, saved_region]))
-                regions_fused = True
-
-        if not regions_fused:
-            regions.append(region)
 
 
 class FitSet(object):
