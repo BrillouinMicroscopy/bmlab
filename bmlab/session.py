@@ -8,6 +8,7 @@ from bmlab.models.extraction_model import ExtractionModel
 from bmlab.models.orientation import Orientation
 from bmlab.models.calibration_model import CalibrationModel
 from bmlab.models.peak_selection_model import PeakSelectionModel
+from bmlab.models.evaluation_model import EvaluationModel
 from bmlab.serializer import serialize, deserialize
 from bmlab.image import extract_lines_along_arc
 from bmlab.fits import fit_lorentz_region
@@ -57,6 +58,9 @@ class Session(object):
     def peak_selection_model(self):
         return self.peak_selection_models.get(self._current_repetition_key)
 
+    def evaluation_model(self):
+        return self.evaluation_models.get(self._current_repetition_key)
+
     @staticmethod
     def get_instance():
         """
@@ -95,6 +99,8 @@ class Session(object):
                                    for key in self.file.repetition_keys()}
         self.peak_selection_models = {key: PeakSelectionModel()
                                       for key in self.file.repetition_keys()}
+        self.evaluation_models = {key: EvaluationModel()
+                                  for key in self.file.repetition_keys()}
 
     def extract_calibration_spectrum(self, calib_key, frame_num=None):
         em = self.extraction_model()
@@ -190,6 +196,7 @@ class Session(object):
         self.extraction_models = {}
         self.calibration_models = {}
         self.peak_selection_models = {}
+        self.evaluation_models = {}
 
         self._current_repetition_key = None
 
