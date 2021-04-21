@@ -14,31 +14,41 @@ class CalibrationController(object):
         self.setup = self.session.setup
         return
 
-    def calibrate(self, calib_key):
+    def calibrate(self, calib_key, count=None, max_count=None):
 
         if not calib_key:
+            max_count.value = -1
             return
 
         if not self.setup:
+            max_count.value = -1
+            return
+
+        repetition = self.session.current_repetition()
+        if repetition is None:
+            max_count.value = -1
             return
 
         em = self.session.extraction_model()
         if not em:
+            max_count.value = -1
             return
 
         cm = self.session.calibration_model()
         if not cm:
+            max_count.value = -1
             return
 
         spectra = self.session\
             .extract_calibration_spectrum(calib_key)
-        time = self.session\
-            .current_repetition().calibration.get_time(calib_key)
+        time = repetition.calibration.get_time(calib_key)
 
         if spectra is None:
+            max_count.value = -1
             return
 
         if len(spectra) == 0:
+            max_count.value = -1
             return
 
         self.session.fit_rayleigh_regions(calib_key)
@@ -46,6 +56,10 @@ class CalibrationController(object):
 
         vipa_params = []
         frequencies = []
+
+        if max_count is not None:
+            max_count.value += len(spectra)
+
         for frame_num, spectrum in enumerate(spectra):
             peaks = cm.get_sorted_peaks(calib_key, frame_num)
 
@@ -56,6 +70,8 @@ class CalibrationController(object):
             xdata = np.arange(len(spectrum))
 
             frequencies.append(VIPA(xdata, params) - self.setup.f0)
+            if count is not None:
+                count.value += 1
 
         cm.set_vipa_params(calib_key, vipa_params)
         cm.set_frequencies(calib_key, time, frequencies)
