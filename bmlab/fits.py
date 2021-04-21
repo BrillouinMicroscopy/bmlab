@@ -165,7 +165,7 @@ def fit_lorentz_region(region, xdata, ydata, nr_peaks=1):
                 xdata[range(*region)], ydata[range(*region)])
         else:
             return
-    except Exception as e:
+    except Exception:
         w0s = fwhms = intensities = offset = np.nan
     finally:
         return w0s, fwhms, intensities, offset
