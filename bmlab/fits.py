@@ -156,16 +156,19 @@ def fit_lorentz_region(region, xdata, ydata, nr_peaks=1):
     :param nr_peaks: The number of peaks to fit
     :return: center, full-width-half-maximum, intensity and offset
     """
-    if nr_peaks == 2:
-        w0s, fwhms, intensities, offset = fit_double_lorentz(
-            xdata[range(*region)], ydata[range(*region)])
-    elif nr_peaks == 1:
-        w0s, fwhms, intensities, offset = fit_lorentz(
-            xdata[range(*region)], ydata[range(*region)])
-    else:
-        return
-
-    return w0s, fwhms, intensities, offset
+    try:
+        if nr_peaks == 2:
+            w0s, fwhms, intensities, offset = fit_double_lorentz(
+                xdata[range(*region)], ydata[range(*region)])
+        elif nr_peaks == 1:
+            w0s, fwhms, intensities, offset = fit_lorentz(
+                xdata[range(*region)], ydata[range(*region)])
+        else:
+            return
+    except Exception as e:
+        w0s = fwhms = intensities = offset = np.nan
+    finally:
+        return w0s, fwhms, intensities, offset
 
 
 def calculate_exact_circle(points):
