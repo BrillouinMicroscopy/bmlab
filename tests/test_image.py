@@ -4,7 +4,7 @@ import numpy as np
 import pytest
 
 from bmlab.image import set_orientation, find_max_in_radius
-from bmlab.image import autofind_orientation, interpolate
+from bmlab.image import autofind_orientation
 from bmlab.image import extract_lines_along_arc
 from bmlab.file import BrillouinFile
 from bmlab.models.orientation import Orientation
@@ -61,23 +61,6 @@ def test_autofind_orientation():
 
     assert actual.rotation == expected.rotation
     assert actual.reflection == expected.reflection
-
-
-def test_interpolate():
-
-    x = y = np.linspace(0, 10, 11)
-    X, Y = np.meshgrid(x, y, indexing='ij')
-
-    f = X**2 + Y**2
-
-    expected = 0.25 * (f[0, 1] + f[1, 0] + f[0, 0] + f[1, 1])
-    np.testing.assert_almost_equal(interpolate(f, [0.5, 0.5]), expected)
-
-    expected = 0.5 * (f[4, 5] + f[5, 5])
-    np.testing.assert_almost_equal(interpolate(f, [4.5, 5]), expected)
-
-    expected = f[5, 5]
-    np.testing.assert_almost_equal(interpolate(f, [5, 5]), expected)
 
 
 def test_extract_lines_along_arc():

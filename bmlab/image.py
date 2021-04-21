@@ -6,6 +6,7 @@ import logging
 
 import numpy as np
 from skimage.feature import blob_dog
+from scipy.interpolate import interpolate
 
 from bmlab.models.orientation import Orientation
 
@@ -140,28 +141,18 @@ def find_max_in_radius(img, xy0, radius):
 
 
 def extract_lines_along_arc(img, orientation, arc):
+    # TODO: Adjust arc generating function to directly generate such
+    #  a structure
+    tmp_x = np.zeros([len(arc), len(arc[0])])
+    tmp_y = np.zeros([len(arc), len(arc[0])])
+
+    for j, pos in enumerate(arc):
+        for k, p in enumerate(pos):
+            tmp_x[j, k] = pos[k, 0]
+            tmp_y[j, k] = pos[k, 1]
+
     img = orientation.apply(img)
-    values = []
-    for points in arc:
-        values.append(sum(interpolate(img, p) for p in points)
-                      / (points.size / 2))
-    return np.array(values)
+    m, n = img.shape
+    func = interpolate.RectBivariateSpline(np.arange(m), np.arange(n), img)
 
-
-def interpolate(img, xy):
-    xy0 = np.array(xy, dtype=int)
-    dxy = xy - xy0
-    dxy = dxy.T
-    ex = np.array([1, 0], dtype=int)
-    ey = np.array([0, 1], dtype=int)
-    nx, ny = img.shape
-
-    if xy0[0] < 0 or xy0[0] >= nx - 1:
-        return np.nan
-    if xy0[1] < 0 or xy0[1] >= ny - 1:
-        return np.nan
-    res = img[tuple(xy0)] * (1 - dxy[0]) * (1 - dxy[1])
-    res += img[tuple(xy0 + ex)] * dxy[0] * (1 - dxy[1])
-    res += img[tuple(xy0 + ey)] * (1 - dxy[0]) * dxy[1]
-    res += img[tuple(xy0 + ex + ey)] * dxy[0] * dxy[1]
-    return res
+    return np.nanmean(func(tmp_x, tmp_y, grid=False), 1)
