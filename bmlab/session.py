@@ -182,6 +182,9 @@ class Session(object):
     def get_calib_keys(self):
         return self.current_repetition().calibration.image_keys()
 
+    def get_image_keys(self):
+        return self.current_repetition().payload.image_keys()
+
     def clear(self):
         """
         Close connection to loaded file.
