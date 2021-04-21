@@ -17,26 +17,31 @@ class CalibrationController(object):
     def calibrate(self, calib_key, count=None, max_count=None):
 
         if not calib_key:
-            max_count.value = -1
+            if max_count is not None:
+                max_count.value = -1
             return
 
         if not self.setup:
-            max_count.value = -1
+            if max_count is not None:
+                max_count.value = -1
             return
 
         repetition = self.session.current_repetition()
         if repetition is None:
-            max_count.value = -1
+            if max_count is not None:
+                max_count.value = -1
             return
 
         em = self.session.extraction_model()
         if not em:
-            max_count.value = -1
+            if max_count is not None:
+                max_count.value = -1
             return
 
         cm = self.session.calibration_model()
         if not cm:
-            max_count.value = -1
+            if max_count is not None:
+                max_count.value = -1
             return
 
         spectra = self.session\
@@ -44,11 +49,13 @@ class CalibrationController(object):
         time = repetition.calibration.get_time(calib_key)
 
         if spectra is None:
-            max_count.value = -1
+            if max_count is not None:
+                max_count.value = -1
             return
 
         if len(spectra) == 0:
-            max_count.value = -1
+            if max_count is not None:
+                max_count.value = -1
             return
 
         self.session.fit_rayleigh_regions(calib_key)
