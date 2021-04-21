@@ -30,8 +30,10 @@ class CalibrationController(object):
         if not cm:
             return
 
-        spectra = self.session.extract_calibration_spectrum(calib_key)
-        time = self.session.current_repetition().calibration.get_time(calib_key)
+        spectra = self.session\
+            .extract_calibration_spectrum(calib_key)
+        time = self.session\
+            .current_repetition().calibration.get_time(calib_key)
 
         if spectra is None:
             return
