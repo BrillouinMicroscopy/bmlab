@@ -83,6 +83,7 @@ def test_extract_lines_along_arc():
         points = [mid_point + e_r *
                   k for k in np.arange(-num_points, num_points + 1)]
         arc.append(np.array(points))
+    arc = np.array(arc)
 
     # Act
     actual = extract_lines_along_arc(img, orient, arc)

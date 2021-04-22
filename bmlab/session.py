@@ -107,7 +107,7 @@ class Session(object):
         if not em:
             return
         arc = em.get_arc_by_calib_key(calib_key)
-        if not arc:
+        if arc.size == 0:
             return
 
         imgs = self.current_repetition().calibration.get_image(calib_key)
@@ -129,7 +129,7 @@ class Session(object):
             return
         time = self.current_repetition().payload.get_time(image_key)
         arc = em.get_arc_by_time(time)
-        if not arc:
+        if arc.size == 0:
             return
 
         imgs = self.current_repetition().payload.get_image(image_key)

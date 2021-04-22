@@ -141,18 +141,11 @@ def find_max_in_radius(img, xy0, radius):
 
 
 def extract_lines_along_arc(img, orientation, arc):
-    # TODO: Adjust arc generating function to directly generate such
-    #  a structure
-    tmp_x = np.zeros([len(arc), len(arc[0])])
-    tmp_y = np.zeros([len(arc), len(arc[0])])
-
-    for j, pos in enumerate(arc):
-        for k, p in enumerate(pos):
-            tmp_x[j, k] = pos[k, 0]
-            tmp_y[j, k] = pos[k, 1]
+    if arc.ndim != 3 or arc.shape[2] != 2:
+        return
 
     img = orientation.apply(img)
     m, n = img.shape
     func = interpolate.RectBivariateSpline(np.arange(m), np.arange(n), img)
 
-    return np.nanmean(func(tmp_x, tmp_y, grid=False), 1)
+    return np.nanmean(func(arc[:, :, 0], arc[:, :, 1], grid=False), 1)

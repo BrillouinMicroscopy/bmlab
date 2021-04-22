@@ -115,7 +115,7 @@ class ExtractionModel(object):
         :param calib_key: the calibration number
         :return: the arc with pixel positions
         """
-        arc = []
+        arc = np.empty(0)
         try:
             center, radius = self.get_circle_fit(calib_key)
             circle = Circle(center, radius)
@@ -132,7 +132,7 @@ class ExtractionModel(object):
         :param time: time point
         :return: the arc with pixel positions
         """
-        arc = []
+        arc = np.empty(0)
         try:
             center, radius = self.get_circle_fit_by_time(time)
             circle = Circle(center, radius)
@@ -154,7 +154,7 @@ class ExtractionModel(object):
                 )
             ]
             arc.append(np.array(points))
-        return arc
+        return np.array(arc)
 
     def set_extracted_values(self, calib_key, values):
         self.extracted_values[calib_key] = values
