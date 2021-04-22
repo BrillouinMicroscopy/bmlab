@@ -146,6 +146,7 @@ def extract_lines_along_arc(img, orientation, arc):
 
     img = orientation.apply(img)
     m, n = img.shape
-    func = interpolate.RectBivariateSpline(np.arange(m), np.arange(n), img)
+    func = interpolate.RegularGridInterpolator(
+        (np.arange(m), np.arange(n)), img, method='linear', bounds_error=False)
 
-    return np.nanmean(func(arc[:, :, 0], arc[:, :, 1], grid=False), 1)
+    return np.nanmean(func((arc[:, :, 0], arc[:, :, 1])), 1)
