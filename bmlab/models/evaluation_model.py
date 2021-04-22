@@ -1,4 +1,6 @@
 import logging
+import numpy as np
+
 
 logger = logging.getLogger(__name__)
 
@@ -7,6 +9,7 @@ class EvaluationModel(object):
 
     def __init__(self):
         self.results = {
+            'brillouin_peak_position': [],  # [pix] Brillouin peak position
             'brillouin_shift_p': [],    # [pix] Brillouin frequency shift
             'brillouin_shift_f': [],    # [GHz] Brillouin frequency shift
             'brillouin_fwhm_p': [],     # [pix] Brillouin peak width
@@ -38,3 +41,6 @@ class EvaluationModel(object):
 
     def get_parameters(self):
         return self.parameters
+
+    def initialize_results_arrays(self, shape):
+        self.results['brillouin_peak_position'] = np.empty(shape)
