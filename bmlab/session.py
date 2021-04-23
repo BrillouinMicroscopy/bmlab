@@ -216,6 +216,7 @@ class Session(object):
         with h5py.File(session_file_name, 'w') as f:
             serialize(self.orientation, f, 'orientation')
             serialize(self.extraction_models, f, 'extraction_models')
+            serialize(self.calibration_models, f, 'calibration_models')
 
     def load(self, session_file_name):
 
@@ -231,15 +232,6 @@ class Session(object):
                 self.orientation.__class__, f['orientation'])
             self.extraction_models = deserialize(
                 self.extraction_models.__class__, f['extraction_models'])
-
-    def load_from_hdf(self, file_name):
-        # TODO: Finish implementation
-        with h5py.File(file_name, 'r') as f:
-
-            self.orientation = deserialize(
-                self.orientation.__class__, f['orientation'])
-            self.extraction_models = deserialize(
-                self.extraction_models.__class__, f['extraction_models'])
-
-            for em in self.extraction_models.values():
-                em.refresh_circle_fits_interpolation()
+            self.calibration_models = deserialize(
+                self.calibration_models.__class__, f['calibration_models']
+            )
