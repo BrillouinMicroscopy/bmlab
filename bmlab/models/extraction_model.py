@@ -143,6 +143,7 @@ class ExtractionModel(object):
             return arc
 
     def get_arc_from_circle_phis(self, circle, phis):
+        # ToDo refactor this, append to a list is slow
         arc = []
         for phi in phis:
             e_r = circle.e_r(phi)
