@@ -48,17 +48,19 @@ class EvaluationController(object):
 
         resolution = self.session.current_repetition().payload.resolution
 
-        shape = (
-            resolution[0],  # measurement points in x direction
-            resolution[1],  # measurement points in y direction
-            resolution[2],  # measurement points in z direction
-            # TODO
-            # number of images per measurement point
-            # number of Brillouin or Rayleigh regions
-            # number of peaks to fit per region
+        # Get first spectrum to find number of images
+        spectra = self.session.extract_payload_spectrum('0')
+
+        shape_brillouin = (
+            resolution[0],           # measurement points in x direction
+            resolution[1],           # measurement points in y direction
+            resolution[2],           # measurement points in z direction
+            len(spectra),            # number of images per measurement point
+            len(brillouin_regions),  # number of Brillouin or Rayleigh regions
+            evm.nr_brillouin_peaks   # number of peaks to fit per region
         )
 
-        evm.initialize_results_arrays(shape)
+        evm.initialize_results_arrays(shape_brillouin)
 
         # Loop over all measurement positions
         for ind_x in range(resolution[0]):
@@ -82,9 +84,9 @@ class EvaluationController(object):
                         for region_key, region in enumerate(brillouin_regions):
                             w0, fwhm, intensity, offset = \
                                 fit_lorentz_region(region, xdata, spectrum)
-                            evm.results[
-                                'brillouin_peak_position'][
-                                ind_x, ind_y, ind_z] = w0
+                            evm.results['brillouin_peak_position'][
+                                ind_x, ind_y, ind_z, frame_num, region_key, :]\
+                                = w0
                         for region_key, region in enumerate(rayleigh_regions):
                             w0, fwhm, intensity, offset = \
                                 fit_lorentz_region(region, xdata, spectrum)
