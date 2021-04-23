@@ -44,3 +44,4 @@ class EvaluationModel(object):
 
     def initialize_results_arrays(self, shape):
         self.results['brillouin_peak_position'] = np.empty(shape)
+        self.results['brillouin_peak_position'][:] = np.nan
