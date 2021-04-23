@@ -59,8 +59,16 @@ class EvaluationController(object):
             len(brillouin_regions),  # number of Brillouin or Rayleigh regions
             evm.nr_brillouin_peaks   # number of peaks to fit per region
         )
+        evm.initialize_results_arrays_brillouin(shape_brillouin)
 
-        evm.initialize_results_arrays(shape_brillouin)
+        shape_rayleigh = (
+            resolution[0],           # measurement points in x direction
+            resolution[1],           # measurement points in y direction
+            resolution[2],           # measurement points in z direction
+            len(spectra),            # number of images per measurement point
+            len(rayleigh_regions),   # number of Brillouin or Rayleigh regions
+        )
+        evm.initialize_results_arrays_rayleigh(shape_rayleigh)
 
         # Loop over all measurement positions
         for ind_x in range(resolution[0]):
@@ -82,14 +90,25 @@ class EvaluationController(object):
                         xdata = np.arange(len(spectrum))
                         # Evaluate all selected regions
                         for region_key, region in enumerate(brillouin_regions):
+                            ind = (ind_x, ind_y, ind_z,
+                                   frame_num, region_key, 0)
                             w0, fwhm, intensity, offset = \
                                 fit_lorentz_region(region, xdata, spectrum)
-                            evm.results['brillouin_peak_position'][
-                                ind_x, ind_y, ind_z, frame_num, region_key, :]\
-                                = w0
+                            # Save results into arrays
+                            evm.results['brillouin_peak_position'][ind] = w0
+                            evm.results['brillouin_peak_fwhm'][ind] = fwhm
+                            evm.results['brillouin_peak_intensity'][ind] =\
+                                intensity
                         for region_key, region in enumerate(rayleigh_regions):
+                            ind = (ind_x, ind_y, ind_z,
+                                   frame_num, region_key)
                             w0, fwhm, intensity, offset = \
                                 fit_lorentz_region(region, xdata, spectrum)
+                            # Save results into arrays
+                            evm.results['rayleigh_peak_position'][ind] = w0
+                            evm.results['rayleigh_peak_fwhm'][ind] = fwhm
+                            evm.results['rayleigh_peak_intensity'][ind] =\
+                                intensity
 
                     if count is not None:
                         count.value += 1

@@ -12,11 +12,23 @@ class EvaluationModel(object):
         self.nr_brillouin_peaks = 1
 
         self.results = {
-            'brillouin_peak_position': [],  # [pix] Brillouin peak position
-            'brillouin_shift_p': [],    # [pix] Brillouin frequency shift
-            'brillouin_shift_f': [],    # [GHz] Brillouin frequency shift
-            'brillouin_fwhm_p': [],     # [pix] Brillouin peak width
-            'brillouin_fwhm_f': []      # [GHz] Brillouin peak width
+            # Fitted values
+            'brillouin_peak_position': [],   # [pix] Brillouin peak position
+            'brillouin_peak_fwhm': [],       # [pix] Brillouin peak FWHM
+            'brillouin_peak_intensity': [],  # [a.u.] Brillouin peak intensity
+
+            'rayleigh_peak_position': [],   # [pix] Rayleigh peak position
+            'rayleigh_peak_fwhm': [],       # [pix] Rayleigh peak FWHM
+            'rayleigh_peak_intensity': [],  # [a.u.] Rayleigh peak intensity
+
+            'intensity': [],                # [a.u.] Overall intensity of image
+            'times': [],                    # [s] The time the measurement
+                                            #     point was taken at
+
+            # Derived values
+            'brillouin_shift': [],          # [pix] Brillouin frequency shift
+            'brillouin_shift_f': [],        # [GHz] Brillouin frequency shift
+            'brillouin_peak_fwhm_f': [],    # [GHz] Brillouin peak FWHM
         }
 
         self.parameters = {
@@ -45,6 +57,22 @@ class EvaluationModel(object):
     def get_parameters(self):
         return self.parameters
 
-    def initialize_results_arrays(self, shape):
+    def initialize_results_arrays_brillouin(self, shape):
         self.results['brillouin_peak_position'] = np.empty(shape)
         self.results['brillouin_peak_position'][:] = np.nan
+
+        self.results['brillouin_peak_fwhm'] = np.empty(shape)
+        self.results['brillouin_peak_fwhm'][:] = np.nan
+
+        self.results['brillouin_peak_intensity'] = np.empty(shape)
+        self.results['brillouin_peak_intensity'][:] = np.nan
+
+    def initialize_results_arrays_rayleigh(self, shape):
+        self.results['rayleigh_peak_position'] = np.empty(shape)
+        self.results['rayleigh_peak_position'][:] = np.nan
+
+        self.results['rayleigh_peak_fwhm'] = np.empty(shape)
+        self.results['rayleigh_peak_fwhm'][:] = np.nan
+
+        self.results['rayleigh_peak_intensity'] = np.empty(shape)
+        self.results['rayleigh_peak_intensity'][:] = np.nan
