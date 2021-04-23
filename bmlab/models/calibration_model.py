@@ -242,12 +242,21 @@ class FitSet(object):
     def __init__(self):
         self.fits = {}
 
+    def make_key(self, calib_key, region_key, frame_num):
+        return calib_key + '::' + str(region_key) + '::' + str(frame_num)
+
+    def split_key(self, key):
+        items = key.split('::')
+        items[1] = int(items[1])
+        items[2] = int(items[2])
+        return items
+
     def add_fit(self, fit):
-        key = (fit.calib_key, fit.region_key, fit.frame_num)
+        key = self.make_key(fit.calib_key, fit.region_key, fit.frame_num)
         self.fits[key] = fit
 
     def get_fit(self, calib_key, region_key, frame_num=None):
-        key = (calib_key, region_key, frame_num)
+        key = self.make_key(calib_key, region_key, frame_num)
         return self.fits.get(key)
 
     def clear(self, calib_key):
@@ -262,10 +271,11 @@ class FitSet(object):
 class RayleighFitSet(FitSet):
 
     def average_fits(self, calib_key, region_key):
-        w0s = [fit.w0
-               for (calib_key_, region_key_, frame_num_), fit
-               in self.fits.items()
-               if calib_key == calib_key_ and region_key == region_key_]
+        w0s = []
+        for key, fit in self.fits.items():
+            calib_key_, region_key_, _ = self.split_key(key)
+            if calib_key == calib_key_ and region_key == region_key_:
+                w0s.append(fit.w0)
         logger.debug('w0s = ', w0s)
         if w0s:
             return np.mean(w0s)
@@ -275,10 +285,11 @@ class RayleighFitSet(FitSet):
 class BrillouinFitSet(FitSet):
 
     def average_fits(self, calib_key, region_key):
-        w0s = [fit.w0s
-               for (calib_key_, region_key_, frame_num_), fit
-               in self.fits.items()
-               if calib_key == calib_key_ and region_key == region_key_]
+        w0s = []
+        for key, fit in self.fits.items():
+            calib_key_, region_key_, _ = self.split_key(key)
+            if calib_key == calib_key_ and region_key == region_key_:
+                w0s.append(fit.w0)
         logger.debug('w0s = ', w0s)
         if w0s:
             w0s = np.array(w0s)

@@ -1,8 +1,12 @@
 import pathlib
 import os
 
+import h5py
+
 from bmlab.session import Session
 from bmlab.geometry import Circle, discretize_arc
+from bmlab.models.calibration_model import FitSet, RayleighFit
+from bmlab.serializer import serialize, deserialize
 
 
 def data_file_path(file_name):
@@ -55,3 +59,25 @@ def test_serialize_and_deserialize_session():
     assert not session.orientation.reflection['horizontally']
 
     os.remove(data_file_path('Water.session.h5'))
+
+
+def test_serialize_fitset():
+
+    fit_set = FitSet()
+    fit = RayleighFit('1', 3, 4, 11., 12., 13., 14.)
+    fit_set.add_fit(fit)
+
+    with h5py.File('tmpsession.h5', 'w') as f:
+        serialize(fit_set, f, 'fits')
+
+    with h5py.File('tmpsession.h5', 'r') as f:
+        actual = deserialize(
+            FitSet, f['fits']
+        )
+
+    actual_fit = actual.get_fit('1', 3, 4)
+    expected_fit = fit_set.get_fit('1', 3, 4)
+    assert actual_fit.w0 == expected_fit.w0
+    assert actual_fit.fwhm == expected_fit.fwhm
+    assert actual_fit.intensity == expected_fit.intensity
+    assert actual_fit.offset == expected_fit.offset

@@ -217,6 +217,8 @@ class Session(object):
             serialize(self.orientation, f, 'orientation')
             serialize(self.extraction_models, f, 'extraction_models')
             serialize(self.calibration_models, f, 'calibration_models')
+            # serialize(self.evaluation_models, f, 'evaluation_models')
+            # serialize(self.peak_selection_models, f, 'peak_selection_models')
 
     def load(self, session_file_name):
 
@@ -235,3 +237,10 @@ class Session(object):
             self.calibration_models = deserialize(
                 self.calibration_models.__class__, f['calibration_models']
             )
+            # self.evaluation_models = deserialize(
+            #     self.evaluation_models.__class__, f['evaluation_models']
+            # )
+            # self.peak_selection_models = deserialize(
+            #     self.peak_selection_models.__class__,
+            #     f['peak_selection_models']
+            # )
