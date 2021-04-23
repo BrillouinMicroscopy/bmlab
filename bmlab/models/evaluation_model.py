@@ -8,6 +8,9 @@ logger = logging.getLogger(__name__)
 class EvaluationModel(object):
 
     def __init__(self):
+
+        self.nr_brillouin_peaks = 1
+
         self.results = {
             'brillouin_peak_position': [],  # [pix] Brillouin peak position
             'brillouin_shift_p': [],    # [pix] Brillouin frequency shift
