@@ -107,11 +107,11 @@ class CalibrationModel(object):
         peaks = []
         # Search all fits for given calib_key and frame_num
         for key, fit in self.rayleigh_fits.fits.items():
-            if (key[0] == calib_key) & (key[2] == frame_num):
+            if (fit.calib_key == calib_key) & (fit.frame_num == frame_num):
                 peaks.append(fit.w0)
 
         for key, fit in self.brillouin_fits.fits.items():
-            if (key[0] == calib_key) & (key[2] == frame_num):
+            if (fit.calib_key == calib_key) & (fit.frame_num == frame_num):
                 for w0 in fit.w0s:
                     peaks.append(w0)
 
@@ -289,7 +289,7 @@ class BrillouinFitSet(FitSet):
         for key, fit in self.fits.items():
             calib_key_, region_key_, _ = self.split_key(key)
             if calib_key == calib_key_ and region_key == region_key_:
-                w0s.append(fit.w0)
+                w0s.append(fit.w0s)
         logger.debug('w0s = ', w0s)
         if w0s:
             w0s = np.array(w0s)
