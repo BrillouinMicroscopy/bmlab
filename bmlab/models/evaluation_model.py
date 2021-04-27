@@ -71,7 +71,7 @@ class EvaluationModel(object):
         self.results['times'] = np.empty(shape_general)
         self.results['times'][:] = np.nan
 
-        shape_brillouin= (
+        shape_brillouin = (
             dims['dim_x'],
             dims['dim_y'],
             dims['dim_z'],
