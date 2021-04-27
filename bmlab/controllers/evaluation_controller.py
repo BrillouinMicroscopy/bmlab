@@ -51,24 +51,22 @@ class EvaluationController(object):
         # Get first spectrum to find number of images
         spectra = self.session.extract_payload_spectrum('0')
 
-        shape_brillouin = (
-            resolution[0],           # measurement points in x direction
-            resolution[1],           # measurement points in y direction
-            resolution[2],           # measurement points in z direction
-            len(spectra),            # number of images per measurement point
-            len(brillouin_regions),  # number of Brillouin or Rayleigh regions
-            evm.nr_brillouin_peaks   # number of peaks to fit per region
-        )
-        evm.initialize_results_arrays_brillouin(shape_brillouin)
-
-        shape_rayleigh = (
-            resolution[0],           # measurement points in x direction
-            resolution[1],           # measurement points in y direction
-            resolution[2],           # measurement points in z direction
-            len(spectra),            # number of images per measurement point
-            len(rayleigh_regions),   # number of Brillouin or Rayleigh regions
-        )
-        evm.initialize_results_arrays_rayleigh(shape_rayleigh)
+        evm.initialize_results_arrays({
+            # measurement points in x direction
+            'dim_x': resolution[0],
+            # measurement points in y direction
+            'dim_y': resolution[1],
+            # measurement points in z direction
+            'dim_z': resolution[2],
+            # number of images per measurement point
+            'nr_images': len(spectra),
+            # number of Brillouin regions
+            'nr_brillouin_regions': len(brillouin_regions),
+            # number of peaks to fit per region
+            'nr_brillouin_peaks': evm.nr_brillouin_peaks,
+            # number of Rayleigh regions
+            'nr_rayleigh_regions': len(rayleigh_regions),
+        })
 
         # Loop over all measurement positions
         for ind_x in range(resolution[0]):
