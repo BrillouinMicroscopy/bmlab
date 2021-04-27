@@ -22,7 +22,7 @@ class EvaluationModel(object):
             'rayleigh_peak_intensity': [],  # [a.u.] Rayleigh peak intensity
 
             'intensity': [],                # [a.u.] Overall intensity of image
-            'times': [],                    # [s] The time the measurement
+            'time': [],                     # [s] The time the measurement
                                             #     point was taken at
 
             # Derived values
@@ -68,8 +68,8 @@ class EvaluationModel(object):
         self.results['intensity'] = np.empty(shape_general)
         self.results['intensity'][:] = np.nan
 
-        self.results['times'] = np.empty(shape_general)
-        self.results['times'][:] = np.nan
+        self.results['time'] = np.empty(shape_general)
+        self.results['time'][:] = np.nan
 
         shape_brillouin = (
             dims['dim_x'],
