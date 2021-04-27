@@ -141,7 +141,10 @@ class Session(object):
                                                     self.orientation, arc)
             extracted_values.append(values_by_img)
 
-        return extracted_values
+        exposure = self.current_repetition().payload.get_exposure(image_key)
+        times = exposure * np.arange(len(imgs)) + time
+
+        return extracted_values, times
 
     def fit_rayleigh_regions(self, calib_key):
         em = self.extraction_model()

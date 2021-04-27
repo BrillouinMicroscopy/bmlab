@@ -80,9 +80,10 @@ class EvaluationController(object):
                         if max_count is not None:
                             max_count.value = -1
                         return
-                    spectra = self.session.extract_payload_spectrum(
+                    spectra, times = self.session.extract_payload_spectrum(
                         image_key
                     )
+                    evm.results['times'][ind_x, ind_y, ind_z, :] = times
                     # Loop over all frames per measurement position
                     for frame_num, spectrum in enumerate(spectra):
                         xdata = np.arange(len(spectrum))

@@ -208,6 +208,18 @@ class Payload(object):
         except Exception:
             return None
 
+    def get_exposure(self, image_key):
+        """"
+        Returns the exposure time of a payload image
+        with the given key
+        """
+        try:
+            return self.data.get(image_key).attrs\
+                .get('exposure')[0].decode('utf-8')
+        except Exception:
+            # For older files we return a default value
+            return 0.5
+
 
 class Calibration(object):
 
