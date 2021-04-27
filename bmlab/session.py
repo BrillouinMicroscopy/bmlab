@@ -144,7 +144,9 @@ class Session(object):
         exposure = self.current_repetition().payload.get_exposure(image_key)
         times = exposure * np.arange(len(imgs)) + time
 
-        return extracted_values, times
+        intensities = np.nanmean(imgs, axis=(1, 2))
+
+        return extracted_values, times, intensities
 
     def fit_rayleigh_regions(self, calib_key):
         em = self.extraction_model()
