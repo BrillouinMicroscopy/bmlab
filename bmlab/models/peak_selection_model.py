@@ -20,7 +20,10 @@ class PeakSelectionModel(object):
     def set_brillouin_region(self, index, region):
         region = tuple(round(x) for x in region)
 
-        self.brillouin_regions[index] = region
+        if index >= len(self.brillouin_regions):
+            self.add_brillouin_region(region)
+        else:
+            self.brillouin_regions[index] = region
 
     def get_brillouin_regions(self):
         return self.brillouin_regions
@@ -37,7 +40,10 @@ class PeakSelectionModel(object):
     def set_rayleigh_region(self, index, region):
         region = tuple(round(x) for x in region)
 
-        self.rayleigh_regions[index] = region
+        if index >= len(self.rayleigh_regions):
+            self.add_rayleigh_region(region)
+        else:
+            self.rayleigh_regions[index] = region
 
     def get_rayleigh_regions(self):
         return self.rayleigh_regions
