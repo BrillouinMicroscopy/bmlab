@@ -79,6 +79,8 @@ class EvaluationModel(object):
             dims['dim_z'],
             dims['nr_images'],
             dims['nr_rayleigh_regions'],
+            1,  # We just add this so it matches
+                #  the ndims of the Brillouin array
         )
 
         self.results['rayleigh_peak_position'] = np.empty(shape_rayleigh)

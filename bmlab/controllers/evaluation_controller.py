@@ -77,6 +77,7 @@ class EvaluationController(object):
                                     + ind_y * resolution[0] + ind_x)
 
                     if (abort is not None) & abort.value:
+                        self.calculate_derived_values()
                         if max_count is not None:
                             max_count.value = -1
                         return
@@ -114,4 +115,33 @@ class EvaluationController(object):
                     if count is not None:
                         count.value += 1
 
+        self.calculate_derived_values()
+
         return
+
+    def calculate_derived_values(self):
+        """
+        We calculate the derived parameters here:
+        - Brillouin shift [pix]
+        - Brillouin shift [GHz]
+        - Brillouin peak width [GHz]
+        - Rayleigh peak width [GHz]
+        :return:
+        """
+        evm = self.session.evaluation_model()
+        if not evm:
+            return
+        # If we have the same number of Rayleigh and Brillouin regions,
+        # we can simply subtract the two arrays (regions are always
+        # sorted by center in the peak selection model, so corresponding
+        # regions should be at the same array index)
+        if (evm.results['brillouin_peak_position'].shape[4] ==
+                evm.results['rayleigh_peak_position'].shape[4]):
+            brillouin_shift = abs(
+                evm.results['brillouin_peak_position'] -
+                evm.results['rayleigh_peak_position']
+            )
+        else:
+            brillouin_shift = None
+
+        evm.results['brillouin_shift'] = brillouin_shift
