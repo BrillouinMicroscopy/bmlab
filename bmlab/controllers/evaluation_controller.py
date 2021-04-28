@@ -157,10 +157,12 @@ class EvaluationController(object):
                 evm.results['rayleigh_peak_position']
             )
 
-            evm.results['brillouin_shift_f'] = abs(
-                brillouin_peak_f -
-                rayleigh_peak_f
-            )
+            if (brillouin_peak_f is not None) &\
+                (rayleigh_peak_f is not None):
+                evm.results['brillouin_shift_f'] = abs(
+                    brillouin_peak_f -
+                    rayleigh_peak_f
+                )
 
         # Having a different number of Rayleigh and Brillouin regions
         # doesn't really make sense. But in case I am missing something
