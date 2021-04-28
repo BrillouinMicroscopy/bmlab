@@ -158,7 +158,7 @@ class EvaluationController(object):
             )
 
             if (brillouin_peak_f is not None) &\
-                (rayleigh_peak_f is not None):
+               (rayleigh_peak_f is not None):
                 evm.results['brillouin_shift_f'] = abs(
                     brillouin_peak_f -
                     rayleigh_peak_f
