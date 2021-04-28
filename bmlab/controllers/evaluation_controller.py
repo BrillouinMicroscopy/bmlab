@@ -131,6 +131,9 @@ class EvaluationController(object):
         evm = self.session.evaluation_model()
         if not evm:
             return
+        cm = self.session.calibration_model()
+        if not cm:
+            return
         # If we have the same number of Rayleigh and Brillouin regions,
         # we can simply subtract the two arrays (regions are always
         # sorted by center in the peak selection model, so corresponding
@@ -142,6 +145,23 @@ class EvaluationController(object):
                 evm.results['brillouin_peak_position'] -
                 evm.results['rayleigh_peak_position']
             )
+
+            time = evm.results['time']
+
+            brillouin_peak_f = cm.get_frequency_by_time(
+                time,
+                evm.results['brillouin_peak_position']
+            )
+            rayleigh_peak_f = cm.get_frequency_by_time(
+                time,
+                evm.results['rayleigh_peak_position']
+            )
+
+            evm.results['brillouin_shift_f'] = abs(
+                brillouin_peak_f -
+                rayleigh_peak_f
+            )
+
         # Having a different number of Rayleigh and Brillouin regions
         # doesn't really make sense. But in case I am missing something
         # here, we assign each Brillouin region the nearest (by center)
