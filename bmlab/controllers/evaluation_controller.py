@@ -137,11 +137,34 @@ class EvaluationController(object):
         # regions should be at the same array index)
         if (evm.results['brillouin_peak_position'].shape[4] ==
                 evm.results['rayleigh_peak_position'].shape[4]):
-            brillouin_shift = abs(
+
+            evm.results['brillouin_shift'] = abs(
                 evm.results['brillouin_peak_position'] -
                 evm.results['rayleigh_peak_position']
             )
+        # Having a different number of Rayleigh and Brillouin regions
+        # doesn't really make sense. But in case I am missing something
+        # here, we assign each Brillouin region the nearest (by center)
+        # Rayleigh region.
         else:
-            brillouin_shift = None
+            psm = self.session.peak_selection_model()
+            if not psm:
+                return
+            brillouin_centers = list(map(np.mean, psm.get_brillouin_regions()))
+            rayleigh_centers = list(map(np.mean, psm.get_rayleigh_regions()))
 
-        evm.results['brillouin_shift'] = brillouin_shift
+            for idx in range(len(brillouin_centers)):
+                # Find corresponding (nearest) Rayleigh region
+                d = list(
+                    map(
+                        lambda x: abs(x - brillouin_centers[idx]),
+                        rayleigh_centers
+                    )
+                )
+                idx_r = d.index(min(d))
+                evm.results['brillouin_shift'][:, :, :, :, idx, :] = abs(
+                    evm.results[
+                        'brillouin_peak_position'][:, :, :, :, idx, :] -
+                    evm.results[
+                        'rayleigh_peak_position'][:, :, :, :, idx_r, :]
+                )
