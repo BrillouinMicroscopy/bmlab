@@ -16,3 +16,13 @@ def regions_merge_add_region(regions, region):
 
     if not regions_fused:
         regions.append(region)
+
+
+def regions_check_order(regions):
+    """
+    This function checks that the tuples in the regions array
+    are sorted based on their center
+    :param regions: array containing regions
+    :return:
+    """
+    regions.sort(key=np.mean)
