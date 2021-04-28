@@ -124,6 +124,10 @@ class CalibrationModel(object):
         self.frequencies[calib_key] = frequencies
         self.calib_times[calib_key] = time
 
+    def clear_frequencies(self, calib_key):
+        del self.frequencies[calib_key]
+        del self.calib_times[calib_key]
+
     def get_frequencies_by_calib_key(self, calib_key):
         """
         Returns the complete frequency axis for a given
