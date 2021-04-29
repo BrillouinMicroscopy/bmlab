@@ -83,9 +83,9 @@ class EvaluationController(object):
                         return
                     spectra, times, intensities =\
                         self.session.extract_payload_spectrum(image_key)
-                    evm.results['time'][ind_x, ind_y, ind_z, :] =\
+                    evm.results['time'][ind_x, ind_y, ind_z, :, 0, 0] =\
                         times
-                    evm.results['intensity'][ind_x, ind_y, ind_z, :] =\
+                    evm.results['intensity'][ind_x, ind_y, ind_z, :, 0, 0] =\
                         intensities
                     # Loop over all frames per measurement position
                     for frame_num, spectrum in enumerate(spectra):

@@ -38,6 +38,8 @@ class EvaluationModel(object):
             dims['dim_y'],
             dims['dim_z'],
             dims['nr_images'],
+            1,  # We just add this so it matches the ndims of the
+            1,  # Brillouin array and reshapes are reduced
         )
 
         self.results['intensity'] = np.empty(shape_general)
@@ -79,8 +81,8 @@ class EvaluationModel(object):
             dims['dim_z'],
             dims['nr_images'],
             dims['nr_rayleigh_regions'],
-            1,  # We just add this so it matches
-                #  the ndims of the Brillouin array
+            1,  # We just add this so it matches the ndims of the
+                #  Brillouin array and reshapes are reduced
         )
 
         self.results['rayleigh_peak_position'] = np.empty(shape_rayleigh)

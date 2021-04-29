@@ -205,6 +205,21 @@ class CalibrationModel(object):
         on the spectrum
         :return: The corresponding frequency in Hz
         """
+        # Cannot execute if ndims are unequal
+        if np.ndim(time) is not np.ndim(position):
+            return None
+
+        shape_time = np.shape(time)
+        shape_position = np.shape(position)
+
+        # In case the arrays don't have the same shape,
+        # we repeat the time array
+        if shape_time is not shape_position:
+            time = np.tile(
+                time,
+                (np.array(shape_position) - np.array(shape_time)) + 1
+            )
+
         # TODO Move the interpolation out of this function
         #  (only needs to be done once)
         #  (!!! quite critical because this function is called
