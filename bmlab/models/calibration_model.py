@@ -233,12 +233,25 @@ class CalibrationModel(object):
             f = interpolate.interp1d(indices, frequencies)
             return f(position)
         # Otherwise we can interpolate by time as well
+        elif len(calib_times_array) < 3:
+            f = interpolate.RegularGridInterpolator(
+                (calib_times_array, indices),
+                frequencies,
+                method='linear',
+                bounds_error=False
+            )
+            return f((time, position))
         else:
-            f = interpolate.interp2d(
-                indices,
+            # If we only have three entries we cannot use a
+            # third degree spline
+            degree = 3 if len(calib_times_array) > 3 else 2
+            f = interpolate.RectBivariateSpline(
                 calib_times_array,
-                frequencies)
-            return f(position, time)
+                indices,
+                frequencies,
+                kx=degree
+            )
+            return f(time, position, grid=False)
 
 
 class FitSet(object):

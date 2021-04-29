@@ -63,18 +63,64 @@ def test_get_frequency_by_time():
     """
     Fill calibration model with values for calibrations
     """
+    # Test that one calibration works
     cm.set_frequencies('0', 0, np.arange(100).reshape(1, -1))
+
+    frequency = cm.get_frequency_by_time(0, 0)
+    np.testing.assert_allclose(frequency, 0, atol=1.E-8)
+    frequency = cm.get_frequency_by_time(10, 0)
+    np.testing.assert_allclose(frequency, 0, atol=1.E-8)
+
+    times = 10 * np.ones((5, 5, 5, 2, 2, 2))
+    positions = np.zeros((5, 5, 5, 2, 2, 2))
+    positions[:, :, :, 1, :, :] = 50
+    frequencies = cm.get_frequency_by_time(times, positions)
+
+    expected = np.zeros((5, 5, 5, 2, 2, 2))
+    expected[:, :, :, 1, :, :] = 50
+    np.testing.assert_allclose(frequencies, expected, atol=1.E-8)
+
+    # Test that two calibrations work
     cm.set_frequencies('1', 10, np.arange(100).reshape(1, -1) + 10)
+
+    frequency = cm.get_frequency_by_time(0, 0)
+    np.testing.assert_allclose(frequency, 0, atol=1.E-8)
+    frequency = cm.get_frequency_by_time(10, 0)
+    np.testing.assert_allclose(frequency, 10, atol=1.E-8)
+
+    times = 10 * np.ones((5, 5, 5, 2, 2, 2))
+    positions = np.zeros((5, 5, 5, 2, 2, 2))
+    positions[:, :, :, 1, :, :] = 50
+    frequencies = cm.get_frequency_by_time(times, positions)
+
+    expected = 10 * np.ones((5, 5, 5, 2, 2, 2))
+    expected[:, :, :, 1, :, :] = 60
+    np.testing.assert_allclose(frequencies, expected, atol=1.E-8)
+
+    # Test that three calibrations work
     cm.set_frequencies('2', 30, np.arange(100).reshape(1, -1) + 30)
 
     frequency = cm.get_frequency_by_time(0, 0)
-    assert frequency == 0
+    np.testing.assert_allclose(frequency, 0, atol=1.E-8)
 
     frequency = cm.get_frequency_by_time(10, 0)
-    assert frequency == 10
+    np.testing.assert_allclose(frequency, 10, atol=1.E-8)
 
     frequency = cm.get_frequency_by_time(20, 0)
-    assert frequency == 20
+    np.testing.assert_allclose(frequency, 20, atol=1.E-8)
 
     frequency = cm.get_frequency_by_time(20, 11)
-    assert frequency == 31
+    np.testing.assert_allclose(frequency, 31, atol=1.E-8)
+
+    # Test that the function also accepts arrays
+    times = 10 * np.ones((5, 5, 5, 2, 2, 2))
+    times[:, :, :, :, :, 1] = 20
+    positions = np.zeros((5, 5, 5, 2, 2, 2))
+    positions[:, :, :, 1, :, :] = 50
+    frequencies = cm.get_frequency_by_time(times, positions)
+
+    expected = 10 * np.ones((5, 5, 5, 2, 2, 2))
+    expected[:, :, :, 0, :, 1] = 20
+    expected[:, :, :, 1, :, 0] = 60
+    expected[:, :, :, 1, :, 1] = 70
+    np.testing.assert_allclose(frequencies, expected, atol=1.E-8)
