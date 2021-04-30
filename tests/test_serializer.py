@@ -1,12 +1,24 @@
 import pathlib
 import os
 
+import pytest
+
 import h5py
 
 from bmlab.session import Session
 from bmlab.geometry import Circle, discretize_arc
 from bmlab.models.calibration_model import FitSet, RayleighFit
 from bmlab.serializer import serialize, deserialize
+
+
+@pytest.fixture(autouse=True)
+def run_before_and_after_tests():
+    yield
+
+    # We remove the session file created by the test
+    session_filename = data_file_path('Water.session.h5')
+    if os.path.exists(session_filename):
+        os.remove(session_filename)
 
 
 def data_file_path(file_name):

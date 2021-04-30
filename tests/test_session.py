@@ -6,6 +6,16 @@ import pytest
 from bmlab.session import Session
 
 
+@pytest.fixture(autouse=True)
+def run_before_and_after_tests():
+    yield
+
+    # We remove the session file created by the test
+    session_filename = data_file_path('Water.session.h5')
+    if os.path.exists(session_filename):
+        os.remove(session_filename)
+
+
 def data_file_path(file_name):
     return pathlib.Path(__file__).parent / 'data' / file_name
 
