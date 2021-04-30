@@ -190,3 +190,21 @@ class EvaluationController(object):
                     evm.results[
                         'rayleigh_peak_position'][:, :, :, :, idx_r, :]
                 )
+
+                time = evm.results['time']
+
+                brillouin_peak_f = cm.get_frequency_by_time(
+                    time,
+                    evm.results['brillouin_peak_position'][:, :, :, :, idx, :]
+                )
+                rayleigh_peak_f = cm.get_frequency_by_time(
+                    time,
+                    evm.results['rayleigh_peak_position'][:, :, :, :, idx_r, :]
+                )
+
+                if (brillouin_peak_f is not None) &\
+                   (rayleigh_peak_f is not None):
+                    evm.results['brillouin_shift_f'][:, :, :, :, idx, :] = abs(
+                        brillouin_peak_f -
+                        rayleigh_peak_f
+                    )
