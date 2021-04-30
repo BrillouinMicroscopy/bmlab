@@ -1,4 +1,5 @@
 0.0.4
+ - setup: use "pytest" command instead of deprecated "setup.py test"
  - get metadata from HDF file
  - set image orientation
 0.0.3

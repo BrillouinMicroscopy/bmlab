@@ -6,8 +6,9 @@ import logging
 
 import numpy as np
 from skimage.feature import blob_dog
+from scipy.interpolate import interpolate
 
-from bmlab.model import Orientation
+from bmlab.models.orientation import Orientation
 
 
 class AutofindException(Exception):
@@ -41,7 +42,7 @@ def autofind_orientation(img):
     nx, ny = img.shape
     nx2, ny2 = nx // 2, ny // 2
 
-    blob_matrix = np.zeros((2, 2), dtype=np.int)
+    blob_matrix = np.zeros((2, 2), dtype=int)
     for blob in blobs:
         x, y, _ = blob
         x = round(x)
@@ -77,11 +78,11 @@ def set_orientation(image, rotate=0, flip_ud=False, flip_lr=False):
     ----------
     image: array_like
         Array of two dimensions.
-    rotate: integer, default = 0
+    rotate: int
         Number of times the array is rotated by 90 degrees (clockwise).
-    flip_ud: bool, default = False
+    flip_ud: bool
         If True, flip the image up-down
-    flip_lr: bool, default = False
+    flip_lr: bool
         If True, flip the image left-right
 
     Returns
@@ -139,33 +140,13 @@ def find_max_in_radius(img, xy0, radius):
     return peak_x, peak_y
 
 
-def extract_lines_along_arc(img, orientation, phis, circle, num_points):
+def extract_lines_along_arc(img, orientation, arc):
+    if arc.ndim != 3 or arc.shape[2] != 2:
+        return
+
     img = orientation.apply(img)
-    values = []
-    for phi in phis:
-        e_r = circle.e_r(phi)
-        mid_point = circle.point(phi)
-        points = [mid_point + e_r *
-                  k for k in np.arange(-num_points, num_points+1)]
-        points = np.array(points)
-        values.append(sum(interpolate(img, p) for p in points))
-    return np.array(values)
+    m, n = img.shape
+    func = interpolate.RegularGridInterpolator(
+        (np.arange(m), np.arange(n)), img, method='linear', bounds_error=False)
 
-
-def interpolate(img, xy):
-    xy0 = np.array(xy, dtype=np.int)
-    dxy = xy - xy0
-    dxy = dxy.T
-    ex = np.array([1, 0], dtype=np.int)
-    ey = np.array([0, 1], dtype=np.int)
-    nx, ny = img.shape
-
-    if xy0[0] < 0 or xy0[0] >= nx - 1:
-        return np.nan
-    if xy0[1] < 0 or xy0[1] >= ny - 1:
-        return np.nan
-    res = img[tuple(xy0)] * (1 - dxy[0]) * (1 - dxy[1])
-    res += img[tuple(xy0 + ex)] * dxy[0] * (1 - dxy[1])
-    res += img[tuple(xy0 + ey)] * (1 - dxy[0]) * dxy[1]
-    res += img[tuple(xy0 + ex + ey)] * dxy[0] * dxy[1]
-    return res
+    return np.nanmean(func((arc[:, :, 0], arc[:, :, 1])), 1)

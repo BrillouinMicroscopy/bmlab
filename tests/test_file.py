@@ -1,6 +1,6 @@
 import pytest
 import pathlib
-
+import datetime
 
 from bmlab.file import BrillouinFile, BadFileException
 
@@ -29,6 +29,12 @@ def test_file_has_comment():
     assert bf.comment == 'Brillouin data'
 
 
+def test_file_has_date():
+    bf = BrillouinFile(data_file_path('Water.h5'))
+    assert bf.date == datetime.datetime.fromisoformat(
+        '2020-11-03T15:20:30.682+01:00')
+
+
 def test_open_file_with_no_brillouin_data_raises_exception():
     with pytest.raises(BadFileException):
         BrillouinFile(data_file_path('empty_file.h5'))
@@ -45,7 +51,8 @@ def test_file_get_repetition_keys():
 def test_file_get_repetition_date():
     bf = BrillouinFile(data_file_path('Water.h5'))
     rep = bf.get_repetition('0')
-    assert rep.date
+    assert rep.date == datetime.datetime.fromisoformat(
+        '2020-11-03T15:20:52.852+01:00')
 
 
 def test_file_get_resolution():
@@ -84,6 +91,19 @@ def test_file_payload_get_image():
     assert image.shape == (2, 400, 400)
 
 
+def test_file_payload_get_date():
+    bf = BrillouinFile(data_file_path('Water.h5'))
+    date = bf.get_repetition('0').payload.get_date('0')
+    assert date == datetime.datetime.fromisoformat(
+        '2020-11-03T15:21:10.568+01:00')
+
+
+def test_file_payload_get_time():
+    bf = BrillouinFile(data_file_path('Water.h5'))
+    time = bf.get_repetition('0').payload.get_time('0')
+    assert time == 39.886
+
+
 def test_file_calibration_image_keys():
     bf = BrillouinFile(data_file_path('Water.h5'))
     rep = bf.get_repetition('0')
@@ -92,3 +112,16 @@ def test_file_calibration_image_keys():
     bf = BrillouinFile(data_file_path('Water_old.h5'))
     rep = bf.get_repetition('0')
     assert rep.calibration.image_keys() == [str(k+1) for k in range(2)]
+
+
+def test_file_calibration_get_date():
+    bf = BrillouinFile(data_file_path('Water.h5'))
+    date = bf.get_repetition('0').calibration.get_date('1')
+    assert date == datetime.datetime.fromisoformat(
+        '2020-11-03T15:21:07.484+01:00')
+
+
+def test_file_calibration_get_time():
+    bf = BrillouinFile(data_file_path('Water.h5'))
+    time = bf.get_repetition('0').calibration.get_time('1')
+    assert time == 36.802

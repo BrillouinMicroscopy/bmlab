@@ -17,6 +17,14 @@ from packaging import version
 BRILLOUIN_GROUP = 'Brillouin'
 
 
+def _get_datetime(time_stamp):
+    """ Convert the time stamp in the HDF file to Python datetime """
+    try:
+        return datetime.datetime.fromisoformat(time_stamp)
+    except Exception:
+        return None
+
+
 class BrillouinFile(object):
 
     def __init__(self, path):
@@ -55,6 +63,8 @@ class BrillouinFile(object):
             """ Old Brillouin file format """
             self.Brillouin_group = self.file
         self.comment = self.file.attrs.get('comment')[0].decode('utf-8')
+        self.date = _get_datetime(
+            self.file.attrs.get('date')[0].decode('utf-8'))
 
     def __del__(self):
         """
@@ -104,14 +114,14 @@ class BrillouinFile(object):
             the repetition
         """
         if version.parse(self.file_version) >= version.parse("0.0.4"):
-            return Repetition(self.Brillouin_group.get(repetition_key))
+            return Repetition(self.Brillouin_group.get(repetition_key), self)
         else:
-            return Repetition(self.file)
+            return Repetition(self.file, self)
 
 
 class Repetition(object):
 
-    def __init__(self, repetition_group):
+    def __init__(self, repetition_group, file):
         """
         Creates a repetition from the corresponding group of a HDF file.
 
@@ -121,23 +131,17 @@ class Repetition(object):
             The HDF group representing a Repetition. Consists of payload,
             calibration and background.
         """
-        self.date = self._get_datetime(repetition_group.attrs.get('date')[0])
-        self.payload = Payload(repetition_group.get('payload'))
+        self.date = _get_datetime(
+            repetition_group.attrs.get('date')[0].decode('utf-8'))
+        self.payload = Payload(repetition_group.get('payload'), self)
         calibration_group = repetition_group.get('calibration')
-        self.calibration = Calibration(calibration_group)
-
-    def _get_datetime(self, time_stamp):
-        """ Convert the time stamp in the HDF file to Python datetime """
-        time_stamp = time_stamp.decode('utf-8')
-        try:
-            return datetime.datetime.fromisoformat(time_stamp)
-        except Exception:
-            return None
+        self.calibration = Calibration(calibration_group, self)
+        self.file = file
 
 
 class Payload(object):
 
-    def __init__(self, payload_group):
+    def __init__(self, payload_group, repetition):
         """
         Creates a payload representation from the corresponding group of a
         HDF file.
@@ -148,6 +152,7 @@ class Payload(object):
             The payload of a repetition, basically a set of images
 
         """
+        self.repetition = repetition
         self.resolution = tuple(payload_group.attrs.get(
             'resolution-%s' % axis)[0] for axis in ['x', 'y', 'z'])
         self.data = payload_group.get('data')
@@ -181,10 +186,44 @@ class Payload(object):
         """
         return np.array(self.data.get(image_key))
 
+    def get_date(self, image_key):
+        """"
+        Returns the date of a payload image
+        with the given key
+        """
+        try:
+            return _get_datetime(
+                self.data.get(image_key).attrs.get('date')[0].decode('utf-8'))
+        except Exception:
+            return ''
+
+    def get_time(self, image_key):
+        try:
+            # Get date of the calibration
+            date = self.get_date(image_key)
+            # Get the reference date
+            ref = self.repetition.file.date
+            # return the difference in seconds
+            return (date - ref).total_seconds()
+        except Exception:
+            return None
+
+    def get_exposure(self, image_key):
+        """"
+        Returns the exposure time of a payload image
+        with the given key
+        """
+        try:
+            return self.data.get(image_key).attrs\
+                .get('exposure')[0].decode('utf-8')
+        except Exception:
+            # For older files we return a default value
+            return 0.5
+
 
 class Calibration(object):
 
-    def __init__(self, calibration_group):
+    def __init__(self, calibration_group, repetition):
         """
         Creates a calibration representation from the corresponding group of
         a HDF file.
@@ -194,6 +233,7 @@ class Calibration(object):
         calibration_group : HDF group
             Calibration data of a repetition from an HDF file.
         """
+        self.repetition = repetition
         self.data = calibration_group.get('data')
         """
         For H5BM files < 0.0.4
@@ -212,7 +252,7 @@ class Calibration(object):
 
     def get_image(self, image_key):
         """
-        Returns the image from the payload for given key.
+        Returns the image from the calibration for given key.
 
         Parameters
         ----------
@@ -225,6 +265,28 @@ class Calibration(object):
             Array representing the image.
         """
         return np.array(self.data.get(image_key))
+
+    def get_date(self, image_key):
+        """"
+        Returns the date of a calibration image
+        with the given key
+        """
+        try:
+            return _get_datetime(
+                self.data.get(image_key).attrs.get('date')[0].decode('utf-8'))
+        except Exception:
+            return ''
+
+    def get_time(self, image_key):
+        try:
+            # Get date of the calibration
+            date = self.get_date(image_key)
+            # Get the reference date
+            ref = self.repetition.file.date
+            # return the difference in seconds
+            return (date - ref).total_seconds()
+        except Exception:
+            return None
 
 
 class BadFileException(Exception):

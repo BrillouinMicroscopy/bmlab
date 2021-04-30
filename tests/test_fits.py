@@ -1,48 +1,84 @@
+import pathlib
+
 import numpy as np
 # import matplotlib.pyplot as plt
 
-from bmlab.fits import lorentz, fit_lorentz, fit_circle, fit_double_lorentz
+from bmlab.fits import lorentz, fit_lorentz, fit_circle,\
+    fit_double_lorentz, calculate_exact_circle, fit_vipa, VIPA
+
+from bmlab.models.setup import AVAILABLE_SETUPS
+
+import pytest
 
 
 def test_fit_lorentz():
     # Arrange
-    w = np.linspace(10, 20, 100)
-    w_0 = 14.
-    gam = 0.2
+    x = np.linspace(0, 30, 100)
+    w0 = 15.
+    fwhm = 4
     offset = 10.
-    y_data = lorentz(w, w_0, gam, offset)
+    intensity = 10.
+    y_data = lorentz(x, w0, fwhm, intensity) + offset
 
-    # plt.plot(w, y_data)
+    # plt.plot(x, y_data)
     # plt.show()
 
-    actual_w0, actual_gam, actual_offset = fit_lorentz(w, y_data)
-    np.testing.assert_almost_equal(actual_w0, w_0, decimal=3)
-    np.testing.assert_almost_equal(actual_gam, gam, decimal=3)
+    actual_w0, actual_fwhm, actual_intensity, actual_offset =\
+        fit_lorentz(x, y_data)
+    np.testing.assert_almost_equal(actual_w0, w0, decimal=3)
+    np.testing.assert_almost_equal(actual_fwhm, fwhm, decimal=3)
+    np.testing.assert_almost_equal(actual_intensity, intensity, decimal=3)
     np.testing.assert_almost_equal(actual_offset, offset, decimal=3)
+
+
+def test_fit_lorentz_real_image_data():
+    """ The data for this test case has been extracted manually from the running
+        BMicro application.
+    """
+
+    data_dir = pathlib.Path(__file__).parent / 'data'
+
+    region = np.load(data_dir / 'rayleigh_reg0_region.npy')
+    xdata = np.load(data_dir / 'rayleigh_reg0_xdata.npy')
+    ydata = np.load(data_dir / 'rayleigh_reg0_ydata.npy')
+
+    w0, fwhm, intensity, offset = fit_lorentz(xdata[range(*region)],
+                                              ydata[range(*region)])
+
+    assert w0 == pytest.approx(115, 0.2)
+    assert fwhm == pytest.approx(6, 0.5)
+    assert intensity == pytest.approx(1186, 1)
+    assert offset == pytest.approx(47, 1)
 
 
 def test_fit_double_lorentz():
     # Arrange
-    w = np.linspace(10, 20, 100)
-    w0_left = 14.
-    w0_right = 16.
-    gam = 0.5
+    x = np.linspace(0, 60, 200)
+    w0_left = 10.
+    intensity_left = 8.
+    fwhm_left = 2.
+    w0_right = 20.
+    intensity_right = 12.
+    fwhm_right = 4.
     offset = 10.
-    y_data = lorentz(w, w0_left, gam, offset)
-    y_data += lorentz(w, w0_right, gam, 0)
+    y_data = lorentz(x, w0_left, fwhm_left, intensity_left)
+    y_data += lorentz(x, w0_right, fwhm_right, intensity_right) + offset
 
     # plt.plot(w, y_data)
     # plt.show()
 
-    fit_left, fit_right = fit_double_lorentz(w, y_data)
+    w0s, fwhms, intens, actual_offset\
+        = fit_double_lorentz(x, y_data)
 
-    np.testing.assert_almost_equal(fit_left[0], w0_left, decimal=3)
-    np.testing.assert_almost_equal(fit_left[1], gam, decimal=3)
-    np.testing.assert_almost_equal(fit_left[2], offset, decimal=3)
+    np.testing.assert_almost_equal(w0s[0], w0_left, decimal=3)
+    np.testing.assert_almost_equal(fwhms[0], fwhm_left, decimal=3)
+    np.testing.assert_almost_equal(intens[0], intensity_left, decimal=3)
 
-    np.testing.assert_almost_equal(fit_right[0], w0_right, decimal=3)
-    np.testing.assert_almost_equal(fit_right[1], gam, decimal=3)
-    np.testing.assert_almost_equal(fit_right[2], offset, decimal=3)
+    np.testing.assert_almost_equal(w0s[1], w0_right, decimal=3)
+    np.testing.assert_almost_equal(fwhms[1], fwhm_right, decimal=3)
+    np.testing.assert_almost_equal(intens[1], intensity_right, decimal=3)
+
+    np.testing.assert_almost_equal(actual_offset, offset, decimal=3)
 
 
 def test_circle_fit():
@@ -74,3 +110,70 @@ def test_circle_fit():
     actual_c, actual_r = fit_circle(test_points)
     np.testing.assert_allclose(actual_c, expect_c, rtol=1e-2)
     np.testing.assert_allclose(actual_r, expect_r, rtol=1e-2)
+
+    # Test that radius is always positive
+    test_points_2 = [(np.sqrt(2), 0), (1, 1), (0, np.sqrt(2))]
+    actual_c_2, actual_r_2 = fit_circle(test_points_2)
+
+    np.testing.assert_allclose(actual_c_2, (0, 0), rtol=0.001, atol=0.0001)
+    assert(actual_r_2 > 0)
+    np.testing.assert_allclose(actual_r_2, np.sqrt(2),
+                               rtol=0.0001, atol=0.000001)
+
+    test_points_3 = [
+        (10.0, 0.0),
+        (7.0710678118654755, 7.0710678118654755),
+        (6.123233995736766e-16, 10.0)
+    ]
+    actual_c_3, actual_r_3 = fit_circle(test_points_3)
+
+    np.testing.assert_allclose(actual_c_3, (0, 0), rtol=0.001, atol=0.0001)
+    assert(actual_r_3 > 0)
+    np.testing.assert_allclose(actual_r_3, 10, rtol=0.0001, atol=0.000001)
+
+
+def test_calculate_exact_circle():
+    points = [[1, 0], [0, 1], [-1, 0]]
+    center, radius = calculate_exact_circle(points)
+
+    np.testing.assert_allclose(center, [0, 0], rtol=1e-2)
+    np.testing.assert_allclose(radius, 1, rtol=1e-2)
+
+    points = [[-1, -2], [-2, -1], [-3, -2]]
+    center, radius = calculate_exact_circle(points)
+
+    np.testing.assert_allclose(center, [-2, -2], rtol=1e-2)
+    np.testing.assert_allclose(radius, 1, rtol=1e-2)
+
+    points = [[8, -2], [-2, 8], [-12, -2]]
+    center, radius = calculate_exact_circle(points)
+
+    np.testing.assert_allclose(center, [-2, -2], rtol=1e-2)
+    np.testing.assert_allclose(radius, 10, rtol=1e-2)
+
+
+def test_fit_vipa():
+    setup = AVAILABLE_SETUPS[0]
+    peaks = np.array([
+        84.2957567375179,
+        147.651886970066,
+        166.035559534916,
+        229.678232333124,
+        244.118149639528,
+        287.316083765756
+    ])
+
+    vipa_params = fit_vipa(peaks, setup)
+
+    # Values extracted from the previous Matlab version
+    vipa_params_expected =\
+        np.array([
+            2.602626743299098e-15, -2.565391389072813e-22,
+            -6.473779072623057e-25, 14.89190812511701e+9
+        ])
+
+    actual = VIPA(peaks, vipa_params) - setup.f0
+    expected = VIPA(peaks, vipa_params_expected) - setup.f0
+
+    # Values are in GHz, differences below 5 MHz should be good
+    np.testing.assert_allclose(actual, expected, atol=5e3)

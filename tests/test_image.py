@@ -4,10 +4,10 @@ import numpy as np
 import pytest
 
 from bmlab.image import set_orientation, find_max_in_radius
-from bmlab.image import autofind_orientation, interpolate
+from bmlab.image import autofind_orientation
 from bmlab.image import extract_lines_along_arc
 from bmlab.file import BrillouinFile
-from bmlab.model import Orientation
+from bmlab.models.orientation import Orientation
 from bmlab.geometry import Circle
 
 
@@ -63,44 +63,36 @@ def test_autofind_orientation():
     assert actual.reflection == expected.reflection
 
 
-def test_interpolate():
-
-    x = y = np.linspace(0, 10, 11)
-    X, Y = np.meshgrid(x, y, indexing='ij')
-
-    f = X**2 + Y**2
-
-    expected = 0.25 * (f[0, 1] + f[1, 0] + f[0, 0] + f[1, 1])
-    np.testing.assert_almost_equal(interpolate(f, [0.5, 0.5]), expected)
-
-    expected = 0.5 * (f[4, 5] + f[5, 5])
-    np.testing.assert_almost_equal(interpolate(f, [4.5, 5]), expected)
-
-    expected = f[5, 5]
-    np.testing.assert_almost_equal(interpolate(f, [5, 5]), expected)
-
-
 def test_extract_lines_along_arc():
 
     # Arrange
     orient = Orientation(reflection={'vertically': False,
                                      'horizontally': False})
     circle = Circle((0, 0), 100)
-    x = y = np.arange(110, dtype=np.int)
+    x = y = np.arange(110, dtype=int)
     X, Y = np.meshgrid(x, y, indexing='ij')
     phis = np.linspace(0, np.pi/2., 30)
     img = np.sqrt(X**2 + Y**2)
     img_2 = X**2 + Y**2
 
+    arc = []
+    num_points = 3
+    for phi in phis:
+        e_r = circle.e_r(phi)
+        mid_point = circle.point(phi)
+        points = [mid_point + e_r *
+                  k for k in np.arange(-num_points, num_points + 1)]
+        arc.append(np.array(points))
+    arc = np.array(arc)
+
     # Act
-    actual = extract_lines_along_arc(img, orient, phis, circle, 3)
-    actual_2 = extract_lines_along_arc(img_2, orient, phis, circle, 3)
+    actual = extract_lines_along_arc(img, orient, arc)
+    actual_2 = extract_lines_along_arc(img_2, orient, arc)
 
     # Assert
     one = np.ones_like(phis)
-    # 7 = 3 + 1 + 3 points, one in the middle, three inside, three outside
-    np.testing.assert_allclose(actual, 7*100*one, rtol=1.E-4)
-    np.testing.assert_allclose(actual_2, 7 * 10**4 * one, rtol=1.E-3)
+    np.testing.assert_allclose(actual, 100*one, rtol=1.E-4)
+    np.testing.assert_allclose(actual_2, 10**4 * one, rtol=1.E-3)
 
     # Quadratic scaling should shift the sum to the outside
     assert np.all(actual_2 > actual)

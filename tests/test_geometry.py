@@ -33,6 +33,6 @@ def test_discretize_arc():
     circle = Circle((0, 0), 100)
     img_shape = (100, 100)
     num_points = 100
-    expected = np.linspace(0, np.pi/2., num_points)
+    expected = np.linspace(np.pi/2., 0, num_points)
     actual = discretize_arc(circle, img_shape, num_points)
     np.testing.assert_array_equal(actual, expected)

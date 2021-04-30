@@ -12,7 +12,7 @@ jobs:
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        python-version: ['3.7', '3.8']
+        python-version: ['3.7', '3.8', '3.9']
         os: [macos-latest, ubuntu-latest, windows-latest]
 
     steps:
@@ -32,7 +32,7 @@ jobs:
         pip freeze
     - name: Test with pytest
       run: |
-        coverage run --source=bmlab setup.py test
+        coverage run --source=bmlab -m pytest tests
     - name: Lint with flake8
       run: |
         flake8 .
