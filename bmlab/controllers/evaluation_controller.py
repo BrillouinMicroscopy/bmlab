@@ -141,19 +141,9 @@ class EvaluationController(object):
         # sorted by center in the peak selection model, so corresponding
         # regions should be at the same array index)
         if shape_brillouin[4] == shape_rayleigh[4]:
-
-            rayleigh_peak_position = evm.results['rayleigh_peak_position']
-            # In case we have multiple Brillouin peaks fitted, we have to
-            # tile the Rayleigh array
-            if shape_brillouin != shape_rayleigh:
-                rayleigh_peak_position = np.tile(
-                    rayleigh_peak_position,
-                    (np.array(shape_brillouin) - np.array(shape_rayleigh)) + 1
-                )
-
             evm.results['brillouin_shift'] = abs(
                 evm.results['brillouin_peak_position'] -
-                rayleigh_peak_position
+                evm.results['rayleigh_peak_position']
             )
 
             time = evm.results['time']
@@ -164,7 +154,7 @@ class EvaluationController(object):
             )
             rayleigh_peak_f = cm.get_frequency_by_time(
                 time,
-                rayleigh_peak_position
+                evm.results['rayleigh_peak_position']
             )
 
             if (brillouin_peak_f is not None) &\
