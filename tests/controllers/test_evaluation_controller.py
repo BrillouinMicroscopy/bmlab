@@ -181,4 +181,3 @@ def test_calculate_derived_values_different_region_count_nr_peaks_2():
     assert (evm.results['brillouin_shift'][:, :, :, :, 1, 0] == 5).all()
     assert (evm.results['brillouin_shift'][:, :, :, :, 0, 1] == 3).all()
     assert (evm.results['brillouin_shift'][:, :, :, :, 1, 1] == 4).all()
-
