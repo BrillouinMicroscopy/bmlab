@@ -1,4 +1,5 @@
 import pathlib
+import os
 
 import pytest
 
@@ -46,3 +47,20 @@ def test_clear_session():
     assert session.file is None
     assert session.orientation.rotation == 0
     assert session.current_repetition() is None
+
+
+def test_session_filename():
+    session = Session.get_instance()
+
+    assert session.get_session_file_name('Water.h5') == 'Water.session.h5'
+
+
+def test_create_session_file():
+    session = Session.get_instance()
+    h5_file_path = data_file_path('Water.h5')
+    session.set_file(h5_file_path)
+    session_filename = session.get_session_file_name(h5_file_path)
+
+    session.save()
+
+    assert os.path.exists(session_filename)

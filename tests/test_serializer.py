@@ -48,10 +48,19 @@ def test_serialize_and_deserialize_session():
         session.extract_calibration_spectrum(calib_key)
 
     session.save()
-
     session.clear()
+    session.set_file(data_file_path('Water.h5'))
 
-    session.load(data_file_path('Water.session.h5'))
+    assert session.orientation.rotation == 0
+    assert session.orientation.reflection['vertically']
+
+    assert not session.orientation.reflection['horizontally']
+
+    # We save and load it twice to make sure a loaded file
+    # can be saved and loaded again properly.
+    session.save()
+    session.clear()
+    session.set_file(data_file_path('Water.h5'))
 
     assert session.orientation.rotation == 0
     assert session.orientation.reflection['vertically']
