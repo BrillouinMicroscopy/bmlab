@@ -188,7 +188,8 @@ class EvaluationController(object):
                     evm.results['rayleigh_peak_position'][:, :, :, :, idx_r, :]
                 )
                 if shift is not None:
-                    evm.results['brillouin_shift_f'][:, :, :, :, idx, :] = shift
+                    evm.results['brillouin_shift_f'][:, :, :, :, idx, :] =\
+                        shift
 
         # Calculate FWHM in GHz
         fwhm_brillouin = self.calculate_fwhm_f(
