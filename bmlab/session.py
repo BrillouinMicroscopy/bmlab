@@ -88,6 +88,7 @@ class Session(object):
         """
         try:
             file = BrillouinFile(file_name)
+            self.load(file_name)
         except Exception as e:
             raise e
 
@@ -215,8 +216,7 @@ class Session(object):
         if self.file is None:
             return
 
-        h5_file_name = str(self.file.path)
-        session_file_name = h5_file_name[:-3] + '.session.h5'
+        session_file_name = self.get_session_file_name(self.file.path)
 
         with h5py.File(session_file_name, 'w') as f:
             serialize(self.orientation, f, 'orientation')
@@ -225,14 +225,12 @@ class Session(object):
             # serialize(self.evaluation_models, f, 'evaluation_models')
             # serialize(self.peak_selection_models, f, 'peak_selection_models')
 
-    def load(self, session_file_name):
+    def load(self, h5_file_name):
 
-        h5_file_name = str(session_file_name)[:-11] + '.h5'
+        session_file_name = self.get_session_file_name(h5_file_name)
 
         if not os.path.exists(session_file_name):
             return
-
-        self.set_file(h5_file_name)
 
         with h5py.File(session_file_name, 'r') as f:
             self.orientation = deserialize(
@@ -249,3 +247,7 @@ class Session(object):
             #     self.peak_selection_models.__class__,
             #     f['peak_selection_models']
             # )
+
+    @staticmethod
+    def get_session_file_name(h5_file_name):
+        return str(h5_file_name)[:-3] + '.session.h5'
