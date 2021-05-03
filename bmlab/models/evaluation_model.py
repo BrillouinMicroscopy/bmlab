@@ -93,3 +93,6 @@ class EvaluationModel(object):
 
         self.results['rayleigh_peak_intensity'] = np.empty(shape_rayleigh)
         self.results['rayleigh_peak_intensity'][:] = np.nan
+
+        self.results['rayleigh_peak_fwhm_f'] = np.empty(shape_rayleigh)
+        self.results['rayleigh_peak_fwhm_f'][:] = np.nan
