@@ -3,6 +3,7 @@ from pathlib import Path
 import os
 import tempfile
 import shutil
+import uuid
 
 import h5py
 import numpy as np
@@ -125,7 +126,7 @@ def test_de_serialize_ExtractionModel():
 
     cf = em.circle_fits.get('the_calib_key')
 
-    with tempfile.TemporaryDirectory() as tmp_dir:
+    with tempfile.TemporaryDirectory(suffix=str(uuid.uuid4())) as tmp_dir:
         with h5py.File(str(tmp_dir) + 'abc.h5', 'w') as f:
             em.serialize(f, 'the_extraction_model')
 
