@@ -22,7 +22,10 @@ def tmp_dir():
     os.chdir(tmp_dir)
     yield tmp_dir
     os.chdir('..')
-    shutil.rmtree(tmp_dir)
+    try:
+        shutil.rmtree(tmp_dir)
+    except Exception as e:
+        print(e)
 
 
 def data_file_path(file_name):
