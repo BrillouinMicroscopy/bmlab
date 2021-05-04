@@ -22,7 +22,7 @@ def data_file_path(file_name):
 def test_serialize_and_deserialize_session():
     session = Session.get_instance()
 
-    with tempfile.TemporaryDirectory() as tmp_dir:
+    with tempfile.TemporaryDirectory(suffix=str(uuid.uuid4())) as tmp_dir:
 
         shutil.copy(data_file_path('Water.h5'), Path(tmp_dir) / 'Water.h5')
         os.chdir(tmp_dir)
@@ -83,7 +83,7 @@ def test_serialize_fitset():
     fit = RayleighFit('1', 3, 4, 11., 12., 13., 14.)
     fit_set.add_fit(fit)
 
-    with tempfile.TemporaryDirectory() as tmp_dir:
+    with tempfile.TemporaryDirectory(suffix=str(uuid.uuid4())) as tmp_dir:
         os.chdir(tmp_dir)
         with h5py.File('tmpsession.h5', 'w') as f:
             fit_set.serialize(f, 'fits')
@@ -103,7 +103,7 @@ def test_de_serialize_CircleFit():
 
     cf = CircleFit(center=(1., 2.), radius=3.)
 
-    with tempfile.TemporaryDirectory() as tmp_dir:
+    with tempfile.TemporaryDirectory(suffix=str(uuid.uuid4())) as tmp_dir:
         with h5py.File(str(tmp_dir) + 'abc.h5', 'w') as f:
             cf.serialize(f, 'circle')
 
