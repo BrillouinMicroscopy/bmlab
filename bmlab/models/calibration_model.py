@@ -4,11 +4,12 @@ import numpy as np
 from scipy import interpolate
 
 from bmlab.models.regions import regions_merge_add_region
+from bmlab.serializer import Serializer
 
 logger = logging.getLogger(__name__)
 
 
-class CalibrationModel(object):
+class CalibrationModel(Serializer):
 
     def __init__(self):
         self.calib_times = {}
@@ -269,7 +270,7 @@ class CalibrationModel(object):
             return f(time, position, grid=False)
 
 
-class FitSet(object):
+class FitSet(Serializer):
 
     def __init__(self):
         self.fits = {}
@@ -300,7 +301,7 @@ class FitSet(object):
             del self.fits[key]
 
 
-class RayleighFitSet(FitSet):
+class RayleighFitSet(FitSet, Serializer):
 
     def average_fits(self, calib_key, region_key):
         w0s = []
@@ -314,7 +315,7 @@ class RayleighFitSet(FitSet):
         return None
 
 
-class BrillouinFitSet(FitSet):
+class BrillouinFitSet(FitSet, Serializer):
 
     def average_fits(self, calib_key, region_key):
         w0s = []
@@ -329,7 +330,7 @@ class BrillouinFitSet(FitSet):
         return None
 
 
-class RayleighFit(object):
+class RayleighFit(Serializer):
 
     def __init__(self, calib_key, region_key, frame_num,
                  w0, fwhm, intensity, offset):

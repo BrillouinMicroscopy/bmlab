@@ -9,12 +9,12 @@ from bmlab.models.orientation import Orientation
 from bmlab.models.calibration_model import CalibrationModel
 from bmlab.models.peak_selection_model import PeakSelectionModel
 from bmlab.models.evaluation_model import EvaluationModel
-from bmlab.serializer import serialize, deserialize
+from bmlab.serializer import serialize, deserialize, Serializer
 from bmlab.image import extract_lines_along_arc
 from bmlab.fits import fit_lorentz_region
 
 
-class Session(object):
+class Session(Serializer):
     """
     Session stores information about the current file
     to be processed.
@@ -88,20 +88,27 @@ class Session(object):
         """
         try:
             file = BrillouinFile(file_name)
+        except Exception as e:
+            raise e
+        else:
+            """ Only load data if the file could be opened """
+            session = Session.get_instance()
+            session.file = file
+            session.extraction_models = {key: ExtractionModel()
+                                      for key in self.file.repetition_keys()}
+            session.calibration_models = {key: CalibrationModel()
+                                       for key in self.file.repetition_keys()}
+            session.peak_selection_models = {key: PeakSelectionModel()
+                                          for key in self.file.repetition_keys()}
+            session.evaluation_models = {key: EvaluationModel()
+                                      for key in self.file.repetition_keys()}
+
+        try:
             self.load(file_name)
         except Exception as e:
             raise e
-
-        """ Only load data if the file could be opened """
-        self.file = file
-        self.extraction_models = {key: ExtractionModel()
-                                  for key in self.file.repetition_keys()}
-        self.calibration_models = {key: CalibrationModel()
-                                   for key in self.file.repetition_keys()}
-        self.peak_selection_models = {key: PeakSelectionModel()
-                                      for key in self.file.repetition_keys()}
-        self.evaluation_models = {key: EvaluationModel()
-                                  for key in self.file.repetition_keys()}
+        else:
+            Session.get_instance().file = file
 
     def extract_calibration_spectrum(self, calib_key, frame_num=None):
         em = self.extraction_model()
@@ -204,8 +211,8 @@ class Session(object):
         # Session data by repetition:
         self.extraction_models = {}
         self.calibration_models = {}
-        self.peak_selection_models = {}
         self.evaluation_models = {}
+        self.peak_selection_models = {}
 
         self._current_repetition_key = None
 
@@ -219,11 +226,7 @@ class Session(object):
         session_file_name = self.get_session_file_name(self.file.path)
 
         with h5py.File(session_file_name, 'w') as f:
-            serialize(self.orientation, f, 'orientation')
-            serialize(self.extraction_models, f, 'extraction_models')
-            serialize(self.calibration_models, f, 'calibration_models')
-            # serialize(self.evaluation_models, f, 'evaluation_models')
-            # serialize(self.peak_selection_models, f, 'peak_selection_models')
+            self.serialize(f, 'session', skip=['file'])
 
     def load(self, h5_file_name):
 
@@ -233,20 +236,7 @@ class Session(object):
             return
 
         with h5py.File(session_file_name, 'r') as f:
-            self.orientation = deserialize(
-                self.orientation.__class__, f['orientation'])
-            self.extraction_models = deserialize(
-                self.extraction_models.__class__, f['extraction_models'])
-            self.calibration_models = deserialize(
-                self.calibration_models.__class__, f['calibration_models']
-            )
-            # self.evaluation_models = deserialize(
-            #     self.evaluation_models.__class__, f['evaluation_models']
-            # )
-            # self.peak_selection_models = deserialize(
-            #     self.peak_selection_models.__class__,
-            #     f['peak_selection_models']
-            # )
+            Session.__instance = Serializer.deserialize(f['session'])
 
     @staticmethod
     def get_session_file_name(h5_file_name):
