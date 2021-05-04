@@ -68,12 +68,12 @@ def test_serialize_and_deserialize_session():
 
         assert not session.orientation.reflection['horizontally']
 
-        em = session.extraction_model()
+        #em = session.extraction_model()
 
-        points = em.get_points('1')
-        np.testing.assert_array_equal(points[0], (100, 290))
-        assert isinstance(points, list)
-        assert isinstance(points[0], tuple)
+        #points = em.get_points('1')
+        #np.testing.assert_array_equal(points[0], (100, 290))
+        #assert isinstance(points, list)
+        #assert isinstance(points[0], tuple)
 
 
 def test_serialize_fitset():
