@@ -1,7 +1,6 @@
-from bmlab.serializer import Serializer
 
 
-class Orientation(Serializer):
+class Orientation(object):
 
     def __init__(self, rotation=0,
                  reflection={'vertically': False, 'horizontally': False}):

@@ -1,12 +1,11 @@
 import logging
 
 from bmlab.models.regions import regions_merge_add_region, regions_check_order
-from bmlab.serializer import Serializer
 
 logger = logging.getLogger(__name__)
 
 
-class PeakSelectionModel(Serializer):
+class PeakSelectionModel(object):
 
     def __init__(self):
         self.brillouin_regions = []

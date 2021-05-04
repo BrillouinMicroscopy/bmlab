@@ -1,12 +1,11 @@
 import logging
 import numpy as np
 
-from bmlab.serializer import Serializer
 
 logger = logging.getLogger(__name__)
 
 
-class EvaluationModel(Serializer):
+class EvaluationModel(object):
 
     def __init__(self):
 

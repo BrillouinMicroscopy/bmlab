@@ -3,10 +3,9 @@ from scipy import interpolate
 
 from bmlab.fits import fit_circle
 from bmlab.geometry import Circle
-from bmlab.serializer import Serializer
 
 
-class ExtractionModel(Serializer):
+class ExtractionModel(object):
 
     def __init__(self):
         self.arc_width = 2  # [pix] the width of the extraction arc
@@ -217,7 +216,7 @@ class ExtractionModel(Serializer):
         self.arc_width = width
 
 
-class CircleFit(Serializer):
+class CircleFit(object):
 
     def __init__(self, center, radius):
         self.center = center
