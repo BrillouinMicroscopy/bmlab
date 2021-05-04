@@ -61,6 +61,19 @@ def test_file_get_resolution():
     assert rep.payload.resolution == (10, 1, 1)
 
 
+def test_file_get_positions():
+    bf = BrillouinFile(data_file_path('Water.h5'))
+    rep = bf.get_repetition('0')
+    # Test that the shape is correct
+    assert rep.payload.positions['x'].shape == (1, 10, 1)
+    assert rep.payload.positions['y'].shape == (1, 10, 1)
+    assert rep.payload.positions['z'].shape == (1, 10, 1)
+    # Test some values
+    assert rep.payload.positions['x'][0, 0, 0] == -5652.5
+    assert rep.payload.positions['y'][0, 0, 0] == -1963.0
+    assert rep.payload.positions['z'][0, 0, 0] == 201.425
+
+
 def test_file_repetition_has_calibration():
     bf = BrillouinFile(data_file_path('Water.h5'))
     rep = bf.get_repetition('0')

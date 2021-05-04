@@ -155,6 +155,11 @@ class Payload(object):
         self.repetition = repetition
         self.resolution = tuple(int(payload_group.attrs.get(
             'resolution-%s' % axis)[0]) for axis in ['x', 'y', 'z'])
+        self.positions = {
+            'x': np.array(payload_group.get('positions-x')),
+            'y': np.array(payload_group.get('positions-y')),
+            'z': np.array(payload_group.get('positions-z')),
+        }
         self.data = payload_group.get('data')
 
     def image_keys(self):
