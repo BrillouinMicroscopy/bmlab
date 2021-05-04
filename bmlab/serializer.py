@@ -22,7 +22,7 @@ class Serializer(object):
         group = parent.create_group(name)
 
         group.attrs['type'] = '%s.%s' % (self.__class__.__module__,
-                                   self.__class__.__name__)
+                                         self.__class__.__name__)
 
         for var_name, var_value in self.__dict__.items():
 

@@ -3,6 +3,7 @@ import numpy as np
 import bmlab.constants as constants
 from bmlab.serializer import Serializer
 
+
 class Setup(Serializer):
 
     def __init__(self, key, name, pixel_size, focal_length,

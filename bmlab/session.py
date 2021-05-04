@@ -9,7 +9,7 @@ from bmlab.models.orientation import Orientation
 from bmlab.models.calibration_model import CalibrationModel
 from bmlab.models.peak_selection_model import PeakSelectionModel
 from bmlab.models.evaluation_model import EvaluationModel
-from bmlab.serializer import serialize, deserialize, Serializer
+from bmlab.serializer import Serializer
 from bmlab.image import extract_lines_along_arc
 from bmlab.fits import fit_lorentz_region
 
@@ -94,14 +94,22 @@ class Session(Serializer):
             """ Only load data if the file could be opened """
             session = Session.get_instance()
             session.file = file
-            session.extraction_models = {key: ExtractionModel()
-                                      for key in self.file.repetition_keys()}
-            session.calibration_models = {key: CalibrationModel()
-                                       for key in self.file.repetition_keys()}
-            session.peak_selection_models = {key: PeakSelectionModel()
-                                          for key in self.file.repetition_keys()}
-            session.evaluation_models = {key: EvaluationModel()
-                                      for key in self.file.repetition_keys()}
+            session.extraction_models = {
+                key: ExtractionModel()
+                for key in self.file.repetition_keys()
+            }
+            session.calibration_models = {
+                key: CalibrationModel()
+                for key in self.file.repetition_keys()
+            }
+            session.peak_selection_models = {
+                key: PeakSelectionModel()
+                for key in self.file.repetition_keys()
+            }
+            session.evaluation_models = {
+                key: EvaluationModel()
+                for key in self.file.repetition_keys()
+            }
 
         try:
             self.load(file_name)

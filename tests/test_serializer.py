@@ -68,12 +68,12 @@ def test_serialize_and_deserialize_session():
 
         assert not session.orientation.reflection['horizontally']
 
-        #em = session.extraction_model()
+        # em = session.extraction_model()
 
-        #points = em.get_points('1')
-        #np.testing.assert_array_equal(points[0], (100, 290))
-        #assert isinstance(points, list)
-        #assert isinstance(points[0], tuple)
+        # points = em.get_points('1')
+        # np.testing.assert_array_equal(points[0], (100, 290))
+        # assert isinstance(points, list)
+        # assert isinstance(points[0], tuple)
 
 
 def test_serialize_fitset():
@@ -98,7 +98,6 @@ def test_serialize_fitset():
         assert actual_fit.offset == expected_fit.offset
 
 
-
 def test_de_serialize_CircleFit():
 
     cf = CircleFit(center=(1., 2.), radius=3.)
@@ -108,7 +107,8 @@ def test_de_serialize_CircleFit():
             cf.serialize(f, 'circle')
 
             assert isinstance(f['circle'], h5py.Group)
-            assert f['circle'].attrs['type'] == 'bmlab.models.extraction_model.CircleFit'
+            assert f['circle'].attrs['type'] == \
+                   'bmlab.models.extraction_model.CircleFit'
 
         with h5py.File(str(tmp_dir) + 'abc.h5', 'r') as f:
             cf = CircleFit.deserialize(f['circle'])
@@ -120,7 +120,7 @@ def test_de_serialize_CircleFit():
 def test_de_serialize_ExtractionModel():
 
     em = ExtractionModel()
-    for p in  [(100, 290), (145, 255), (290, 110)]:
+    for p in [(100, 290), (145, 255), (290, 110)]:
         em.add_point('the_calib_key', 0.1, p[0], p[1])
 
     cf = em.circle_fits.get('the_calib_key')
@@ -134,5 +134,7 @@ def test_de_serialize_ExtractionModel():
         with h5py.File(str(tmp_dir) + 'abc.h5', 'r') as f:
             em_actual = Serializer.deserialize(f['the_extraction_model'])
 
-            assert em_actual.circle_fits.get('the_calib_key').radius == cf.radius
-            np.testing.assert_array_equal(em_actual.circle_fits.get('the_calib_key').center, cf.center)
+            actual_radius = em_actual.circle_fits.get('the_calib_key').radius
+            assert actual_radius == cf.radius
+            np.testing.assert_array_equal(
+                em_actual.circle_fits.get('the_calib_key').center, cf.center)
