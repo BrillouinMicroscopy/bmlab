@@ -24,6 +24,8 @@ def tmp_dir():
     os.chdir('..')
     try:
         shutil.rmtree(tmp_dir)
+    # Windows sometimes does not correctly close the HDF file. Then we have a
+    # file access conflict.
     except Exception as e:
         print(e)
 
@@ -79,12 +81,12 @@ def test_serialize_and_deserialize_session(tmp_dir):
 
     assert not session.orientation.reflection['horizontally']
 
-    # em = session.extraction_model()
+    em = session.extraction_model()
 
-    # points = em.get_points('1')
-    # np.testing.assert_array_equal(points[0], (100, 290))
-    # assert isinstance(points, list)
-    # assert isinstance(points[0], tuple)
+    points = em.get_points('1')
+    np.testing.assert_array_equal(points[0], (100, 290))
+    assert isinstance(points, list)
+    assert isinstance(points[0], tuple)
 
 
 def test_serialize_fitset(tmp_dir):
