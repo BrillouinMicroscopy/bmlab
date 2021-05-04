@@ -34,7 +34,7 @@ def data_file_path(file_name):
     return pathlib.Path(__file__).parent / 'data' / file_name
 
 
-def test_serialize_and_deserialize_session(tmp_dir):
+def test_serialize_session(tmp_dir):
     session = Session.get_instance()
 
     shutil.copy(data_file_path('Water.h5'), Path.cwd() / 'Water.h5')
@@ -69,24 +69,8 @@ def test_serialize_and_deserialize_session(tmp_dir):
 
     session.save()
 
-    session.clear()
-
-    session = Session.get_instance()
-    session.set_file('Water.h5')
-
-    session = Session.get_instance()
-
-    assert session.orientation.rotation == 0
-    assert session.orientation.reflection['vertically']
-
-    assert not session.orientation.reflection['horizontally']
-
-    em = session.extraction_model()
-
-    points = em.get_points('1')
-    np.testing.assert_array_equal(points[0], (100, 290))
-    assert isinstance(points, list)
-    assert isinstance(points[0], tuple)
+    with h5py.File('Water.session.h5', 'r') as f:
+        assert 'session/extraction_models/0/points/1' in f
 
 
 def test_serialize_fitset(tmp_dir):
