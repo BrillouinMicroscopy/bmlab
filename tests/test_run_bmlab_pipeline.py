@@ -29,9 +29,10 @@ def test_run_pipeline():
         'vertically': False, 'horizontally': False
     })
 
-    # Extraction
+    # Models
     em = session.extraction_model()
     cm = session.calibration_model()
+    pm = session.peak_selection_model()
 
     cal = session.current_repetition().calibration
 
@@ -67,5 +68,10 @@ def test_run_pipeline():
         cm.add_rayleigh_region(calib_key, (370, 410))
 
         calibration_controller.calibrate(calib_key)
+
+    pm.add_brillouin_region((190, 250))
+    pm.add_brillouin_region((290, 350))
+    pm.add_rayleigh_region((110, 155))
+    pm.add_rayleigh_region((370, 410))
 
     evaluation_controller.evaluate()
