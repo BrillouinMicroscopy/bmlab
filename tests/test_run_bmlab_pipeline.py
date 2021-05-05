@@ -35,8 +35,13 @@ def test_run_pipeline():
     calibration_controller = CalibrationController()
     evaluation_controller = EvaluationController()
 
+    points = [
+        (107, 293),
+        (165, 236),
+        (255, 137),
+        (291, 93),
+    ]
     for calib_key in session.get_calib_keys():
-        points = [(100, 290), (162, 240), (290, 95)]
         time = cal.get_time(calib_key)
         for p in points:
             em.add_point(calib_key, time, *p)
