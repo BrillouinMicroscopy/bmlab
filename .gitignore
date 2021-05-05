@@ -133,3 +133,5 @@ _version_save.py
 
 .DS_Store
 tmp*.h5
+
+tests/tmp*

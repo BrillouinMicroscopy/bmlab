@@ -1,9 +1,10 @@
 import numpy as np
 
 import bmlab.constants as constants
+from bmlab.serializer import Serializer
 
 
-class Setup(object):
+class Setup(Serializer):
 
     def __init__(self, key, name, pixel_size, focal_length,
                  vipa, calibration):
@@ -47,7 +48,7 @@ class Setup(object):
         return p1, p2, p3
 
 
-class VIPA(object):
+class VIPA(Serializer):
 
     def __init__(self, d, n, theta, order, lambda0):
         """ Start values for VIPA fit
@@ -72,7 +73,7 @@ class VIPA(object):
         self.m = round(constants.c/(self.lambda0 * self.FSR))
 
 
-class Calibration(object):
+class Calibration(Serializer):
 
     def __init__(self, num_brillouin_samples, shift_methanol=None,
                  shift_water=None):
