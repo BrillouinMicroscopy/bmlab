@@ -42,7 +42,8 @@ class Serializer(object):
         parent.create_dataset(name, data=array)
 
     def serialize_string(self, parent, string, name):
-        parent.create_dataset(name, data=string, dtype=h5py.string_dtype())
+        ds = parent.create_dataset(name, data=string, dtype=h5py.string_dtype())
+        ds.attrs['type'] = 'builtins.str'
 
     def serialize_number(self, parent, number, name):
         parent.create_dataset(name, data=number)
@@ -109,7 +110,13 @@ class Serializer(object):
     def do_deserialize(cls, instance_handle, var_value, var_name):
         if isinstance(var_value, h5py.Dataset):
             if var_value.shape == ():
-                instance_handle[var_name] = var_value[...].item()
+                item = var_value[...].item()
+                var_type = var_value.attrs.get('type')
+                if var_type:
+                    class_ = _class_from_full_class_name(var_type)
+                    item = class_(item)
+
+                instance_handle[var_name] = item
             else:
                 instance_handle[var_name] = var_value[...]
         elif isinstance(var_value, h5py.Group):
