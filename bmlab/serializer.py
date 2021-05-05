@@ -10,7 +10,6 @@ import logging
 import numbers
 import builtins
 import h5py
-import numpy as np
 
 
 logger = logging.getLogger(__name__)
@@ -42,16 +41,11 @@ class Serializer(object):
     def serialize_array(self, parent, array, name):
         parent.create_dataset(name, data=array)
 
+    def serialize_string(self, parent, string, name):
+        parent.create_dataset(name, data=string, dtype=h5py.string_dtype())
+
     def serialize_number(self, parent, number, name):
         parent.create_dataset(name, data=number)
-
-    @classmethod
-    def deserialize_array(cls, group, name):
-        return np.array(group[name])
-
-    @classmethod
-    def deserialize_number(cls, group, name):
-        return group.attrs[name]
 
     def do_serialize(self, group, value, name):
         if isinstance(value, dict):
@@ -67,8 +61,10 @@ class Serializer(object):
             value.serialize(group, name)
         elif is_list_like(value) and not isinstance(value, str):
             self.serialize_array(group, value, name)
-        elif is_scalar(value) or isinstance(value, str):
+        elif is_scalar(value):
             self.serialize_number(group, value, name)
+        elif isinstance(value, str):
+            self.serialize_string(group, value, name)
         elif value is None:
             pass
         else:

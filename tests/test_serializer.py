@@ -115,15 +115,14 @@ def test_serialize_session(tmp_dir):
 
 def test_deserialize_session_file(session_file):
 
-    with h5py.File(session_file, 'r') as f:
-        session = Session.get_instance()
-        session.set_file('Water.h5')
+    session = Session.get_instance()
+    session.set_file('Water.h5')
 
-        em = session.extraction_model()
-        assert em
-        assert em.calib_times['2'] == 62.542
-        assert len(em.extracted_values['1']) > 0
-        assert len(em.extraction_angles['2']) > 0
+    em = session.extraction_model()
+    assert em
+    assert em.calib_times['2'] == 62.542
+    assert len(em.extracted_values['1']) > 0
+    assert len(em.extraction_angles['2']) > 0
 
 
 def test_serialize_fitset(tmp_dir):
