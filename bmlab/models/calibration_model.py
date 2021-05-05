@@ -343,7 +343,7 @@ class RayleighFit(Serializer):
         self.offset = offset
 
 
-class BrillouinFit(object):
+class BrillouinFit(Serializer):
 
     def __init__(self, calib_key, region_key, frame_num,
                  w0s, fwhms, intensities, offset):

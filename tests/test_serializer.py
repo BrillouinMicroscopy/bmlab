@@ -10,7 +10,7 @@ import pytest
 
 from bmlab.session import Session
 from bmlab.geometry import Circle, discretize_arc
-from bmlab.models.calibration_model import FitSet, RayleighFit
+from bmlab.models.calibration_model import FitSet, RayleighFit, BrillouinFit
 from bmlab.models.extraction_model import CircleFit, ExtractionModel
 from bmlab.serializer import Serializer
 
