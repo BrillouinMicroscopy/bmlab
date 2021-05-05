@@ -21,6 +21,9 @@ def test_run_pipeline():
     session.set_current_repetition('0')
     session.set_setup(AVAILABLE_SETUPS[0])
 
+    # Check that we loaded the correct file
+    assert session.file.date.isoformat() == '2020-11-03T15:20:30.682000+01:00'
+
     # Set orientation
     session.orientation = Orientation(rotation=1, reflection={
         'vertically': False, 'horizontally': False
