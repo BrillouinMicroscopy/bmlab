@@ -22,8 +22,8 @@ def test_run_pipeline():
     session.set_setup(AVAILABLE_SETUPS[0])
 
     # Set orientation
-    session.orientation = Orientation(rotation=0, reflection={
-        'vertically': True, 'horizontally': False
+    session.orientation = Orientation(rotation=1, reflection={
+        'vertically': False, 'horizontally': False
     })
 
     # Extraction
@@ -42,6 +42,8 @@ def test_run_pipeline():
             em.add_point(calib_key, time, *p)
         imgs = cal.get_image(calib_key)
         img = imgs[0, ...]
+        img = session.orientation.apply(img)
+
         em.optimize_points(calib_key, img)
 
         circle_fit = em.get_circle_fit(calib_key)
