@@ -58,4 +58,4 @@ def test_run_pipeline():
 
         calibration_controller.calibrate(calib_key)
 
-    evaluation_controller.evaluate(abort=False)
+    evaluation_controller.evaluate()
