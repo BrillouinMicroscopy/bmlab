@@ -11,8 +11,7 @@ import pytest
 from bmlab.session import Session
 from bmlab.geometry import Circle, discretize_arc
 from bmlab.models.calibration_model import FitSet, RayleighFit
-from bmlab.models.extraction_model import CircleFit, ExtractionModel
-from bmlab.serializer import Serializer
+from bmlab.models.extraction_model import CircleFit
 
 
 @pytest.fixture()
@@ -123,6 +122,7 @@ def test_deserialize_session_file(session_file):
     assert em.calib_times['2'] == 62.542
     assert len(em.extracted_values['1']) > 0
     assert len(em.extraction_angles['2']) > 0
+    assert em.circle_fits_interpolation is not None
 
 
 def test_serialize_fitset(tmp_dir):
@@ -161,25 +161,3 @@ def test_de_serialize_CircleFit(tmp_dir):
 
         np.testing.assert_array_equal(cf.center, (1., 2.))
         assert cf.radius == 3.
-
-
-def test_de_serialize_ExtractionModel(tmp_dir):
-
-    em = ExtractionModel()
-    for p in [(100, 290), (145, 255), (290, 110)]:
-        em.add_point('the_calib_key', 0.1, p[0], p[1])
-
-    cf = em.circle_fits.get('the_calib_key')
-
-    with h5py.File(str(tmp_dir) + 'abc.h5', 'w') as f:
-        em.serialize(f, 'the_extraction_model')
-
-        assert isinstance(f['the_extraction_model'], h5py.Group)
-
-    with h5py.File(str(tmp_dir) + 'abc.h5', 'r') as f:
-        em_actual = Serializer.deserialize(f['the_extraction_model'])
-
-        actual_radius = em_actual.circle_fits.get('the_calib_key').radius
-        assert actual_radius == cf.radius
-        np.testing.assert_array_equal(
-            em_actual.circle_fits.get('the_calib_key').center, cf.center)
