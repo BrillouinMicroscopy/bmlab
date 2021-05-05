@@ -244,7 +244,10 @@ class Session(Serializer):
             return
 
         with h5py.File(session_file_name, 'r') as f:
-            Session.__instance = Serializer.deserialize(f['session'])
+            new_session = Serializer.deserialize(f['session'])
+            session = Session.get_instance()
+            for var_name, var_value in new_session.__dict__.items():
+                session.__dict__[var_name] = var_value
 
     @staticmethod
     def get_session_file_name(h5_file_name):

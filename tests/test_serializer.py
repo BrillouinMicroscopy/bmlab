@@ -30,6 +30,46 @@ def tmp_dir():
         print(e)
 
 
+@pytest.fixture()
+def session_file(tmp_dir):
+
+    session = Session.get_instance()
+
+    shutil.copy(data_file_path('Water.h5'), Path.cwd() / 'Water.h5')
+
+    session.set_file('Water.h5')
+
+    session.orientation.set_reflection(vertically=True, horizontally=False)
+
+    session.set_current_repetition('0')
+
+    cal = session.current_repetition().calibration
+    em = session.extraction_model()
+    for calib_key in session.get_calib_keys():
+        points = [(100, 290), (145, 255), (290, 110)]
+        time = cal.get_time(calib_key)
+        for p in points:
+            em.add_point(calib_key, time, *p)
+        imgs = cal.get_image(calib_key)
+        img = imgs[0, ...]
+
+        circle_fit = em.get_circle_fit(calib_key)
+        center, radius = circle_fit
+        circle = Circle(center, radius)
+        phis = discretize_arc(circle, img.shape, num_points=500)
+
+        session.extraction_model().set_extraction_angles(calib_key, phis)
+
+        assert em.get_circle_fit(calib_key)
+        assert em.get_extracted_values(calib_key) is None
+
+        session.extract_calibration_spectrum(calib_key)
+
+    session.save()
+
+    yield 'Water.session.h5'
+
+
 def data_file_path(file_name):
     return pathlib.Path(__file__).parent / 'data' / file_name
 
@@ -71,6 +111,19 @@ def test_serialize_session(tmp_dir):
 
     with h5py.File('Water.session.h5', 'r') as f:
         assert 'session/extraction_models/0/points/1' in f
+
+
+def test_deserialize_session_file(session_file):
+
+    with h5py.File(session_file, 'r') as f:
+        session = Session.get_instance()
+        session.set_file('Water.h5')
+
+        em = session.extraction_model()
+        assert em
+        assert em.calib_times['2'] == 62.542
+        assert len(em.extracted_values['1']) > 0
+        assert len(em.extraction_angles['2']) > 0
 
 
 def test_serialize_fitset(tmp_dir):
