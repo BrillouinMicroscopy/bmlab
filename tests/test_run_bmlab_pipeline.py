@@ -1,5 +1,7 @@
 import pathlib
 
+import numpy as np
+
 from bmlab.controllers.calibration_controller import CalibrationController
 from bmlab.controllers.evaluation_controller import EvaluationController
 from bmlab.geometry import Circle, discretize_arc
@@ -33,6 +35,7 @@ def test_run_pipeline():
     em = session.extraction_model()
     cm = session.calibration_model()
     pm = session.peak_selection_model()
+    evm = session.evaluation_model()
 
     cal = session.current_repetition().calibration
 
@@ -75,3 +78,5 @@ def test_run_pipeline():
     pm.add_rayleigh_region((370, 410))
 
     evaluation_controller.evaluate()
+    np.testing.assert_allclose(
+        evm.results['brillouin_shift_f'], 5.04e9, atol=50E6)
