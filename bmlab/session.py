@@ -212,7 +212,10 @@ class Session(Serializer):
         """
 
         # Global session data:
-        self.file = None
+        if hasattr(self, 'file') and self.file is not None:
+            self.file.close()
+            self.file = None
+
         self.orientation = Orientation()
         self.setup = None
 

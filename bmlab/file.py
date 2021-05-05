@@ -70,6 +70,9 @@ class BrillouinFile(object):
         """
         Destructor. Closes hdf file when object runs out of scope.
         """
+        self.close()
+
+    def close(self):
         try:
             self.file.close()
         except Exception:

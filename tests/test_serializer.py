@@ -66,6 +66,8 @@ def session_file(tmp_dir):
 
     session.save()
 
+    session.clear()
+
     yield 'Water.session.h5'
 
 
@@ -111,6 +113,8 @@ def test_serialize_session(tmp_dir):
     with h5py.File('Water.session.h5', 'r') as f:
         assert 'session/extraction_models/0/points/1' in f
 
+    session.clear()
+
 
 def test_deserialize_session_file(session_file):
 
@@ -123,6 +127,8 @@ def test_deserialize_session_file(session_file):
     assert len(em.extracted_values['1']) > 0
     assert len(em.extraction_angles['2']) > 0
     assert em.circle_fits_interpolation is not None
+
+    session.clear()
 
 
 def test_serialize_fitset(tmp_dir):
