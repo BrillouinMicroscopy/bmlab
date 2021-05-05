@@ -76,7 +76,7 @@ class EvaluationController(object):
                     image_key = str(ind_z * (resolution[0] * resolution[1])
                                     + ind_y * resolution[0] + ind_x)
 
-                    if (abort is not None) & abort.value:
+                    if (abort is not None) and abort.value:
                         self.calculate_derived_values()
                         if max_count is not None:
                             max_count.value = -1
@@ -221,7 +221,7 @@ class EvaluationController(object):
             rayleigh_position
         )
 
-        if (brillouin_peak_f is not None) & \
+        if (brillouin_peak_f is not None) and \
                 (rayleigh_peak_f is not None):
             return abs(
                 brillouin_peak_f -
@@ -242,7 +242,7 @@ class EvaluationController(object):
             peak_position - peak_fwhm/2
         )
 
-        if (brillouin_peak_right_slope_f is not None) & \
+        if (brillouin_peak_right_slope_f is not None) and \
                 (brillouin_peak_left_slope_f is not None):
             return abs(
                 brillouin_peak_right_slope_f -

@@ -108,11 +108,11 @@ class CalibrationModel(Serializer):
         peaks = []
         # Search all fits for given calib_key and frame_num
         for key, fit in self.rayleigh_fits.fits.items():
-            if (fit.calib_key == calib_key) & (fit.frame_num == frame_num):
+            if (fit.calib_key == calib_key) and (fit.frame_num == frame_num):
                 peaks.append(fit.w0)
 
         for key, fit in self.brillouin_fits.fits.items():
-            if (fit.calib_key == calib_key) & (fit.frame_num == frame_num):
+            if (fit.calib_key == calib_key) and (fit.frame_num == frame_num):
                 for w0 in fit.w0s:
                     peaks.append(w0)
 
