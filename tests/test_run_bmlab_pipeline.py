@@ -57,4 +57,5 @@ def test_run_pipeline():
         cm.add_rayleigh_region(calib_key, (370, 410))
 
         calibration_controller.calibrate(calib_key)
-        evaluation_controller.evaluate(abort=False)
+
+    evaluation_controller.evaluate(abort=False)
