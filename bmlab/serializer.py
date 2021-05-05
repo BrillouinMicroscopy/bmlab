@@ -123,7 +123,7 @@ class Serializer(object):
             raise Exception('Cannot deserialize object %s' % var_name)
 
 
-class SerializableTuple(Serializer, builtins.list):
+class SerializableTuple(Serializer, builtins.tuple):
 
     def __init__(self, pure_tuple):
         self.pure_tuple = pure_tuple
