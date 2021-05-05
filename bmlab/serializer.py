@@ -111,11 +111,8 @@ class Serializer(object):
         if isinstance(var_value, h5py.Dataset):
             if var_value.shape == ():
                 item = var_value[...].item()
-                var_type = var_value.attrs.get('type')
-                if var_type:
-                    class_ = _class_from_full_class_name(var_type)
-                    item = class_(item)
-
+                if type(item) == type(b''):
+                    item = item.decode('utf-8')
                 instance_handle[var_name] = item
             else:
                 instance_handle[var_name] = var_value[...]
