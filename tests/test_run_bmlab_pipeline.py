@@ -10,7 +10,7 @@ from bmlab.models.setup import AVAILABLE_SETUPS
 from bmlab.session import Session
 
 
-def test_run_pipeline():
+def run_pipeline():
     data_dir = pathlib.Path(__file__).parent / 'data'
 
     # Start session
@@ -35,7 +35,6 @@ def test_run_pipeline():
     em = session.extraction_model()
     cm = session.calibration_model()
     pm = session.peak_selection_model()
-    evm = session.evaluation_model()
 
     cal = session.current_repetition().calibration
 
@@ -78,5 +77,12 @@ def test_run_pipeline():
     pm.add_rayleigh_region((370, 410))
 
     evaluation_controller.evaluate()
+    return session
+
+
+def test_run_pipeline():
+
+    session = run_pipeline()
+    evm = session.evaluation_model()
     np.testing.assert_allclose(
         evm.results['brillouin_shift_f'], 5.04e9, atol=50E6)

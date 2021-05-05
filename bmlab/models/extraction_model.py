@@ -74,6 +74,10 @@ class ExtractionModel(Serializer):
         fit = self.circle_fits_interpolation(self.circle_fits_index, time)
         return (fit[0], fit[1]), fit[2]
 
+    def post_deserialize(self):
+        self.refresh_extraction_angles_interpolation()
+        self.refresh_circle_fits_interpolation()
+
     def refresh_circle_fits_interpolation(self):
         # If there are no entries, we reset the interpolation
         if not self.calib_times:

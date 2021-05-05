@@ -9,6 +9,7 @@ import re
 import logging
 import numbers
 import builtins
+
 import h5py
 
 
@@ -105,6 +106,9 @@ class Serializer(object):
         for var_name, var_value in group.items():
             cls.do_deserialize(instance_handle, var_value, var_name)
 
+        if isinstance(instance, Serializer):
+            instance.post_deserialize()
+
         return instance
 
     @classmethod
@@ -121,6 +125,12 @@ class Serializer(object):
             instance_handle[var_name] = Serializer.deserialize(var_value)
         else:
             raise Exception('Cannot deserialize object %s' % var_name)
+
+    def post_deserialize(self):
+        """Override this method in derived classes if further initialization
+        is necessary after deserialization from HDF.
+        """
+        pass
 
 
 class SerializableTuple(Serializer, builtins.tuple):
