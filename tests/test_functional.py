@@ -31,6 +31,7 @@ def test_typical_use_case():
     # Extraction
     cal = session.current_repetition().calibration
     em = session.extraction_model()
+    ec = ExtractionController()
     for calib_key in session.get_calib_keys():
         points = [(100, 290), (145, 255), (290, 110)]
         time = cal.get_time(calib_key)
@@ -38,9 +39,9 @@ def test_typical_use_case():
             em.add_point(calib_key, time, *p)
         imgs = cal.get_image(calib_key)
         img = imgs[0, ...]
-        em.optimize_points(calib_key, img)
-        em.optimize_points(calib_key, img)
-        em.optimize_points(calib_key, img)
+        ec.optimize_points(calib_key, img)
+        ec.optimize_points(calib_key, img)
+        ec.optimize_points(calib_key, img)
 
         circle_fit = em.get_circle_fit(calib_key)
         center, radius = circle_fit

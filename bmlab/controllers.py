@@ -4,7 +4,7 @@ import numpy as np
 
 from bmlab import Session
 from bmlab.fits import fit_vipa, VIPA, fit_lorentz_region
-from bmlab.image import extract_lines_along_arc
+from bmlab.image import extract_lines_along_arc, find_max_in_radius
 
 logger = logging.getLogger(__name__)
 
@@ -417,3 +417,18 @@ class ExtractionController(object):
             extracted_values.append(values_by_img)
         em.set_extracted_values(calib_key, extracted_values)
         return extracted_values
+
+    def optimize_points(self, calib_key, img, radius=10):
+
+        session = Session.get_instance()
+        em = session.extraction_model()
+
+        points = em.get_points(calib_key)
+        time = em.get_time(calib_key)
+        em.clear_points(calib_key)
+
+        for p in points:
+            new_point = find_max_in_radius(img, p, radius)
+            # Warning: x-axis in imshow is 1-axis in img, y-axis is 0-axis
+            em.add_point(
+                calib_key, time, new_point[0], new_point[1])

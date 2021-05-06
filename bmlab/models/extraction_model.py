@@ -40,21 +40,6 @@ class ExtractionModel(Serializer):
             return self.calib_times[calib_key]
         return []
 
-    def optimize_points(self, calib_key, img, radius=10):
-
-        from bmlab.image import find_max_in_radius
-        # local import because to break circular dependency
-
-        points = self.get_points(calib_key)
-        time = self.get_time(calib_key)
-        self.clear_points(calib_key)
-
-        for p in points:
-            new_point = find_max_in_radius(img, p, radius)
-            # Warning: x-axis in imshow is 1-axis in img, y-axis is 0-axis
-            self.add_point(
-                calib_key, time, new_point[0], new_point[1])
-
     def clear_points(self, calib_key):
         self.points.pop(calib_key, None)
         self.circle_fits.pop(calib_key, None)

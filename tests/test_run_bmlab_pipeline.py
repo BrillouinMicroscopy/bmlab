@@ -2,7 +2,8 @@ import pathlib
 
 import numpy as np
 
-from bmlab.controllers import CalibrationController, EvaluationController
+from bmlab.controllers import CalibrationController, EvaluationController,\
+    ExtractionController
 from bmlab.geometry import Circle, discretize_arc
 from bmlab.models import Orientation
 from bmlab.models.setup import AVAILABLE_SETUPS
@@ -39,6 +40,7 @@ def run_pipeline():
 
     calibration_controller = CalibrationController()
     evaluation_controller = EvaluationController()
+    extraction_controller = ExtractionController()
 
     points = [
         (107, 293),
@@ -54,7 +56,7 @@ def run_pipeline():
         img = imgs[0, ...]
         img = session.orientation.apply(img)
 
-        em.optimize_points(calib_key, img)
+        extraction_controller.optimize_points(calib_key, img)
 
         circle_fit = em.get_circle_fit(calib_key)
         center, radius = circle_fit

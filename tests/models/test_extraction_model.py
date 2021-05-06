@@ -79,23 +79,6 @@ def test_get_circle_fit_by_time():
     np.testing.assert_almost_equal(radius, 2, decimal=4)
 
 
-def test_optimize_points_in_extraction_model():
-
-    img = np.zeros((100, 100), dtype=int)
-    img[20, 20] = 1
-    img[80, 80] = 1
-
-    em = ExtractionModel()
-    em.add_point('0', 0, 15, 15)
-    em.add_point('0', 0, 75, 85)
-
-    em.optimize_points('0', img, radius=10)
-    opt_points = em.get_points('0')
-
-    assert (20, 20) == opt_points[0]
-    assert (80, 80) == opt_points[1]
-
-
 def test_clear_points_from_extraction_model():
     em = ExtractionModel()
     em.add_point('0', 0, 15, 15)
