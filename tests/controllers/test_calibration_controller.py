@@ -1,4 +1,4 @@
-from bmlab.controllers.calibration_controller import CalibrationController
+from bmlab.controllers import CalibrationController
 
 
 def test_calibrate():

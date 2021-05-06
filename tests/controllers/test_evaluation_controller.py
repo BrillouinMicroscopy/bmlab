@@ -1,6 +1,6 @@
 import pathlib
 
-from bmlab.controllers.evaluation_controller import EvaluationController
+from bmlab.controllers import EvaluationController
 
 
 def data_file_path(file_name):

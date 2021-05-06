@@ -7,6 +7,7 @@ import pathlib
 from bmlab import Session
 from bmlab.geometry import Circle, discretize_arc
 from bmlab.models import Orientation
+from bmlab.controllers import ExtractionController
 
 DATA_DIR = pathlib.Path(__file__).parent / 'data'
 
@@ -52,7 +53,8 @@ def test_typical_use_case():
         assert em.get_circle_fit(calib_key)
         assert em.get_extracted_values(calib_key) is None
 
-        session.extract_calibration_spectrum(calib_key)
+        ec = ExtractionController()
+        ec.extract_calibration_spectrum(calib_key)
 
     # Calibration
     cm = session.calibration_model()
