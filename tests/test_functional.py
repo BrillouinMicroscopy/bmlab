@@ -37,12 +37,12 @@ def test_typical_use_case():
         time = cal.get_time(calib_key)
         for p in points:
             em.add_point(calib_key, time, *p)
+        ec.optimize_points(calib_key)
+        ec.optimize_points(calib_key)
+        ec.optimize_points(calib_key)
+
         imgs = cal.get_image(calib_key)
         img = imgs[0, ...]
-        ec.optimize_points(calib_key, img)
-        ec.optimize_points(calib_key, img)
-        ec.optimize_points(calib_key, img)
-
         circle_fit = em.get_circle_fit(calib_key)
         center, radius = circle_fit
         circle = Circle(center, radius)

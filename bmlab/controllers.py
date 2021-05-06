@@ -419,9 +419,13 @@ class EvaluationController(object):
 
 class ExtractionController(object):
 
-    def optimize_points(self, calib_key, img, radius=10):
+    def optimize_points(self, calib_key, radius=10):
         session = Session.get_instance()
         em = session.extraction_model()
+
+        imgs = session.current_repetition().calibration.get_image(calib_key)
+        img = imgs[0, ...]
+        img = session.orientation.apply(img)
 
         points = em.get_points(calib_key)
         time = em.get_time(calib_key)

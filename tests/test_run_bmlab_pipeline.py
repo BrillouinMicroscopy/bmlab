@@ -52,11 +52,12 @@ def run_pipeline():
         time = cal.get_time(calib_key)
         for p in points:
             em.add_point(calib_key, time, *p)
+
+        extraction_controller.optimize_points(calib_key)
+
         imgs = cal.get_image(calib_key)
         img = imgs[0, ...]
         img = session.orientation.apply(img)
-
-        extraction_controller.optimize_points(calib_key, img)
 
         circle_fit = em.get_circle_fit(calib_key)
         center, radius = circle_fit
