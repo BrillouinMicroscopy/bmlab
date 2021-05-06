@@ -2,15 +2,45 @@ import pathlib
 
 import numpy as np
 
+from bmlab.controllers import CalibrationController
 from bmlab.controllers import EvaluationController, ExtractionController
 from bmlab.models import ExtractionModel
 
+
 def data_file_path(file_name):
-    return pathlib.Path(__file__).parent.parent / 'data' / file_name
+    return pathlib.Path(__file__).parent / 'data' / file_name
+
+
+def test_optimize_points_in_extraction_model(mocker):
+
+    img = np.zeros((100, 100), dtype=int)
+    img[20, 20] = 1
+    img[80, 80] = 1
+
+    em = ExtractionModel()
+    em.add_point('0', 0, 15, 15)
+    em.add_point('0', 0, 75, 85)
+
+    mocker.patch('bmlab.session.Session.extraction_model', return_value=em)
+
+    ec = ExtractionController()
+
+    ec.optimize_points('0', img, radius=10)
+    opt_points = em.get_points('0')
+
+    assert (20, 20) == opt_points[0]
+    assert (80, 80) == opt_points[1]
+
+
+
+def test_calibrate():
+
+    calib_key = '0'
+    calibration_controller = CalibrationController()
+    calibration_controller.calibrate(calib_key)
 
 
 def test_evaluate():
-
     evaluationcontroller = EvaluationController()
     evaluationcontroller.evaluate()
 
@@ -185,22 +215,3 @@ def test_calculate_derived_values_different_region_count_nr_peaks_2():
     assert (evm.results['brillouin_shift'][:, :, :, :, 1, 1] == 4).all()
 
 
-def test_optimize_points_in_extraction_model(mocker):
-
-    img = np.zeros((100, 100), dtype=int)
-    img[20, 20] = 1
-    img[80, 80] = 1
-
-    em = ExtractionModel()
-    em.add_point('0', 0, 15, 15)
-    em.add_point('0', 0, 75, 85)
-
-    mocker.patch('bmlab.session.Session.extraction_model', return_value=em)
-
-    ec = ExtractionController()
-
-    ec.optimize_points('0', img, radius=10)
-    opt_points = em.get_points('0')
-
-    assert (20, 20) == opt_points[0]
-    assert (80, 80) == opt_points[1]
