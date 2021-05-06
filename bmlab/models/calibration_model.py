@@ -24,6 +24,7 @@ class CalibrationModel(Serializer):
 
         self.frequency_by_calib_key_interpolators = {}
         self.frequencies_by_time_interpolator = None
+        self.frequency_by_time_interpolator = None
 
     def post_deserialize(self):
         self.refresh_frequency_interpolators()
@@ -148,6 +149,17 @@ class CalibrationModel(Serializer):
         self.refresh_frequency_interpolators()
 
     def refresh_frequency_interpolators(self):
+        """
+        This function creates the interpolator to get
+        the frequencies of points in a spectrum
+        Returns
+        -------
+        """
+
+        """
+        Create the interpolator for getting a frequency in a
+        calibration spectrum
+        """
         for calib_key in self.frequencies:
             frequencies = self.get_frequencies_by_calib_key(calib_key)
             if frequencies is None:
@@ -158,6 +170,9 @@ class CalibrationModel(Serializer):
             self.frequency_by_calib_key_interpolators[calib_key] =\
                 interpolate.interp1d(xdata, frequency)
 
+        """
+        Create the interpolator for getting frequencies by time
+        """
         sorted_keys = sorted(self.calib_times,
                              key=self.calib_times.get)
         if len(sorted_keys) < 2:
@@ -175,6 +190,53 @@ class CalibrationModel(Serializer):
 
             self.frequencies_by_time_interpolator =\
                 interpolate.interp1d(calib_times_array, frequencies, axis=0)
+
+        """
+        Create the interpolator for getting a frequency by position and time
+        """
+        if not sorted_keys:
+            return None
+
+        calib_times_array = []
+        frequencies = []
+        for key in sorted_keys:
+            calib_times_array.append(self.calib_times[key])
+            frequencies.append(np.nanmean(self.frequencies[key], 0))
+
+        calib_times_array = np.array(calib_times_array)
+        frequencies = np.array(frequencies)
+
+        indices = np.arange(frequencies.shape[1])
+
+        # If we only have one time point, we
+        # interpolate by peak position only
+        if len(sorted_keys) < 2:
+            frequencies = np.squeeze(frequencies)
+            f = interpolate.interp1d(indices, frequencies)
+            self.frequency_by_time_interpolator =\
+                lambda time, position: f(position)
+        # Otherwise we can interpolate by time as well
+        elif len(calib_times_array) < 3:
+            f = interpolate.RegularGridInterpolator(
+                (calib_times_array, indices),
+                frequencies,
+                method='linear',
+                bounds_error=False
+            )
+            self.frequency_by_time_interpolator = \
+                lambda time, position: f((time, position))
+        else:
+            # If we only have three entries we cannot use a
+            # third degree spline
+            degree = 3 if len(calib_times_array) > 3 else 2
+            f = interpolate.RectBivariateSpline(
+                calib_times_array,
+                indices,
+                frequencies,
+                kx=degree
+            )
+            self.frequency_by_time_interpolator = \
+                lambda time, position: f(time, position, grid=False)
 
     def get_frequencies_by_calib_key(self, calib_key):
         """
@@ -233,53 +295,8 @@ class CalibrationModel(Serializer):
                 (np.array(shape_position) - np.array(shape_time)) + 1
             )
 
-        # TODO Move the interpolation out of this function
-        #  (only needs to be done once)
-        #  (!!! quite critical because this function is called
-        #  for every measurement point)
-        # Sort calibration keys by time
-        sorted_keys = sorted(self.calib_times,
-                             key=self.calib_times.get)
-        if not sorted_keys:
-            return None
-
-        calib_times_array = []
-        frequencies = []
-        for key in sorted_keys:
-            calib_times_array.append(self.calib_times[key])
-            frequencies.append(np.nanmean(self.frequencies[key], 0))
-
-        calib_times_array = np.array(calib_times_array)
-        frequencies = np.array(frequencies)
-
-        indices = np.arange(frequencies.shape[1])
-
-        # If we only have one time point, we
-        # interpolate by peak position only
-        if len(sorted_keys) < 2:
-            frequencies = np.squeeze(frequencies)
-            f = interpolate.interp1d(indices, frequencies)
-            return f(position)
-        # Otherwise we can interpolate by time as well
-        elif len(calib_times_array) < 3:
-            f = interpolate.RegularGridInterpolator(
-                (calib_times_array, indices),
-                frequencies,
-                method='linear',
-                bounds_error=False
-            )
-            return f((time, position))
-        else:
-            # If we only have three entries we cannot use a
-            # third degree spline
-            degree = 3 if len(calib_times_array) > 3 else 2
-            f = interpolate.RectBivariateSpline(
-                calib_times_array,
-                indices,
-                frequencies,
-                kx=degree
-            )
-            return f(time, position, grid=False)
+        if self.frequency_by_time_interpolator is not None:
+            return self.frequency_by_time_interpolator(time, position)
 
 
 class FitSet(Serializer):
