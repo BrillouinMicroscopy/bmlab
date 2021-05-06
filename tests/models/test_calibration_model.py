@@ -83,6 +83,32 @@ def test_get_frequency_by_calib_key():
     assert cm.get_frequency_by_calib_key(80, '1') == 90
 
 
+def test_get_frequencies_by_time():
+    cm = CalibrationModel()
+
+    """
+    Fill calibration model with values for calibrations
+    """
+    # Test that one calibration works
+    frequencies0 = np.arange(100)
+    cm.set_frequencies('0', 0, frequencies0.reshape(1, -1))
+
+    frequencies = cm.get_frequencies_by_time(0)
+    np.testing.assert_allclose(frequencies, frequencies0, atol=1.E-8)
+
+    frequencies = cm.get_frequencies_by_time(10)
+    np.testing.assert_allclose(frequencies, frequencies0, atol=1.E-8)
+
+    frequencies1 = np.arange(100) + 10
+    cm.set_frequencies('1', 10, frequencies1.reshape(1, -1))
+
+    frequencies = cm.get_frequencies_by_time(0)
+    np.testing.assert_allclose(frequencies, frequencies0, atol=1.E-8)
+
+    frequencies = cm.get_frequencies_by_time(10)
+    np.testing.assert_allclose(frequencies, frequencies1, atol=1.E-8)
+
+
 def test_get_frequency_by_time():
     cm = CalibrationModel()
 
