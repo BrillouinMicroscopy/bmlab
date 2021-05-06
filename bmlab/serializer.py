@@ -168,6 +168,8 @@ class SerializableDict(Serializer, builtins.dict):
         group.attrs['type'] = 'builtins.dict'
 
         for key, value in self.pure_dict.items():
+            if callable(value):
+                continue
             self.do_serialize(group, value, key)
 
 

@@ -22,6 +22,11 @@ class CalibrationModel(Serializer):
         self.vipa_params = {}
         self.frequencies = {}
 
+        self.frequency_by_calib_key_interpolators = {}
+
+    def post_deserialize(self):
+        self.refresh_frequency_interpolators()
+
     def add_brillouin_region(self, calib_key, region):
         if calib_key not in self.brillouin_regions:
             self.brillouin_regions[calib_key] = []
@@ -134,10 +139,23 @@ class CalibrationModel(Serializer):
     def set_frequencies(self, calib_key, time, frequencies):
         self.frequencies[calib_key] = frequencies
         self.calib_times[calib_key] = time
+        self.refresh_frequency_interpolators()
 
     def clear_frequencies(self, calib_key):
         del self.frequencies[calib_key]
         del self.calib_times[calib_key]
+        self.refresh_frequency_interpolators()
+
+    def refresh_frequency_interpolators(self):
+        for calib_key in self.frequencies:
+            frequencies = self.get_frequencies_by_calib_key(calib_key)
+            if frequencies is None:
+                return
+            frequency = np.mean(np.array(frequencies), axis=0)
+
+            xdata = np.arange(len(frequency))
+            self.frequency_by_calib_key_interpolators[calib_key] =\
+                interpolate.interp1d(xdata, frequency)
 
     def get_frequencies_by_calib_key(self, calib_key):
         """
@@ -158,18 +176,9 @@ class CalibrationModel(Serializer):
         :param calib_key: The key of the calibration
         :return: The corresponding frequency in Hz
         """
-        # TODO Move the interpolation out of this function
-        #  (only needs to be done once for a calibration key)
-        #  (not so critical at the moment, since it's only done
-        #  for calibrating)
-        frequencies = self.get_frequencies_by_calib_key(calib_key)
-        if not frequencies:
-            return
-        frequency = np.mean(np.array(frequencies), axis=0)
-
-        xdata = np.arange(len(frequency))
-        f = interpolate.interp1d(xdata, frequency)
-        return f(position)
+        if calib_key in self.frequency_by_calib_key_interpolators:
+            return self.frequency_by_calib_key_interpolators[
+                calib_key](position)
 
     def get_frequencies_by_time(self, time):
         """
