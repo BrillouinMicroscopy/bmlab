@@ -166,7 +166,7 @@ class EvaluationController(object):
         resolution = self.session.current_repetition().payload.resolution
 
         # Get first spectrum to find number of images
-        spectra, _, _ = self.session.extract_payload_spectrum('0')
+        spectra, _, _ = self.extract_payload_spectrum('0')
 
         evm.initialize_results_arrays({
             # measurement points in x direction
@@ -199,7 +199,7 @@ class EvaluationController(object):
                             max_count.value = -1
                         return
                     spectra, times, intensities =\
-                        self.session.extract_payload_spectrum(image_key)
+                        self.extract_payload_spectrum(image_key)
                     evm.results['time'][ind_x, ind_y, ind_z, :, 0, 0] =\
                         times
                     evm.results['intensity'][ind_x, ind_y, ind_z, :, 0, 0] =\
@@ -235,6 +235,32 @@ class EvaluationController(object):
         self.calculate_derived_values()
 
         return
+
+    def extract_payload_spectrum(self, image_key):
+        session = Session.get_instance()
+        em = session.extraction_model()
+        if not em:
+            return
+        time = session.current_repetition().payload.get_time(image_key)
+        arc = em.get_arc_by_time(time)
+        if arc.size == 0:
+            return
+
+        imgs = session.current_repetition().payload.get_image(image_key)
+
+        # Extract values from *all* frames in the current payload
+        extracted_values = []
+        for img in imgs:
+            values_by_img = extract_lines_along_arc(img,
+                                                    session.orientation, arc)
+            extracted_values.append(values_by_img)
+
+        exposure = session.current_repetition().payload.get_exposure(image_key)
+        times = exposure * np.arange(len(imgs)) + time
+
+        intensities = np.nanmean(imgs, axis=(1, 2))
+
+        return extracted_values, times, intensities
 
     def calculate_derived_values(self):
         """
