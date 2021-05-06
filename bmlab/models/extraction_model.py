@@ -15,7 +15,6 @@ class ExtractionModel(Serializer):
         self.circle_fits = {}
         self.circle_fits_index = []
         self.circle_fits_interpolation = None
-        self.extracted_values = {}
         self.extraction_angles = {}
         self.extraction_angles_index = None
         self.extraction_angles_interpolation = None
@@ -146,15 +145,6 @@ class ExtractionModel(Serializer):
             ]
             arc.append(np.array(points))
         return np.array(arc)
-
-    def set_extracted_values(self, calib_key, values):
-        self.extracted_values[calib_key] = values
-
-    def get_extracted_values(self, calib_key):
-        values = self.extracted_values.get(calib_key)
-        if values:
-            return values
-        return None
 
     def set_extraction_angles(self, calib_key, phis):
         self.extraction_angles[calib_key] = phis

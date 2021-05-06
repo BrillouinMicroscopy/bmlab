@@ -46,8 +46,7 @@ class CalibrationController(object):
                 max_count.value = -1
             return
 
-        ec = ExtractionController()
-        spectra = ec.extract_calibration_spectrum(calib_key)
+        spectra = self.extract_calibration_spectra(calib_key)
         time = repetition.calibration.get_time(calib_key)
 
         if spectra is None:
@@ -86,16 +85,13 @@ class CalibrationController(object):
         cm.set_frequencies(calib_key, time, frequencies)
 
     def fit_rayleigh_regions(self, calib_key):
-        session = Session.get_instance()
-        em = session.extraction_model()
-        cm = session.calibration_model()
-        extracted_values = em.get_extracted_values(calib_key)
+        cm = self.session.calibration_model()
+        spectra = cm.get_spectra(calib_key)
         regions = cm.get_rayleigh_regions(calib_key)
 
         cm.clear_rayleigh_fits(calib_key)
-        for frame_num, spectrum in enumerate(extracted_values):
+        for frame_num, spectrum in enumerate(spectra):
             for region_key, region in enumerate(regions):
-                spectrum = extracted_values[frame_num]
                 xdata = np.arange(len(spectrum))
                 w0, fwhm, intensity, offset = \
                     fit_lorentz_region(region, xdata, spectrum)
@@ -103,14 +99,12 @@ class CalibrationController(object):
                                     w0, fwhm, intensity, offset)
 
     def fit_brillouin_regions(self, calib_key):
-        session = Session.get_instance()
-        em = session.extraction_model()
-        cm = session.calibration_model()
-        extracted_values = em.get_extracted_values(calib_key)
+        cm = self.session.calibration_model()
+        spectra = cm.get_spectra(calib_key)
         regions = cm.get_brillouin_regions(calib_key)
 
         cm.clear_brillouin_fits(calib_key)
-        for frame_num, spectrum in enumerate(extracted_values):
+        for frame_num, spectrum in enumerate(spectra):
             for region_key, region in enumerate(regions):
                 xdata = np.arange(len(spectrum))
                 w0s, fwhms, intensities, offset = \
@@ -122,6 +116,31 @@ class CalibrationController(object):
                     )
                 cm.add_brillouin_fit(calib_key, region_key, frame_num,
                                      w0s, fwhms, intensities, offset)
+
+    def extract_calibration_spectra(self, calib_key, frame_num=None):
+        em = self.session.extraction_model()
+        cm = self.session.calibration_model()
+        if not em:
+            return
+        arc = em.get_arc_by_calib_key(calib_key)
+        if arc.size == 0:
+            return
+
+        imgs = self.session.current_repetition()\
+            .calibration.get_image(calib_key)
+        if frame_num is not None:
+            imgs = imgs[frame_num:1]
+
+        # Extract values from *all* frames in the current calibration
+        spectra = []
+        for img in imgs:
+            values_by_img = extract_lines_along_arc(
+                img,
+                self.session.orientation, arc
+            )
+            spectra.append(values_by_img)
+        cm.set_spectra(calib_key, spectra)
+        return spectra
 
 
 class EvaluationController(object):
@@ -166,7 +185,7 @@ class EvaluationController(object):
         resolution = self.session.current_repetition().payload.resolution
 
         # Get first spectrum to find number of images
-        spectra, _, _ = self.extract_payload_spectrum('0')
+        spectra, _, _ = self.extract_payload_spectra('0')
 
         evm.initialize_results_arrays({
             # measurement points in x direction
@@ -199,7 +218,7 @@ class EvaluationController(object):
                             max_count.value = -1
                         return
                     spectra, times, intensities =\
-                        self.extract_payload_spectrum(image_key)
+                        self.extract_payload_spectra(image_key)
                     evm.results['time'][ind_x, ind_y, ind_z, :, 0, 0] =\
                         times
                     evm.results['intensity'][ind_x, ind_y, ind_z, :, 0, 0] =\
@@ -236,31 +255,35 @@ class EvaluationController(object):
 
         return
 
-    def extract_payload_spectrum(self, image_key):
-        session = Session.get_instance()
-        em = session.extraction_model()
+    def extract_payload_spectra(self, image_key):
+        em = self.session.extraction_model()
+        evm = self.session.evaluation_model()
         if not em:
             return
-        time = session.current_repetition().payload.get_time(image_key)
+        time = self.session.current_repetition().payload.get_time(image_key)
         arc = em.get_arc_by_time(time)
         if arc.size == 0:
             return
 
-        imgs = session.current_repetition().payload.get_image(image_key)
+        imgs = self.session.current_repetition().payload.get_image(image_key)
 
         # Extract values from *all* frames in the current payload
-        extracted_values = []
+        spectra = []
         for img in imgs:
-            values_by_img = extract_lines_along_arc(img,
-                                                    session.orientation, arc)
-            extracted_values.append(values_by_img)
+            values_by_img = extract_lines_along_arc(
+                img,
+                self.session.orientation, arc
+            )
+            spectra.append(values_by_img)
 
-        exposure = session.current_repetition().payload.get_exposure(image_key)
+        exposure = self.session.current_repetition()\
+            .payload.get_exposure(image_key)
         times = exposure * np.arange(len(imgs)) + time
 
         intensities = np.nanmean(imgs, axis=(1, 2))
 
-        return extracted_values, times, intensities
+        evm.set_spectra(image_key, spectra)
+        return spectra, times, intensities
 
     def calculate_derived_values(self):
         """
@@ -396,30 +419,7 @@ class EvaluationController(object):
 
 class ExtractionController(object):
 
-    def extract_calibration_spectrum(self, calib_key, frame_num=None):
-        session = Session.get_instance()
-        em = session.extraction_model()
-        if not em:
-            return
-        arc = em.get_arc_by_calib_key(calib_key)
-        if arc.size == 0:
-            return
-
-        imgs = session.current_repetition().calibration.get_image(calib_key)
-        if frame_num is not None:
-            imgs = imgs[frame_num:1]
-
-        # Extract values from *all* frames in the current calibration
-        extracted_values = []
-        for img in imgs:
-            values_by_img = extract_lines_along_arc(img,
-                                                    session.orientation, arc)
-            extracted_values.append(values_by_img)
-        em.set_extracted_values(calib_key, extracted_values)
-        return extracted_values
-
     def optimize_points(self, calib_key, img, radius=10):
-
         session = Session.get_instance()
         em = session.extraction_model()
 
