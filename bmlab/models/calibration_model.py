@@ -23,6 +23,7 @@ class CalibrationModel(Serializer):
         self.frequencies = {}
 
         self.frequency_by_calib_key_interpolators = {}
+        self.frequencies_by_time_interpolator = None
 
     def post_deserialize(self):
         self.refresh_frequency_interpolators()
@@ -157,6 +158,24 @@ class CalibrationModel(Serializer):
             self.frequency_by_calib_key_interpolators[calib_key] =\
                 interpolate.interp1d(xdata, frequency)
 
+        sorted_keys = sorted(self.calib_times,
+                             key=self.calib_times.get)
+        if len(sorted_keys) < 2:
+            self.frequencies_by_time_interpolator = \
+                lambda time: np.nanmean(self.frequencies[sorted_keys[0]], 0)
+        else:
+            calib_times_array = []
+            frequencies = []
+            for key in sorted_keys:
+                calib_times_array.append(self.calib_times[key])
+                frequencies.append(np.nanmean(self.frequencies[key], 0))
+
+            calib_times_array = np.array(calib_times_array)
+            frequencies = np.squeeze(frequencies)
+
+            self.frequencies_by_time_interpolator =\
+                interpolate.interp1d(calib_times_array, frequencies, axis=0)
+
     def get_frequencies_by_calib_key(self, calib_key):
         """
         Returns the complete frequency axis for a given
@@ -187,34 +206,8 @@ class CalibrationModel(Serializer):
         :param time: The time
         :return: The frequency axis in Hz
         """
-
-        # Sort calibration keys by time
-        sorted_keys = sorted(self.calib_times,
-                             key=self.calib_times.get)
-        if not sorted_keys:
-            return None
-
-        # If we only have one time point, simply return
-        #  the complete frequency axis
-        if len(sorted_keys) < 2:
-            return np.nanmean(self.frequencies[sorted_keys[0]], 0)
-        else:
-            # TODO Move the interpolation out of this function
-            #  (only needs to be done once)
-            #  (not so critical at the moment, since this
-            #  function is only used for showing the frequency
-            #  axis in the peak-selection panel)
-            calib_times_array = []
-            frequencies = []
-            for key in sorted_keys:
-                calib_times_array.append(self.calib_times[key])
-                frequencies.append(np.nanmean(self.frequencies[key], 0))
-
-            calib_times_array = np.array(calib_times_array)
-            frequencies = np.squeeze(frequencies)
-
-            f = interpolate.interp1d(calib_times_array, frequencies, axis=0)
-            return f(time)
+        if self.frequencies_by_time_interpolator is not None:
+            return self.frequencies_by_time_interpolator(time)
 
     def get_frequency_by_time(self, time, position):
         """
