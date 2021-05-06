@@ -57,6 +57,32 @@ def test_calibration_model_set_rayleigh_region():
     assert rayleigh_region_0 == [(1, 3)]
 
 
+def test_get_frequencies_by_calib_key():
+    cm = CalibrationModel()
+
+    frequencies0 = np.arange(100).reshape(1, -1)
+    cm.set_frequencies('0', 0, frequencies0)
+
+    frequencies1 = np.arange(100).reshape(1, -1) + 10
+    cm.set_frequencies('1', 10, frequencies1)
+
+    assert (cm.get_frequencies_by_calib_key('0') == frequencies0).all()
+    assert (cm.get_frequencies_by_calib_key('1') == frequencies1).all()
+
+
+def test_get_frequency_by_calib_key():
+    cm = CalibrationModel()
+
+    frequencies0 = np.arange(100).reshape(1, -1)
+    cm.set_frequencies('0', 0, frequencies0)
+
+    frequencies1 = np.arange(100).reshape(1, -1) + 10
+    cm.set_frequencies('1', 10, frequencies1)
+
+    assert cm.get_frequency_by_calib_key(70.7, '0') == 70.7
+    assert cm.get_frequency_by_calib_key(80, '1') == 90
+
+
 def test_get_frequency_by_time():
     cm = CalibrationModel()
 
