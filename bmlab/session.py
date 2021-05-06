@@ -1,6 +1,5 @@
 import os
 
-import numpy as np
 import h5py
 
 from bmlab.file import BrillouinFile
@@ -10,7 +9,6 @@ from bmlab.models.calibration_model import CalibrationModel
 from bmlab.models.peak_selection_model import PeakSelectionModel
 from bmlab.models.evaluation_model import EvaluationModel
 from bmlab.serializer import Serializer
-from bmlab.image import extract_lines_along_arc
 
 
 class Session(Serializer):
