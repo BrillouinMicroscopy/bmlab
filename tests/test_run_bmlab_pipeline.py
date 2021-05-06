@@ -2,8 +2,7 @@ import pathlib
 
 import numpy as np
 
-from bmlab.controllers.calibration_controller import CalibrationController
-from bmlab.controllers.evaluation_controller import EvaluationController
+from bmlab.controllers import CalibrationController, EvaluationController
 from bmlab.geometry import Circle, discretize_arc
 from bmlab.models import Orientation
 from bmlab.models.setup import AVAILABLE_SETUPS

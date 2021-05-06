@@ -1,10 +1,127 @@
 import logging
+
 import numpy as np
 
-from bmlab.session import Session
-from bmlab.fits import fit_lorentz_region
+from bmlab import Session
+from bmlab.fits import fit_vipa, VIPA, fit_lorentz_region
+from bmlab.image import extract_lines_along_arc
 
 logger = logging.getLogger(__name__)
+
+
+class CalibrationController(object):
+
+    def __init__(self):
+        self.session = Session.get_instance()
+        self.setup = self.session.setup
+        return
+
+    def calibrate(self, calib_key, count=None, max_count=None):
+
+        if not calib_key:
+            if max_count is not None:
+                max_count.value = -1
+            return
+
+        if not self.setup:
+            if max_count is not None:
+                max_count.value = -1
+            return
+
+        repetition = self.session.current_repetition()
+        if repetition is None:
+            if max_count is not None:
+                max_count.value = -1
+            return
+
+        em = self.session.extraction_model()
+        if not em:
+            if max_count is not None:
+                max_count.value = -1
+            return
+
+        cm = self.session.calibration_model()
+        if not cm:
+            if max_count is not None:
+                max_count.value = -1
+            return
+
+        ec = ExtractionController()
+        spectra = ec.extract_calibration_spectrum(calib_key)
+        time = repetition.calibration.get_time(calib_key)
+
+        if spectra is None:
+            if max_count is not None:
+                max_count.value = -1
+            return
+
+        if len(spectra) == 0:
+            if max_count is not None:
+                max_count.value = -1
+            return
+
+        self.fit_rayleigh_regions(calib_key)
+        self.fit_brillouin_regions(calib_key)
+
+        vipa_params = []
+        frequencies = []
+
+        if max_count is not None:
+            max_count.value += len(spectra)
+
+        for frame_num, spectrum in enumerate(spectra):
+            peaks = cm.get_sorted_peaks(calib_key, frame_num)
+
+            params = fit_vipa(peaks, self.setup)
+            if params is None:
+                continue
+            vipa_params.append(params)
+            xdata = np.arange(len(spectrum))
+
+            frequencies.append(VIPA(xdata, params) - self.setup.f0)
+            if count is not None:
+                count.value += 1
+
+        cm.set_vipa_params(calib_key, vipa_params)
+        cm.set_frequencies(calib_key, time, frequencies)
+
+    def fit_rayleigh_regions(self, calib_key):
+        session = Session.get_instance()
+        em = session.extraction_model()
+        cm = session.calibration_model()
+        extracted_values = em.get_extracted_values(calib_key)
+        regions = cm.get_rayleigh_regions(calib_key)
+
+        cm.clear_rayleigh_fits(calib_key)
+        for frame_num, spectrum in enumerate(extracted_values):
+            for region_key, region in enumerate(regions):
+                spectrum = extracted_values[frame_num]
+                xdata = np.arange(len(spectrum))
+                w0, fwhm, intensity, offset = \
+                    fit_lorentz_region(region, xdata, spectrum)
+                cm.add_rayleigh_fit(calib_key, region_key, frame_num,
+                                    w0, fwhm, intensity, offset)
+
+    def fit_brillouin_regions(self, calib_key):
+        session = Session.get_instance()
+        em = session.extraction_model()
+        cm = session.calibration_model()
+        extracted_values = em.get_extracted_values(calib_key)
+        regions = cm.get_brillouin_regions(calib_key)
+
+        cm.clear_brillouin_fits(calib_key)
+        for frame_num, spectrum in enumerate(extracted_values):
+            for region_key, region in enumerate(regions):
+                xdata = np.arange(len(spectrum))
+                w0s, fwhms, intensities, offset = \
+                    fit_lorentz_region(
+                        region,
+                        xdata,
+                        spectrum,
+                        self.setup.calibration.num_brillouin_samples
+                    )
+                cm.add_brillouin_fit(calib_key, region_key, frame_num,
+                                     w0s, fwhms, intensities, offset)
 
 
 class EvaluationController(object):
@@ -249,3 +366,28 @@ class EvaluationController(object):
                 brillouin_peak_left_slope_f
             )
         return None
+
+
+class ExtractionController(object):
+
+    def extract_calibration_spectrum(self, calib_key, frame_num=None):
+        session = Session.get_instance()
+        em = session.extraction_model()
+        if not em:
+            return
+        arc = em.get_arc_by_calib_key(calib_key)
+        if arc.size == 0:
+            return
+
+        imgs = session.current_repetition().calibration.get_image(calib_key)
+        if frame_num is not None:
+            imgs = imgs[frame_num:1]
+
+        # Extract values from *all* frames in the current calibration
+        extracted_values = []
+        for img in imgs:
+            values_by_img = extract_lines_along_arc(img,
+                                                    session.orientation, arc)
+            extracted_values.append(values_by_img)
+        em.set_extracted_values(calib_key, extracted_values)
+        return extracted_values

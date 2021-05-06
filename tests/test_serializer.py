@@ -12,6 +12,7 @@ from bmlab.session import Session
 from bmlab.geometry import Circle, discretize_arc
 from bmlab.models.calibration_model import FitSet, RayleighFit
 from bmlab.models.extraction_model import CircleFit
+from bmlab.controllers import ExtractionController
 
 
 @pytest.fixture()
@@ -62,7 +63,8 @@ def session_file(tmp_dir):
         assert em.get_circle_fit(calib_key)
         assert em.get_extracted_values(calib_key) is None
 
-        session.extract_calibration_spectrum(calib_key)
+        ec = ExtractionController()
+        ec.extract_calibration_spectrum(calib_key)
 
     session.save()
 
@@ -106,7 +108,8 @@ def test_serialize_session(tmp_dir):
         assert em.get_circle_fit(calib_key)
         assert em.get_extracted_values(calib_key) is None
 
-        session.extract_calibration_spectrum(calib_key)
+        ec = ExtractionController()
+        ec.extract_calibration_spectrum(calib_key)
 
     session.save()
 
