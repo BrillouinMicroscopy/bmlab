@@ -32,7 +32,6 @@ def test_optimize_points_in_extraction_model(mocker):
     assert (80, 80) == opt_points[1]
 
 
-
 def test_calibrate():
 
     calib_key = '0'
@@ -213,5 +212,3 @@ def test_calculate_derived_values_different_region_count_nr_peaks_2():
     assert (evm.results['brillouin_shift'][:, :, :, :, 1, 0] == 5).all()
     assert (evm.results['brillouin_shift'][:, :, :, :, 0, 1] == 3).all()
     assert (evm.results['brillouin_shift'][:, :, :, :, 1, 1] == 4).all()
-
-
