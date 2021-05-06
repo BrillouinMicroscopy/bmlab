@@ -12,7 +12,7 @@ from bmlab.session import Session
 from bmlab.geometry import Circle, discretize_arc
 from bmlab.models.calibration_model import FitSet, RayleighFit
 from bmlab.models.extraction_model import CircleFit
-from bmlab.controllers import ExtractionController
+from bmlab.controllers import CalibrationController
 
 
 @pytest.fixture()
@@ -45,6 +45,7 @@ def session_file(tmp_dir):
 
     cal = session.current_repetition().calibration
     em = session.extraction_model()
+    cm = session.calibration_model()
     for calib_key in session.get_calib_keys():
         points = [(100, 290), (145, 255), (290, 110)]
         time = cal.get_time(calib_key)
@@ -61,10 +62,10 @@ def session_file(tmp_dir):
         session.extraction_model().set_extraction_angles(calib_key, phis)
 
         assert em.get_circle_fit(calib_key)
-        assert em.get_extracted_values(calib_key) is None
+        assert cm.get_spectra(calib_key) is None
 
-        ec = ExtractionController()
-        ec.extract_calibration_spectrum(calib_key)
+        cc = CalibrationController()
+        cc.extract_calibration_spectra(calib_key)
 
     session.save()
 
@@ -90,6 +91,7 @@ def test_serialize_session(tmp_dir):
 
     cal = session.current_repetition().calibration
     em = session.extraction_model()
+    cm = session.calibration_model()
     for calib_key in session.get_calib_keys():
         points = [(100, 290), (145, 255), (290, 110)]
         time = cal.get_time(calib_key)
@@ -106,10 +108,10 @@ def test_serialize_session(tmp_dir):
         session.extraction_model().set_extraction_angles(calib_key, phis)
 
         assert em.get_circle_fit(calib_key)
-        assert em.get_extracted_values(calib_key) is None
+        assert cm.get_spectra(calib_key) is None
 
-        ec = ExtractionController()
-        ec.extract_calibration_spectrum(calib_key)
+        cc = CalibrationController()
+        cc.extract_calibration_spectra(calib_key)
 
     session.save()
 
@@ -125,9 +127,10 @@ def test_deserialize_session_file(session_file):
     session.set_file('Water.h5')
 
     em = session.extraction_model()
+    cm = session.calibration_model()
     assert em
     assert em.calib_times['2'] == 62.542
-    assert len(em.extracted_values['1']) > 0
+    assert len(cm.spectra['1']) > 0
     assert len(em.extraction_angles['2']) > 0
     assert em.circle_fits_interpolation is not None
 

@@ -11,6 +11,7 @@ class EvaluationModel(Serializer):
     def __init__(self):
 
         self.nr_brillouin_peaks = 1
+        self.spectra = {}
 
         self.results = {
             # Fitted values
@@ -97,3 +98,12 @@ class EvaluationModel(Serializer):
 
         self.results['rayleigh_peak_fwhm_f'] = np.empty(shape_rayleigh)
         self.results['rayleigh_peak_fwhm_f'][:] = np.nan
+
+    def set_spectra(self, image_key, spectra):
+        self.spectra[image_key] = spectra
+
+    def get_spectra(self, image_key):
+        spectra = self.spectra.get(image_key)
+        if spectra:
+            return spectra
+        return None

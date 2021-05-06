@@ -13,6 +13,7 @@ class CalibrationModel(Serializer):
 
     def __init__(self):
         self.calib_times = {}
+        self.spectra = {}
         self.brillouin_regions = {}
         self.rayleigh_regions = {}
         self.brillouin_fits = BrillouinFitSet()
@@ -96,6 +97,15 @@ class CalibrationModel(Serializer):
 
     def clear_rayleigh_fits(self, calib_key):
         self.rayleigh_fits.clear(calib_key)
+
+    def set_spectra(self, calib_key, spectra):
+        self.spectra[calib_key] = spectra
+
+    def get_spectra(self, calib_key):
+        spectra = self.spectra.get(calib_key)
+        if spectra:
+            return spectra
+        return None
 
     def get_sorted_peaks(self, calib_key, frame_num):
         """
