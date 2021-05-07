@@ -58,6 +58,20 @@ class Session(Serializer):
     def evaluation_model(self):
         return self.evaluation_models.get(self._current_repetition_key)
 
+    def set_image_shape(self):
+        """
+        We set the extraction model image shape for every repetition when
+        - a file gets loaded
+        - the image orientation changes
+        Returns
+        -------
+        """
+        repetitions = self.file.repetition_keys()
+        for repetition in repetitions:
+            imgs = self.file.get_repetition(repetition).payload.get_image('0')
+            img = self.orientation.apply(imgs[0, ...])
+            self.extraction_models.get(repetition).set_image_shape(img.shape)
+
     @staticmethod
     def get_instance():
         """
@@ -107,6 +121,7 @@ class Session(Serializer):
                 key: EvaluationModel()
                 for key in self.file.repetition_keys()
             }
+            self.set_image_shape()
 
         try:
             self.load(file_name)
