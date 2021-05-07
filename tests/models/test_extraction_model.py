@@ -119,8 +119,8 @@ def test_get_arc_by_x():
             em.add_point(calib_key, times[i], xdata, ydata)
 
         # Create angles at which to calculate the arc
-        phis = [0, np.pi/2]
-        em.set_extraction_angles(calib_key, phis)
+        em.extraction_angles[calib_key] = [0, np.pi/2]
+        em.refresh_extraction_angles_interpolation()
 
         # Get the arc
         em.set_arc_width(2)

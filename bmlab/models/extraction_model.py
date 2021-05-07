@@ -2,13 +2,14 @@ import numpy as np
 from scipy import interpolate
 
 from bmlab.fits import fit_circle
-from bmlab.geometry import Circle
+from bmlab.geometry import Circle, discretize_arc
 from bmlab.serializer import Serializer
 
 
 class ExtractionModel(Serializer):
 
     def __init__(self):
+        self.image_shape = None
         self.arc_width = 2  # [pix] the width of the extraction arc
         self.points = {}
         self.calib_times = {}
@@ -97,6 +98,8 @@ class ExtractionModel(Serializer):
                 calib_times_array,
                 circle_fits_array)
 
+        self.update_extraction_angles()
+
     def get_arc_by_calib_key(self, calib_key):
         """
         Returns the arc at which to interpolate the 2D image for
@@ -146,8 +149,19 @@ class ExtractionModel(Serializer):
             arc.append(np.array(points))
         return np.array(arc)
 
-    def set_extraction_angles(self, calib_key, phis):
-        self.extraction_angles[calib_key] = phis
+    def set_image_shape(self, shape):
+        if self.image_shape != shape:
+            self.image_shape = shape
+            self.update_extraction_angles()
+
+    def update_extraction_angles(self):
+        if not hasattr(self, 'image_shape') or self.image_shape is None:
+            return
+        for calib_key, circle_fit in self.circle_fits.items():
+            circle = Circle(circle_fit.center, circle_fit.radius)
+
+            phis = discretize_arc(circle, self.image_shape, num_points=500)
+            self.extraction_angles[calib_key] = phis
         self.refresh_extraction_angles_interpolation()
 
     def get_extraction_angles(self, calib_key):
