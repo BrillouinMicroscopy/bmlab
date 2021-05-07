@@ -9,10 +9,9 @@ import numpy as np
 import pytest
 
 from bmlab.session import Session
-from bmlab.geometry import Circle, discretize_arc
 from bmlab.models.calibration_model import FitSet, RayleighFit
 from bmlab.models.extraction_model import CircleFit
-from bmlab.controllers import CalibrationController
+from bmlab.controllers import CalibrationController, ExtractionController
 
 
 @pytest.fixture()
@@ -43,28 +42,23 @@ def session_file(tmp_dir):
 
     session.set_current_repetition('0')
 
-    cal = session.current_repetition().calibration
+    ec = ExtractionController()
+    cc = CalibrationController()
+
     em = session.extraction_model()
     cm = session.calibration_model()
+
+    img = session.get_payload_image('0', 0)
+    em.set_image_shape(img.shape)
+
+    points = [(100, 290), (145, 255), (290, 110)]
     for calib_key in session.get_calib_keys():
-        points = [(100, 290), (145, 255), (290, 110)]
-        time = cal.get_time(calib_key)
         for p in points:
-            em.add_point(calib_key, time, *p)
-        imgs = cal.get_image(calib_key)
-        img = imgs[0, ...]
-
-        circle_fit = em.get_circle_fit(calib_key)
-        center, radius = circle_fit
-        circle = Circle(center, radius)
-        phis = discretize_arc(circle, img.shape, num_points=500)
-
-        session.extraction_model().set_extraction_angles(calib_key, phis)
+            ec.add_point(calib_key, p)
 
         assert em.get_circle_fit(calib_key)
         assert cm.get_spectra(calib_key) is None
 
-        cc = CalibrationController()
         cc.extract_calibration_spectra(calib_key)
 
     session.save()
@@ -89,28 +83,23 @@ def test_serialize_session(tmp_dir):
 
     session.set_current_repetition('0')
 
-    cal = session.current_repetition().calibration
+    ec = ExtractionController()
+    cc = CalibrationController()
+
     em = session.extraction_model()
     cm = session.calibration_model()
+
+    img = session.get_payload_image('0', 0)
+    em.set_image_shape(img.shape)
+
+    points = [(100, 290), (145, 255), (290, 110)]
     for calib_key in session.get_calib_keys():
-        points = [(100, 290), (145, 255), (290, 110)]
-        time = cal.get_time(calib_key)
         for p in points:
-            em.add_point(calib_key, time, *p)
-        imgs = cal.get_image(calib_key)
-        img = imgs[0, ...]
-
-        circle_fit = em.get_circle_fit(calib_key)
-        center, radius = circle_fit
-        circle = Circle(center, radius)
-        phis = discretize_arc(circle, img.shape, num_points=500)
-
-        session.extraction_model().set_extraction_angles(calib_key, phis)
+            ec.add_point(calib_key, p)
 
         assert em.get_circle_fit(calib_key)
         assert cm.get_spectra(calib_key) is None
 
-        cc = CalibrationController()
         cc.extract_calibration_spectra(calib_key)
 
     session.save()

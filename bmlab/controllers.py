@@ -28,12 +28,6 @@ class CalibrationController(object):
                 max_count.value = -1
             return
 
-        repetition = self.session.current_repetition()
-        if repetition is None:
-            if max_count is not None:
-                max_count.value = -1
-            return
-
         em = self.session.extraction_model()
         if not em:
             if max_count is not None:
@@ -47,7 +41,7 @@ class CalibrationController(object):
             return
 
         spectra = self.extract_calibration_spectra(calib_key)
-        time = repetition.calibration.get_time(calib_key)
+        time = self.session.get_calibration_time(calib_key)
 
         if spectra is None:
             if max_count is not None:
@@ -126,8 +120,7 @@ class CalibrationController(object):
         if arc.size == 0:
             return
 
-        imgs = self.session.current_repetition()\
-            .calibration.get_image(calib_key)
+        imgs = self.session.get_calibration_image(calib_key)
         if frame_num is not None:
             imgs = imgs[frame_num:1]
 
@@ -136,7 +129,7 @@ class CalibrationController(object):
         for img in imgs:
             values_by_img = extract_lines_along_arc(
                 img,
-                self.session.orientation, arc
+                arc
             )
             spectra.append(values_by_img)
         cm.set_spectra(calib_key, spectra)
@@ -260,19 +253,19 @@ class EvaluationController(object):
         evm = self.session.evaluation_model()
         if not em:
             return
-        time = self.session.current_repetition().payload.get_time(image_key)
+        time = self.session.get_payload_time(image_key)
         arc = em.get_arc_by_time(time)
         if arc.size == 0:
             return
 
-        imgs = self.session.current_repetition().payload.get_image(image_key)
+        imgs = self.session.get_payload_image(image_key)
 
         # Extract values from *all* frames in the current payload
         spectra = []
         for img in imgs:
             values_by_img = extract_lines_along_arc(
                 img,
-                self.session.orientation, arc
+                arc
             )
             spectra.append(values_by_img)
 
@@ -419,9 +412,17 @@ class EvaluationController(object):
 
 class ExtractionController(object):
 
-    def optimize_points(self, calib_key, img, radius=10):
+    def add_point(self, calib_key, point):
+        session = Session.get_instance()
+        time = session.get_calibration_time(calib_key)
+        em = session.extraction_model()
+        em.add_point(calib_key, time, *point)
+
+    def optimize_points(self, calib_key, radius=10):
         session = Session.get_instance()
         em = session.extraction_model()
+
+        img = session.get_calibration_image(calib_key, 0)
 
         points = em.get_points(calib_key)
         time = em.get_time(calib_key)

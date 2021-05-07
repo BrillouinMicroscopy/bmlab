@@ -4,7 +4,6 @@ import numpy as np
 
 from bmlab.controllers import CalibrationController, EvaluationController,\
     ExtractionController
-from bmlab.geometry import Circle, discretize_arc
 from bmlab.models import Orientation
 from bmlab.models.setup import AVAILABLE_SETUPS
 from bmlab.session import Session
@@ -36,11 +35,14 @@ def run_pipeline():
     cm = session.calibration_model()
     pm = session.peak_selection_model()
 
-    cal = session.current_repetition().calibration
+    ec = ExtractionController()
+    cc = CalibrationController()
+    evc = EvaluationController()
 
-    calibration_controller = CalibrationController()
-    evaluation_controller = EvaluationController()
-    extraction_controller = ExtractionController()
+    # TODO: This needs to be done automatically
+    #  on file load or when the image orientation is changed
+    img = session.get_payload_image('0', 0)
+    em.set_image_shape(img.shape)
 
     points = [
         (107, 293),
@@ -49,20 +51,9 @@ def run_pipeline():
         (291, 93),
     ]
     for calib_key in session.get_calib_keys():
-        time = cal.get_time(calib_key)
         for p in points:
-            em.add_point(calib_key, time, *p)
-        imgs = cal.get_image(calib_key)
-        img = imgs[0, ...]
-        img = session.orientation.apply(img)
-
-        extraction_controller.optimize_points(calib_key, img)
-
-        circle_fit = em.get_circle_fit(calib_key)
-        center, radius = circle_fit
-        circle = Circle(center, radius)
-        phis = discretize_arc(circle, img.shape, num_points=500)
-        session.extraction_model().set_extraction_angles(calib_key, phis)
+            ec.add_point(calib_key, p)
+        ec.optimize_points(calib_key)
 
         # this values should work for both repetitions
         cm.add_brillouin_region(calib_key, (190, 250))
@@ -70,14 +61,14 @@ def run_pipeline():
         cm.add_rayleigh_region(calib_key, (110, 155))
         cm.add_rayleigh_region(calib_key, (370, 410))
 
-        calibration_controller.calibrate(calib_key)
+        cc.calibrate(calib_key)
 
     pm.add_brillouin_region((190, 250))
     pm.add_brillouin_region((290, 350))
     pm.add_rayleigh_region((110, 155))
     pm.add_rayleigh_region((370, 410))
 
-    evaluation_controller.evaluate()
+    evc.evaluate()
     return session
 
 

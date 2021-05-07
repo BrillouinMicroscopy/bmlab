@@ -16,12 +16,13 @@ def data_file_path(file_name):
 
 
 def test_set_orientation_valid_argument():
-    test_image = np.zeros([2, 3, 3])
+    test_image = np.zeros([2, 3, 3, 4])
     with pytest.raises(ValueError):
         set_orientation(test_image)
 
 
 def test_set_orientation():
+    # Test two dimensional case
     test_image = np.zeros([2, 3])
     test_image[0, 0] = 1
 
@@ -34,6 +35,26 @@ def test_set_orientation():
 
     np.testing.assert_array_equal(test_image_b, np.array([[0., 0., 0.],
                                                           [0., 0., 1.]]))
+
+    # Test three dimensional case
+    test_images = np.zeros([3, 2, 3])
+    test_images[0, 0, 0] = 1
+    test_images[1, 0, 2] = 4
+
+    test_images_a = set_orientation(test_images, 1)
+    actual_a = np.zeros([3, 3, 2])
+    actual_a[0, :, :] = set_orientation(np.squeeze(test_images[0, :, :]), 1)
+    actual_a[1, :, :] = set_orientation(np.squeeze(test_images[1, :, :]), 1)
+
+    test_images_b = set_orientation(test_images, 0, True, True)
+    actual_b = np.zeros([3, 2, 3])
+    actual_b[0, :, :] = set_orientation(
+        np.squeeze(test_images[0, :, :]), 0, True, True)
+    actual_b[1, :, :] = set_orientation(
+        np.squeeze(test_images[1, :, :]), 0, True, True)
+
+    np.testing.assert_array_equal(test_images_a, actual_a)
+    np.testing.assert_array_equal(test_images_b, actual_b)
 
 
 def test_find_max_in_radius():
@@ -65,9 +86,6 @@ def test_autofind_orientation():
 
 def test_extract_lines_along_arc():
 
-    # Arrange
-    orient = Orientation(reflection={'vertically': False,
-                                     'horizontally': False})
     circle = Circle((0, 0), 100)
     x = y = np.arange(110, dtype=int)
     X, Y = np.meshgrid(x, y, indexing='ij')
@@ -86,8 +104,8 @@ def test_extract_lines_along_arc():
     arc = np.array(arc)
 
     # Act
-    actual = extract_lines_along_arc(img, orient, arc)
-    actual_2 = extract_lines_along_arc(img_2, orient, arc)
+    actual = extract_lines_along_arc(img, arc)
+    actual_2 = extract_lines_along_arc(img_2, arc)
 
     # Assert
     one = np.ones_like(phis)

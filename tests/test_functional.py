@@ -5,7 +5,6 @@ Functional tests for typical headless applications.
 import pathlib
 
 from bmlab import Session
-from bmlab.geometry import Circle, discretize_arc
 from bmlab.models import Orientation
 from bmlab.controllers import CalibrationController, ExtractionController
 
@@ -28,33 +27,29 @@ def test_typical_use_case():
         'vertically': True, 'horizontally': False
     })
 
-    # Extraction
-    cal = session.current_repetition().calibration
-    em = session.extraction_model()
+    # Controllers
     ec = ExtractionController()
+    cc = CalibrationController()
+
+    # Models
+    em = session.extraction_model()
+    cm = session.calibration_model()
+
+    img = session.get_payload_image('0', 0)
+    em.set_image_shape(img.shape)
+
+    points = [(100, 290), (145, 255), (290, 110)]
     for calib_key in session.get_calib_keys():
-        points = [(100, 290), (145, 255), (290, 110)]
-        time = cal.get_time(calib_key)
         for p in points:
-            em.add_point(calib_key, time, *p)
-        imgs = cal.get_image(calib_key)
-        img = imgs[0, ...]
-        ec.optimize_points(calib_key, img)
-        ec.optimize_points(calib_key, img)
-        ec.optimize_points(calib_key, img)
-
-        circle_fit = em.get_circle_fit(calib_key)
-        center, radius = circle_fit
-        circle = Circle(center, radius)
-        phis = discretize_arc(circle, img.shape, num_points=500)
-
-        session.extraction_model().set_extraction_angles(calib_key, phis)
+            ec.add_point(calib_key, p)
+        ec.optimize_points(calib_key)
+        ec.optimize_points(calib_key)
+        ec.optimize_points(calib_key)
 
         assert em.get_points(calib_key) != points
         assert em.get_circle_fit(calib_key)
 
     # Calibration
-    cm = session.calibration_model()
     for calib_key in session.get_calib_keys():
 
         cm.add_brillouin_region(calib_key, (149, 202))
@@ -64,5 +59,4 @@ def test_typical_use_case():
 
         assert cm.get_spectra(calib_key) is None
 
-        cc = CalibrationController()
         cc.extract_calibration_spectra(calib_key)
