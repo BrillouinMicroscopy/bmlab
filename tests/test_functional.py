@@ -29,14 +29,12 @@ def test_typical_use_case():
     })
 
     # Extraction
-    cal = session.current_repetition().calibration
     em = session.extraction_model()
     ec = ExtractionController()
+    points = [(100, 290), (145, 255), (290, 110)]
     for calib_key in session.get_calib_keys():
-        points = [(100, 290), (145, 255), (290, 110)]
-        time = cal.get_time(calib_key)
         for p in points:
-            em.add_point(calib_key, time, *p)
+            ec.add_point(calib_key, p)
         ec.optimize_points(calib_key)
         ec.optimize_points(calib_key)
         ec.optimize_points(calib_key)
