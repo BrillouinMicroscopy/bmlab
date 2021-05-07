@@ -51,8 +51,7 @@ def session_file(tmp_dir):
         time = cal.get_time(calib_key)
         for p in points:
             em.add_point(calib_key, time, *p)
-        imgs = cal.get_image(calib_key)
-        img = imgs[0, ...]
+        img = session.get_calibration_image(calib_key, 0)
 
         circle_fit = em.get_circle_fit(calib_key)
         center, radius = circle_fit
