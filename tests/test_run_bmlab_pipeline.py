@@ -36,8 +36,6 @@ def run_pipeline():
     cm = session.calibration_model()
     pm = session.peak_selection_model()
 
-    cal = session.current_repetition().calibration
-
     calibration_controller = CalibrationController()
     evaluation_controller = EvaluationController()
     extraction_controller = ExtractionController()
@@ -49,9 +47,8 @@ def run_pipeline():
         (291, 93),
     ]
     for calib_key in session.get_calib_keys():
-        time = cal.get_time(calib_key)
         for p in points:
-            em.add_point(calib_key, time, *p)
+            extraction_controller.add_point(calib_key, p)
 
         extraction_controller.optimize_points(calib_key)
 

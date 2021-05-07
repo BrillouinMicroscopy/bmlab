@@ -28,12 +28,6 @@ class CalibrationController(object):
                 max_count.value = -1
             return
 
-        repetition = self.session.current_repetition()
-        if repetition is None:
-            if max_count is not None:
-                max_count.value = -1
-            return
-
         em = self.session.extraction_model()
         if not em:
             if max_count is not None:
@@ -47,7 +41,7 @@ class CalibrationController(object):
             return
 
         spectra = self.extract_calibration_spectra(calib_key)
-        time = repetition.calibration.get_time(calib_key)
+        time = self.session.get_calibration_time(calib_key)
 
         if spectra is None:
             if max_count is not None:
@@ -259,7 +253,7 @@ class EvaluationController(object):
         evm = self.session.evaluation_model()
         if not em:
             return
-        time = self.session.current_repetition().payload.get_time(image_key)
+        time = self.session.get_payload_time(image_key)
         arc = em.get_arc_by_time(time)
         if arc.size == 0:
             return
@@ -417,6 +411,12 @@ class EvaluationController(object):
 
 
 class ExtractionController(object):
+
+    def add_point(self, calib_key, point):
+        session = Session.get_instance()
+        time = session.get_calibration_time(calib_key)
+        em = session.extraction_model()
+        em.add_point(calib_key, time, *point)
 
     def optimize_points(self, calib_key, radius=10):
         session = Session.get_instance()

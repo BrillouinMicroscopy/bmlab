@@ -123,6 +123,9 @@ class Session(Serializer):
             self.current_repetition().calibration.get_image(calib_key)
         )
 
+    def get_calibration_time(self, calib_key):
+        return self.current_repetition().calibration.get_time(calib_key)
+
     def get_image_keys(self):
         return self.current_repetition().payload.image_keys()
 
@@ -130,6 +133,9 @@ class Session(Serializer):
         return self.orientation.apply(
             self.current_repetition().payload.get_image(image_key)
         )
+
+    def get_payload_time(self, image_key):
+        return self.current_repetition().payload.get_time(image_key)
 
     def clear(self):
         """
