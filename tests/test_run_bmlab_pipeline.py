@@ -39,6 +39,8 @@ def run_pipeline():
     cc = CalibrationController()
     evc = EvaluationController()
 
+    # TODO: This needs to be done automatically
+    #  on file load or when the image orientation is changed
     img = session.get_payload_image('0', 0)
     em.set_image_shape(img.shape)
 

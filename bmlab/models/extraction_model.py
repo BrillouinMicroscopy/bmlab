@@ -149,6 +149,8 @@ class ExtractionModel(Serializer):
             arc.append(np.array(points))
         return np.array(arc)
 
+    # TODO: This needs to be called automatically
+    #  on file load or when the image orientation is changed
     def set_image_shape(self, shape):
         if self.image_shape != shape:
             self.image_shape = shape
