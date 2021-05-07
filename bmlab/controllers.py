@@ -126,8 +126,7 @@ class CalibrationController(object):
         if arc.size == 0:
             return
 
-        imgs = self.session.current_repetition()\
-            .calibration.get_image(calib_key)
+        imgs = self.session.get_calibration_image(calib_key)
         if frame_num is not None:
             imgs = imgs[frame_num:1]
 
@@ -136,7 +135,7 @@ class CalibrationController(object):
         for img in imgs:
             values_by_img = extract_lines_along_arc(
                 img,
-                self.session.orientation, arc
+                arc
             )
             spectra.append(values_by_img)
         cm.set_spectra(calib_key, spectra)
@@ -265,14 +264,14 @@ class EvaluationController(object):
         if arc.size == 0:
             return
 
-        imgs = self.session.current_repetition().payload.get_image(image_key)
+        imgs = self.session.get_payload_image(image_key)
 
         # Extract values from *all* frames in the current payload
         spectra = []
         for img in imgs:
             values_by_img = extract_lines_along_arc(
                 img,
-                self.session.orientation, arc
+                arc
             )
             spectra.append(values_by_img)
 
@@ -423,9 +422,8 @@ class ExtractionController(object):
         session = Session.get_instance()
         em = session.extraction_model()
 
-        imgs = session.current_repetition().calibration.get_image(calib_key)
+        imgs = session.get_calibration_image(calib_key)
         img = imgs[0, ...]
-        img = session.orientation.apply(img)
 
         points = em.get_points(calib_key)
         time = em.get_time(calib_key)

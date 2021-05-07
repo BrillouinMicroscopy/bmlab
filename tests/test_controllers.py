@@ -13,16 +13,17 @@ def data_file_path(file_name):
 
 def test_optimize_points_in_extraction_model(mocker):
 
-    img = np.zeros((100, 100), dtype=int)
-    img[20, 20] = 1
-    img[80, 80] = 1
+    img = np.zeros((1, 100, 100), dtype=int)
+    img[:, 20, 20] = 1
+    img[:, 80, 80] = 1
 
     em = ExtractionModel()
     em.add_point('0', 0, 15, 15)
     em.add_point('0', 0, 75, 85)
 
     mocker.patch('bmlab.session.Session.extraction_model', return_value=em)
-    # mocker.patch('bmlab.session.Session.get_instance().current_repetition().calibration.get_image', return_value=img)
+    mocker.patch('bmlab.session.Session.get_calibration_image',
+                 return_value=img)
 
     ec = ExtractionController()
 

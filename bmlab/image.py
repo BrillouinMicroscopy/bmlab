@@ -77,7 +77,8 @@ def set_orientation(image, rotate=0, flip_ud=False, flip_lr=False):
     Parameters
     ----------
     image: array_like
-        Array of two dimensions.
+        Array of two or three dimensions (containing multiple
+        images along the first dimension in case of 3D)
     rotate: int
         Number of times the array is rotated by 90 degrees (clockwise).
     flip_ud: bool
@@ -96,17 +97,28 @@ def set_orientation(image, rotate=0, flip_ud=False, flip_lr=False):
     --------
     numpy.rot90, numpy.flipud, numpy.fliplr
     """
-    if not np.shape(np.shape(image)) == (2,):
-        raise ValueError('Given Argument is not a two dimensional array')
+    if np.shape(np.shape(image)) == (2,):
+        if rotate > 0:
+            image = np.rot90(image, k=rotate, axes=(1, 0))
 
-    if rotate > 0:
-        image = np.rot90(image, k=rotate, axes=(1, 0))
+        if flip_ud:
+            image = np.flipud(image)
 
-    if flip_ud:
-        image = np.flipud(image)
+        if flip_lr:
+            image = np.fliplr(image)
+    elif np.shape(np.shape(image)) == (3,):
+        if rotate > 0:
+            image = np.rot90(image, k=rotate, axes=(2, 1))
 
-    if flip_lr:
-        image = np.fliplr(image)
+        if flip_ud:
+            image = image[:, ::-1, :]
+
+        if flip_lr:
+            image = image[:, :, ::-1]
+    else:
+        raise ValueError(
+            'Given Argument is not a two or three dimensional array'
+        )
 
     return image
 
@@ -140,11 +152,10 @@ def find_max_in_radius(img, xy0, radius):
     return peak_x, peak_y
 
 
-def extract_lines_along_arc(img, orientation, arc):
+def extract_lines_along_arc(img, arc):
     if arc.ndim != 3 or arc.shape[2] != 2:
         return
 
-    img = orientation.apply(img)
     m, n = img.shape
     func = interpolate.RegularGridInterpolator(
         (np.arange(m), np.arange(n)), img, method='linear', bounds_error=False)
