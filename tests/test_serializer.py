@@ -12,7 +12,7 @@ from bmlab.session import Session
 from bmlab.geometry import Circle, discretize_arc
 from bmlab.models.calibration_model import FitSet, RayleighFit
 from bmlab.models.extraction_model import CircleFit
-from bmlab.controllers import CalibrationController
+from bmlab.controllers import CalibrationController, ExtractionController
 
 
 @pytest.fixture()
@@ -43,14 +43,14 @@ def session_file(tmp_dir):
 
     session.set_current_repetition('0')
 
-    cal = session.current_repetition().calibration
+    ec = ExtractionController()
     em = session.extraction_model()
     cm = session.calibration_model()
+    points = [(100, 290), (145, 255), (290, 110)]
     for calib_key in session.get_calib_keys():
-        points = [(100, 290), (145, 255), (290, 110)]
-        time = cal.get_time(calib_key)
         for p in points:
-            em.add_point(calib_key, time, *p)
+            ec.add_point(calib_key, p)
+
         img = session.get_calibration_image(calib_key, 0)
 
         circle_fit = em.get_circle_fit(calib_key)
