@@ -180,6 +180,14 @@ class Session(Serializer):
     def set_setup(self, setup):
         self.setup = setup
 
+    def set_rotation(self, num_rots):
+        self.orientation.set_rotation(num_rots)
+        self.set_image_shape()
+
+    def set_reflection(self, **kwargs):
+        self.orientation.set_reflection(**kwargs)
+        self.set_image_shape()
+
     def save(self):
         if self.file is None:
             return
