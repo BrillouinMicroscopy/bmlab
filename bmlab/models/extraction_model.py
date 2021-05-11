@@ -33,7 +33,10 @@ class ExtractionModel(Serializer):
     def set_point(self, calib_key, index, time, xdata, ydata):
         if calib_key not in self.points:
             self.points[calib_key] = []
-        self.points[calib_key][index] = (xdata, ydata)
+        if index < len(self.points[calib_key]):
+            self.points[calib_key][index] = (xdata, ydata)
+        else:
+            self.points[calib_key].append((xdata, ydata))
         if len(self.points[calib_key]) >= 3:
             center, radius = fit_circle(self.points[calib_key])
             self.circle_fits[calib_key] = CircleFit(center, radius)
