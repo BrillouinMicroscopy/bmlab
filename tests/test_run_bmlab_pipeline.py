@@ -31,7 +31,6 @@ def run_pipeline():
     })
 
     # Models
-    em = session.extraction_model()
     cm = session.calibration_model()
     pm = session.peak_selection_model()
 
@@ -39,22 +38,21 @@ def run_pipeline():
     cc = CalibrationController()
     evc = EvaluationController()
 
-    # TODO: This needs to be done automatically
-    #  on file load or when the image orientation is changed
-    img = session.get_payload_image('0', 0)
-    em.set_image_shape(img.shape)
-
     points = [
         (107, 293),
         (165, 236),
         (255, 137),
         (291, 93),
     ]
+    # First add all extraction points because this
+    # can influence the extraction for other calibrations
     for calib_key in session.get_calib_keys():
         for p in points:
             ec.add_point(calib_key, p)
         ec.optimize_points(calib_key)
 
+    # Then do the calibration
+    for calib_key in session.get_calib_keys():
         # this values should work for both repetitions
         cm.add_brillouin_region(calib_key, (190, 250))
         cm.add_brillouin_region(calib_key, (290, 350))

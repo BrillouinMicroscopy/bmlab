@@ -38,7 +38,7 @@ def session_file(tmp_dir):
 
     session.set_file('Water.h5')
 
-    session.orientation.set_reflection(vertically=True, horizontally=False)
+    session.set_reflection(vertically=True, horizontally=False)
 
     session.set_current_repetition('0')
 
@@ -79,7 +79,7 @@ def test_serialize_session(tmp_dir):
 
     session.set_file('Water.h5')
 
-    session.orientation.set_reflection(vertically=True, horizontally=False)
+    session.set_reflection(vertically=True, horizontally=False)
 
     session.set_current_repetition('0')
 
@@ -88,9 +88,6 @@ def test_serialize_session(tmp_dir):
 
     em = session.extraction_model()
     cm = session.calibration_model()
-
-    img = session.get_payload_image('0', 0)
-    em.set_image_shape(img.shape)
 
     points = [(100, 290), (145, 255), (290, 110)]
     for calib_key in session.get_calib_keys():

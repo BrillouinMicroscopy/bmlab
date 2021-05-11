@@ -35,9 +35,6 @@ def test_typical_use_case():
     em = session.extraction_model()
     cm = session.calibration_model()
 
-    img = session.get_payload_image('0', 0)
-    em.set_image_shape(img.shape)
-
     points = [(100, 290), (145, 255), (290, 110)]
     for calib_key in session.get_calib_keys():
         for p in points:
