@@ -418,6 +418,12 @@ class ExtractionController(object):
         em = session.extraction_model()
         em.add_point(calib_key, time, *point)
 
+    def set_point(self, calib_key, index, point):
+        session = Session.get_instance()
+        time = session.get_calibration_time(calib_key)
+        em = session.extraction_model()
+        em.set_point(calib_key, index, time, *point)
+
     def optimize_points(self, calib_key, radius=10):
         session = Session.get_instance()
         em = session.extraction_model()

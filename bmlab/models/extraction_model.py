@@ -30,6 +30,19 @@ class ExtractionModel(Serializer):
             self.calib_times[calib_key] = time
             self.refresh_circle_fits_interpolation()
 
+    def set_point(self, calib_key, index, time, xdata, ydata):
+        if calib_key not in self.points:
+            self.points[calib_key] = []
+        if index < len(self.points[calib_key]):
+            self.points[calib_key][index] = (xdata, ydata)
+        else:
+            self.points[calib_key].append((xdata, ydata))
+        if len(self.points[calib_key]) >= 3:
+            center, radius = fit_circle(self.points[calib_key])
+            self.circle_fits[calib_key] = CircleFit(center, radius)
+            self.calib_times[calib_key] = time
+            self.refresh_circle_fits_interpolation()
+
     def get_points(self, calib_key):
         if calib_key in self.points:
             return self.points[calib_key]

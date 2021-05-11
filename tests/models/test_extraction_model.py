@@ -4,6 +4,19 @@ from bmlab.models.extraction_model import ExtractionModel
 from bmlab.geometry import Circle
 
 
+def test_add_and_set_points():
+    em = ExtractionModel()
+    em.add_point('0', 0, 0, 1)
+
+    assert (0, 1) in em.get_points('0')
+
+    em.set_point('0', 0, 0, 0, 2)
+    em.set_point('0', 2, 0, 1, 2)
+
+    assert em.get_points('0')[0] == (0, 2)
+    assert em.get_points('0')[-1] == (1, 2)
+
+
 def test_extraction_model_triggers_circle_fit():
 
     em = ExtractionModel()
