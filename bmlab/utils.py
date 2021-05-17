@@ -19,8 +19,9 @@ def debug_timer(func):
 
 
 def array_dump(name, arr):
-    """ A utility function for dumping numpy arrays to disk.
-        Used for manually creating test data in debugging mode.
+    """
+    A utility function for dumping numpy arrays to disk.
+    Used for manually creating test data in debugging mode.
     """
     with open(name + '.npy', 'wb') as f:
         np.save(f, arr)
