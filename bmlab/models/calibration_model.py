@@ -118,9 +118,15 @@ class CalibrationModel(Serializer):
         """
         Returns the sorted centers of all fitted peaks
         of a given calibration and frame.
-        :param calib_key: The calibration key
-        :param frame_num: The frame number
-        :return: sorted np.array of all peaks
+
+        Parameters
+        ----------
+        calib_key: The calibration key
+        frame_num: The frame number
+
+        Returns
+        -------
+        sorted np.array of all peaks
         """
         peaks = []
         # Search all fits for given calib_key and frame_num
@@ -152,6 +158,7 @@ class CalibrationModel(Serializer):
         """
         This function creates the interpolator to get
         the frequencies of points in a spectrum
+
         Returns
         -------
         """
@@ -241,9 +248,14 @@ class CalibrationModel(Serializer):
     def get_frequencies_by_calib_key(self, calib_key):
         """
         Returns the complete frequency axis for a given
-        calibration
-        :param calib_key: The key of the calibration
-        :return: The frequency axis in Hz
+
+        Parameters
+        ----------
+        calib_key: The key of the calibration
+
+        Returns
+        -------
+        The frequency axis in Hz
         """
         if calib_key in self.frequencies:
             return self.frequencies[calib_key]
@@ -252,10 +264,15 @@ class CalibrationModel(Serializer):
         """
         Returns the frequency of a peak position on the
         spectrum for a given calibration
-        :param position: The position(s) of the peak(s)
-        on the spectrum
-        :param calib_key: The key of the calibration
-        :return: The corresponding frequency in Hz
+
+        Parameters
+        ----------
+        position: The position(s) of the peak(s)
+        calib_key: The key of the calibration
+
+        Returns
+        -------
+        The corresponding frequency in Hz
         """
         if calib_key in self.frequency_by_calib_key_interpolators:
             return self.frequency_by_calib_key_interpolators[
@@ -264,9 +281,14 @@ class CalibrationModel(Serializer):
     def get_frequencies_by_time(self, time):
         """
         Returns the complete frequency axis for a given
-        time
-        :param time: The time
-        :return: The frequency axis in Hz
+
+        Parameters
+        ----------
+        time: The time
+
+        Returns
+        -------
+        The frequency axis in Hz
         """
         if self.frequencies_by_time_interpolator is not None:
             return self.frequencies_by_time_interpolator(time)
@@ -275,10 +297,16 @@ class CalibrationModel(Serializer):
         """
         Returns the frequency of a peak position on the
         spectrum for a given time
-        :param time: The time
-        :param position: The position(s) of the peak(s)
+
+        Parameters
+        ----------
+        time: The time
+        position: The position(s) of the peak(s)
         on the spectrum
-        :return: The corresponding frequency in Hz
+
+        Returns
+        -------
+        The corresponding frequency in Hz
         """
         # Cannot execute if ndims are unequal
         if np.ndim(time) is not np.ndim(position):

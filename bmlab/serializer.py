@@ -127,7 +127,8 @@ class Serializer(object):
             raise Exception('Cannot deserialize object %s' % var_name)
 
     def post_deserialize(self):
-        """Override this method in derived classes if further initialization
+        """
+        Override this method in derived classes if further initialization
         is necessary after deserialization from HDF.
         """
         pass

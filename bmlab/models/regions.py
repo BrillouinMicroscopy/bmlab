@@ -22,7 +22,10 @@ def regions_check_order(regions):
     """
     This function checks that the tuples in the regions array
     are sorted based on their center
-    :param regions: array containing regions
-    :return:
+
+    Parameters
+    ----------
+    regions: array containing regions
+
     """
     regions.sort(key=np.mean)

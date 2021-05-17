@@ -150,11 +150,17 @@ def _circle_opt(c, x_coord, y_coord):
 def fit_lorentz_region(region, xdata, ydata, nr_peaks=1):
     """
     Fits a lorentz or double lorentz fit to the given region
-    :param region: The section of the data to fit
-    :param xdata: The x-data
-    :param ydata: The y-data to fit
-    :param nr_peaks: The number of peaks to fit
-    :return: center, full-width-half-maximum, intensity and offset
+
+    Parameters
+    ----------
+    region: The section of the data to fit
+    xdata: The x-data
+    ydata: The y-data to fit
+    nr_peaks: The number of peaks to fit
+
+    Returns
+    -------
+    center, full-width-half-maximum, intensity and offset
     """
     try:
         if nr_peaks == 2:
@@ -217,10 +223,16 @@ def calculate_exact_circle(points):
 
 def fit_vipa(peaks, setup):
     """
+    Fits the VIPA frequency axis
 
-    :param peaks:
-    :param setup:
-    :return:
+    Parameters
+    ----------
+    peaks: The peak positions
+    setup: The setup parameters
+
+    Returns
+    -------
+    The fitted VIPA parameters
     """
     # Check that we were given enough peaks
     if peaks is None:
@@ -282,8 +294,13 @@ def VIPA(x, vipa_params):
     Subtract the absolute laser frequency from this value
     to get the relative shift.
 
-    :param x:   [pix]   The point on the spectrum
-    :param vipa_params: Fit parameters of the VIPA fit
-    :return:    [Hz]   The frequency of the given point on the spectrum
+    Parameters
+    ----------
+    x:   [pix]   The point on the spectrum
+    vipa_params: Fit parameters of the VIPA fit
+
+    Returns
+    -------
+    [Hz]   The frequency of the given point on the spectrum
     """
     return 1. / (vipa_params[0] + vipa_params[1] * x + vipa_params[2] * x ** 2)

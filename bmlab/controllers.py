@@ -285,7 +285,6 @@ class EvaluationController(object):
         - Brillouin shift [GHz]
         - Brillouin peak width [GHz]
         - Rayleigh peak width [GHz]
-        :return:
         """
         evm = self.session.evaluation_model()
         if not evm:

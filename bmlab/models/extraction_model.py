@@ -117,8 +117,14 @@ class ExtractionModel(Serializer):
         """
         Returns the arc at which to interpolate the 2D image for
         the 1D spectrum
-        :param calib_key: the calibration number
-        :return: the arc with pixel positions
+
+        Parameters
+        ----------
+        calib_key: the calibration number
+
+        Returns
+        -------
+        The arc with pixel positions
         """
         arc = np.empty(0)
         try:
@@ -134,8 +140,14 @@ class ExtractionModel(Serializer):
         """
         Returns the arc at which to interpolate the 2D image for
         the 1D spectrum
-        :param time: time point
-        :return: the arc with pixel positions
+
+        Parameters
+        ----------
+        time: time point
+
+        Returns
+        -------
+        The arc with pixel positions
         """
         arc = np.empty(0)
         try:

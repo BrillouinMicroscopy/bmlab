@@ -35,7 +35,9 @@ class Session(Serializer):
             self.clear()
 
     def current_repetition(self):
-        """ Returns the repetition currently selected in data tab """
+        """
+        Returns the repetition currently selected in data tab
+        """
         if self.file and self._current_repetition_key:
             return self.file.get_repetition(self._current_repetition_key)
         return None
@@ -63,8 +65,6 @@ class Session(Serializer):
         We set the extraction model image shape for every repetition when
         - a file gets loaded
         - the image orientation changes
-        Returns
-        -------
         """
         repetitions = self.file.repetition_keys()
         for repetition in repetitions:
