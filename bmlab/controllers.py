@@ -252,11 +252,11 @@ class EvaluationController(object):
         em = self.session.extraction_model()
         evm = self.session.evaluation_model()
         if not em:
-            return
+            return None, None, None
         time = self.session.get_payload_time(image_key)
         arc = em.get_arc_by_time(time)
         if arc.size == 0:
-            return
+            return None, None, None
 
         imgs = self.session.get_payload_image(image_key)
 
