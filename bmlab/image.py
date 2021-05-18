@@ -7,6 +7,7 @@ import logging
 import numpy as np
 from skimage.feature import blob_dog
 from scipy.interpolate import interpolate
+import warnings
 
 from bmlab.models.orientation import Orientation
 
@@ -160,4 +161,11 @@ def extract_lines_along_arc(img, arc):
     func = interpolate.RegularGridInterpolator(
         (np.arange(m), np.arange(n)), img, method='linear', bounds_error=False)
 
-    return np.nanmean(func((arc[:, :, 0], arc[:, :, 1])), 1)
+    # In case the arc crosses the edge of the image, the interpolated array
+    # will contain rows with only NaNs leading to an empty slice warning
+    with warnings.catch_warnings():
+        warnings.filterwarnings(
+            action='ignore',
+            message='Mean of empty slice'
+        )
+        return np.nanmean(func((arc[:, :, 0], arc[:, :, 1])), 1)
