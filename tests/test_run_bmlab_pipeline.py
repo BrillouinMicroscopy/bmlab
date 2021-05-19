@@ -75,4 +75,4 @@ def test_run_pipeline():
     session = run_pipeline()
     evm = session.evaluation_model()
     np.testing.assert_allclose(
-        evm.results['brillouin_shift_f'], 5.04e9, atol=50E6)
+        evm.results['brillouin_shift_f'], 5.03e9, atol=50E6)

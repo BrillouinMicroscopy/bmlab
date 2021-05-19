@@ -27,7 +27,8 @@ class ExtractionController(object):
         session = Session.get_instance()
         em = session.extraction_model()
 
-        img = session.get_calibration_image(calib_key, 0)
+        imgs = session.get_calibration_image(calib_key)
+        img = np.nanmean(imgs, axis=0)
 
         points = em.get_points(calib_key)
         time = em.get_time(calib_key)
