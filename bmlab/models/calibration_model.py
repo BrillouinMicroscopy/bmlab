@@ -150,8 +150,10 @@ class CalibrationModel(Serializer):
         self.refresh_frequency_interpolators()
 
     def clear_frequencies(self, calib_key):
-        del self.frequencies[calib_key]
-        del self.calib_times[calib_key]
+        if calib_key in self.frequencies:
+            del self.frequencies[calib_key]
+        if calib_key in self.calib_times:
+            del self.calib_times[calib_key]
         self.refresh_frequency_interpolators()
 
     def refresh_frequency_interpolators(self):
