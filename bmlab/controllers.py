@@ -176,7 +176,9 @@ class CalibrationController(object):
                 arc
             )
             spectra.append(values_by_img)
-        cm.set_spectra(calib_key, spectra)
+        # We only set the spectra if we extracted all
+        if frame_num is None:
+            cm.set_spectra(calib_key, spectra)
         return spectra
 
 
