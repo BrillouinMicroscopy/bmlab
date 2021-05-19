@@ -420,7 +420,7 @@ def calculate_shift_f(time, brillouin_position, rayleigh_position):
     session = Session.get_instance()
     cm = session.calibration_model()
     if not cm:
-        return None
+        return np.full(np.shape(brillouin_position), np.nan)
     brillouin_peak_f = cm.get_frequency_by_time(
         time,
         brillouin_position
@@ -436,14 +436,14 @@ def calculate_shift_f(time, brillouin_position, rayleigh_position):
             brillouin_peak_f -
             rayleigh_peak_f
         )
-    return None
+    return np.full(np.shape(brillouin_position), np.nan)
 
 
 def calculate_fwhm_f(time, peak_position, peak_fwhm):
     session = Session.get_instance()
     cm = session.calibration_model()
     if not cm:
-        return None
+        return np.full(np.shape(peak_position), np.nan)
     brillouin_peak_right_slope_f = cm.get_frequency_by_time(
         time,
         peak_position + peak_fwhm/2
@@ -459,4 +459,4 @@ def calculate_fwhm_f(time, peak_position, peak_fwhm):
             brillouin_peak_right_slope_f -
             brillouin_peak_left_slope_f
         )
-    return None
+    return np.full(np.shape(peak_position), np.nan)
