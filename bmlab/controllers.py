@@ -122,7 +122,7 @@ class CalibrationController(object):
 
         imgs = self.session.get_calibration_image(calib_key)
         if frame_num is not None:
-            imgs = imgs[frame_num:1]
+            imgs = imgs[frame_num:frame_num+1]
 
         # Extract values from *all* frames in the current calibration
         spectra = []
