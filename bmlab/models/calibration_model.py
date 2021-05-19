@@ -150,8 +150,10 @@ class CalibrationModel(Serializer):
         self.refresh_frequency_interpolators()
 
     def clear_frequencies(self, calib_key):
-        del self.frequencies[calib_key]
-        del self.calib_times[calib_key]
+        if calib_key in self.frequencies:
+            del self.frequencies[calib_key]
+        if calib_key in self.calib_times:
+            del self.calib_times[calib_key]
         self.refresh_frequency_interpolators()
 
     def refresh_frequency_interpolators(self):
@@ -162,6 +164,16 @@ class CalibrationModel(Serializer):
         Returns
         -------
         """
+        # Reset all interpolators
+        self.frequency_by_calib_key_interpolators = {}
+        self.frequencies_by_time_interpolator = None
+        self.frequency_by_time_interpolator = None
+
+        sorted_keys = sorted(self.calib_times,
+                             key=self.calib_times.get)
+        # Don't do anything if there are not calibrations
+        if len(sorted_keys) < 1:
+            return
 
         """
         Create the interpolator for getting a frequency in a
@@ -180,8 +192,6 @@ class CalibrationModel(Serializer):
         """
         Create the interpolator for getting frequencies by time
         """
-        sorted_keys = sorted(self.calib_times,
-                             key=self.calib_times.get)
         if len(sorted_keys) < 2:
             self.frequencies_by_time_interpolator = \
                 lambda time: np.nanmean(self.frequencies[sorted_keys[0]], 0)
@@ -201,9 +211,6 @@ class CalibrationModel(Serializer):
         """
         Create the interpolator for getting a frequency by position and time
         """
-        if not sorted_keys:
-            return None
-
         calib_times_array = []
         frequencies = []
         for key in sorted_keys:

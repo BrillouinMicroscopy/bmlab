@@ -109,6 +109,19 @@ class CalibrationController(object):
         cm.set_vipa_params(calib_key, vipa_params)
         cm.set_frequencies(calib_key, time, frequencies)
 
+        calculate_derived_values()
+
+    def clear_calibration(self, calib_key):
+        cm = self.session.calibration_model()
+        if not cm:
+            return
+
+        cm.clear_brillouin_fits(calib_key)
+        cm.clear_rayleigh_fits(calib_key)
+        cm.clear_frequencies(calib_key)
+
+        calculate_derived_values()
+
     def fit_rayleigh_regions(self, calib_key):
         cm = self.session.calibration_model()
         spectra = cm.get_spectra(calib_key)
@@ -237,7 +250,7 @@ class EvaluationController(object):
                                     + ind_y * resolution[0] + ind_x)
 
                     if (abort is not None) and abort.value:
-                        self.calculate_derived_values()
+                        calculate_derived_values()
                         if max_count is not None:
                             max_count.value = -1
                         return
@@ -275,7 +288,7 @@ class EvaluationController(object):
                     if count is not None:
                         count.value += 1
 
-        self.calculate_derived_values()
+        calculate_derived_values()
 
         return
 
@@ -309,132 +322,141 @@ class EvaluationController(object):
         evm.set_spectra(image_key, spectra)
         return spectra, times, intensities
 
-    def calculate_derived_values(self):
-        """
-        We calculate the derived parameters here:
-        - Brillouin shift [pix]
-        - Brillouin shift [GHz]
-        - Brillouin peak width [GHz]
-        - Rayleigh peak width [GHz]
-        """
-        evm = self.session.evaluation_model()
-        if not evm:
-            return
 
-        time = evm.results['time']
-        shape_brillouin = evm.results['brillouin_peak_position'].shape
-        shape_rayleigh = evm.results['rayleigh_peak_position'].shape
-        # If we have the same number of Rayleigh and Brillouin regions,
-        # we can simply subtract the two arrays (regions are always
-        # sorted by center in the peak selection model, so corresponding
-        # regions should be at the same array index)
-        if shape_brillouin[4] == shape_rayleigh[4]:
-            evm.results['brillouin_shift'] = abs(
-                evm.results['brillouin_peak_position'] -
-                evm.results['rayleigh_peak_position']
+def calculate_derived_values():
+    """
+    We calculate the derived parameters here:
+    - Brillouin shift [pix]
+    - Brillouin shift [GHz]
+    - Brillouin peak width [GHz]
+    - Rayleigh peak width [GHz]
+    """
+    session = Session.get_instance()
+    evm = session.evaluation_model()
+    if not evm:
+        return
+
+    if len(evm.results['time']) == 0:
+        return
+
+    time = evm.results['time']
+    shape_brillouin = evm.results['brillouin_peak_position'].shape
+    shape_rayleigh = evm.results['rayleigh_peak_position'].shape
+    # If we have the same number of Rayleigh and Brillouin regions,
+    # we can simply subtract the two arrays (regions are always
+    # sorted by center in the peak selection model, so corresponding
+    # regions should be at the same array index)
+    if shape_brillouin[4] == shape_rayleigh[4]:
+        evm.results['brillouin_shift'] = abs(
+            evm.results['brillouin_peak_position'] -
+            evm.results['rayleigh_peak_position']
+        )
+
+        # Calculate shift in GHz
+        shift = calculate_shift_f(
+            time,
+            evm.results['brillouin_peak_position'],
+            evm.results['rayleigh_peak_position']
+        )
+        if shift is not None:
+            evm.results['brillouin_shift_f'] = shift
+
+    # Having a different number of Rayleigh and Brillouin regions
+    # doesn't really make sense. But in case I am missing something
+    # here, we assign each Brillouin region the nearest (by center)
+    # Rayleigh region.
+    else:
+        psm = session.peak_selection_model()
+        if not psm:
+            return
+        brillouin_centers = list(map(np.mean, psm.get_brillouin_regions()))
+        rayleigh_centers = list(map(np.mean, psm.get_rayleigh_regions()))
+
+        for idx in range(len(brillouin_centers)):
+            # Find corresponding (nearest) Rayleigh region
+            d = list(
+                map(
+                    lambda x: abs(x - brillouin_centers[idx]),
+                    rayleigh_centers
+                )
+            )
+            idx_r = d.index(min(d))
+            evm.results['brillouin_shift'][:, :, :, :, idx, :] = abs(
+                evm.results[
+                    'brillouin_peak_position'][:, :, :, :, idx, :] -
+                evm.results[
+                    'rayleigh_peak_position'][:, :, :, :, idx_r, :]
             )
 
             # Calculate shift in GHz
-            shift = self.calculate_shift_f(
-                time,
-                evm.results['brillouin_peak_position'],
-                evm.results['rayleigh_peak_position']
+            shift = calculate_shift_f(
+                time[:, :, :, :, 0, :],
+                evm.results['brillouin_peak_position'][:, :, :, :, idx, :],
+                evm.results['rayleigh_peak_position'][:, :, :, :, idx_r, :]
             )
             if shift is not None:
-                evm.results['brillouin_shift_f'] = shift
+                evm.results['brillouin_shift_f'][:, :, :, :, idx, :] =\
+                    shift
 
-        # Having a different number of Rayleigh and Brillouin regions
-        # doesn't really make sense. But in case I am missing something
-        # here, we assign each Brillouin region the nearest (by center)
-        # Rayleigh region.
-        else:
-            psm = self.session.peak_selection_model()
-            if not psm:
-                return
-            brillouin_centers = list(map(np.mean, psm.get_brillouin_regions()))
-            rayleigh_centers = list(map(np.mean, psm.get_rayleigh_regions()))
+    # Calculate FWHM in GHz
+    fwhm_brillouin = calculate_fwhm_f(
+        time,
+        evm.results['brillouin_peak_position'],
+        evm.results['brillouin_peak_fwhm']
+    )
+    if fwhm_brillouin is not None:
+        evm.results['brillouin_peak_fwhm_f'] = fwhm_brillouin
 
-            for idx in range(len(brillouin_centers)):
-                # Find corresponding (nearest) Rayleigh region
-                d = list(
-                    map(
-                        lambda x: abs(x - brillouin_centers[idx]),
-                        rayleigh_centers
-                    )
-                )
-                idx_r = d.index(min(d))
-                evm.results['brillouin_shift'][:, :, :, :, idx, :] = abs(
-                    evm.results[
-                        'brillouin_peak_position'][:, :, :, :, idx, :] -
-                    evm.results[
-                        'rayleigh_peak_position'][:, :, :, :, idx_r, :]
-                )
+    fwhm_rayleigh = calculate_fwhm_f(
+        time,
+        evm.results['rayleigh_peak_position'],
+        evm.results['rayleigh_peak_fwhm']
+    )
+    if fwhm_brillouin is not None:
+        evm.results['rayleigh_peak_fwhm_f'] = fwhm_rayleigh
 
-                # Calculate shift in GHz
-                shift = self.calculate_shift_f(
-                    time[:, :, :, :, 0, :],
-                    evm.results['brillouin_peak_position'][:, :, :, :, idx, :],
-                    evm.results['rayleigh_peak_position'][:, :, :, :, idx_r, :]
-                )
-                if shift is not None:
-                    evm.results['brillouin_shift_f'][:, :, :, :, idx, :] =\
-                        shift
 
-        # Calculate FWHM in GHz
-        fwhm_brillouin = self.calculate_fwhm_f(
-            time,
-            evm.results['brillouin_peak_position'],
-            evm.results['brillouin_peak_fwhm']
+def calculate_shift_f(time, brillouin_position, rayleigh_position):
+    session = Session.get_instance()
+    cm = session.calibration_model()
+    if not cm:
+        return np.full(np.shape(brillouin_position), np.nan)
+    brillouin_peak_f = cm.get_frequency_by_time(
+        time,
+        brillouin_position
+    )
+    rayleigh_peak_f = cm.get_frequency_by_time(
+        time,
+        rayleigh_position
+    )
+
+    if (brillouin_peak_f is not None) and \
+            (rayleigh_peak_f is not None):
+        return abs(
+            brillouin_peak_f -
+            rayleigh_peak_f
         )
-        if fwhm_brillouin is not None:
-            evm.results['brillouin_peak_fwhm_f'] = fwhm_brillouin
+    return np.full(np.shape(brillouin_position), np.nan)
 
-        fwhm_rayleigh = self.calculate_fwhm_f(
-            time,
-            evm.results['rayleigh_peak_position'],
-            evm.results['rayleigh_peak_fwhm']
-        )
-        if fwhm_brillouin is not None:
-            evm.results['rayleigh_peak_fwhm_f'] = fwhm_rayleigh
 
-    def calculate_shift_f(self, time, brillouin_position, rayleigh_position):
-        cm = self.session.calibration_model()
-        if not cm:
-            return None
-        brillouin_peak_f = cm.get_frequency_by_time(
-            time,
-            brillouin_position
-        )
-        rayleigh_peak_f = cm.get_frequency_by_time(
-            time,
-            rayleigh_position
-        )
+def calculate_fwhm_f(time, peak_position, peak_fwhm):
+    session = Session.get_instance()
+    cm = session.calibration_model()
+    if not cm:
+        return np.full(np.shape(peak_position), np.nan)
+    brillouin_peak_right_slope_f = cm.get_frequency_by_time(
+        time,
+        peak_position + peak_fwhm/2
+    )
+    brillouin_peak_left_slope_f = cm.get_frequency_by_time(
+        time,
+        peak_position - peak_fwhm/2
+    )
 
-        if (brillouin_peak_f is not None) and \
-                (rayleigh_peak_f is not None):
-            return abs(
-                brillouin_peak_f -
-                rayleigh_peak_f
-            )
-        return None
-
-    def calculate_fwhm_f(self, time, peak_position, peak_fwhm):
-        cm = self.session.calibration_model()
-        if not cm:
-            return None
-        brillouin_peak_right_slope_f = cm.get_frequency_by_time(
-            time,
-            peak_position + peak_fwhm/2
+    if (brillouin_peak_right_slope_f is not None) and \
+            (brillouin_peak_left_slope_f is not None):
+        return abs(
+            brillouin_peak_right_slope_f -
+            brillouin_peak_left_slope_f
         )
-        brillouin_peak_left_slope_f = cm.get_frequency_by_time(
-            time,
-            peak_position - peak_fwhm/2
-        )
-
-        if (brillouin_peak_right_slope_f is not None) and \
-                (brillouin_peak_left_slope_f is not None):
-            return abs(
-                brillouin_peak_right_slope_f -
-                brillouin_peak_left_slope_f
-            )
-        return None
+    return np.full(np.shape(peak_position), np.nan)

@@ -4,6 +4,7 @@ import numpy as np
 
 from bmlab.controllers import CalibrationController
 from bmlab.controllers import EvaluationController, ExtractionController
+from bmlab.controllers import calculate_derived_values
 from bmlab.models import ExtractionModel
 
 
@@ -70,7 +71,7 @@ def test_calculate_derived_values_equal_region_count():
     evm.results['brillouin_peak_position'][:] = 1
     evm.results['rayleigh_peak_position'][:] = 3
 
-    evc.calculate_derived_values()
+    calculate_derived_values()
 
     assert (evm.results['brillouin_shift'] == 2).all()
 
@@ -79,7 +80,7 @@ def test_calculate_derived_values_equal_region_count():
     evm.results['rayleigh_peak_position'][:, :, :, :, 0, :] = 3
     evm.results['rayleigh_peak_position'][:, :, :, :, 1, :] = 8
 
-    evc.calculate_derived_values()
+    calculate_derived_values()
 
     assert (evm.results['brillouin_shift'][:, :, :, :, 0, :] == 2).all()
     assert (evm.results['brillouin_shift'][:, :, :, :, 1, :] == 4).all()
@@ -109,7 +110,7 @@ def test_calculate_derived_values_equal_region_count_nr_peaks_2():
     evm.results['brillouin_peak_position'][:] = 1
     evm.results['rayleigh_peak_position'][:] = 3
 
-    evc.calculate_derived_values()
+    calculate_derived_values()
 
     assert (evm.results['brillouin_shift'] == 2).all()
 
@@ -120,7 +121,7 @@ def test_calculate_derived_values_equal_region_count_nr_peaks_2():
     evm.results['rayleigh_peak_position'][:, :, :, :, 0, :] = 3
     evm.results['rayleigh_peak_position'][:, :, :, :, 1, :] = 8
 
-    evc.calculate_derived_values()
+    calculate_derived_values()
 
     assert (evm.results['brillouin_shift'][:, :, :, :, 0, 0] == 2).all()
     assert (evm.results['brillouin_shift'][:, :, :, :, 1, 0] == 4).all()
@@ -164,7 +165,7 @@ def test_calculate_derived_values_different_region_count():
     psm.add_rayleigh_region((6, 7))
     psm.add_rayleigh_region((8, 9))
 
-    evc.calculate_derived_values()
+    calculate_derived_values()
 
     assert (evm.results['brillouin_shift'][:, :, :, :, 0, :] == 4).all()
     assert (evm.results['brillouin_shift'][:, :, :, :, 1, :] == 5).all()
@@ -208,7 +209,7 @@ def test_calculate_derived_values_different_region_count_nr_peaks_2():
     psm.add_rayleigh_region((6, 7))
     psm.add_rayleigh_region((8, 9))
 
-    evc.calculate_derived_values()
+    calculate_derived_values()
 
     assert (evm.results['brillouin_shift'][:, :, :, :, 0, 0] == 4).all()
     assert (evm.results['brillouin_shift'][:, :, :, :, 1, 0] == 5).all()
