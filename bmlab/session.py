@@ -1,5 +1,7 @@
 import os
 
+from pathlib import Path
+
 import h5py
 
 from bmlab.file import BrillouinFile
@@ -212,4 +214,12 @@ class Session(Serializer):
 
     @staticmethod
     def get_session_file_name(h5_file_name):
-        return str(h5_file_name)[:-3] + '.session.h5'
+        # If the raw data file is located in a 'RawData' folder,
+        # we put the eval data file in an 'EvalData' folder and
+        # don't append the 'session' string.
+        file = Path(h5_file_name)
+        if file.parent.name == 'RawData':
+            return str(file.parents[1] /
+                       'EvalData' / (str(file.name)[:-3] + '.h5'))
+        else:
+            return str(h5_file_name)[:-3] + '.session.h5'
