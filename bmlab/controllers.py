@@ -9,6 +9,37 @@ from bmlab.image import extract_lines_along_arc, find_max_in_radius
 logger = logging.getLogger(__name__)
 
 
+class ExtractionController(object):
+
+    def add_point(self, calib_key, point):
+        session = Session.get_instance()
+        time = session.get_calibration_time(calib_key)
+        em = session.extraction_model()
+        em.add_point(calib_key, time, *point)
+
+    def set_point(self, calib_key, index, point):
+        session = Session.get_instance()
+        time = session.get_calibration_time(calib_key)
+        em = session.extraction_model()
+        em.set_point(calib_key, index, time, *point)
+
+    def optimize_points(self, calib_key, radius=10):
+        session = Session.get_instance()
+        em = session.extraction_model()
+
+        img = session.get_calibration_image(calib_key, 0)
+
+        points = em.get_points(calib_key)
+        time = em.get_time(calib_key)
+        em.clear_points(calib_key)
+
+        for p in points:
+            new_point = find_max_in_radius(img, p, radius)
+            # Warning: x-axis in imshow is 1-axis in img, y-axis is 0-axis
+            em.add_point(
+                calib_key, time, new_point[0], new_point[1])
+
+
 class CalibrationController(object):
 
     def __init__(self):
@@ -407,34 +438,3 @@ class EvaluationController(object):
                 brillouin_peak_left_slope_f
             )
         return None
-
-
-class ExtractionController(object):
-
-    def add_point(self, calib_key, point):
-        session = Session.get_instance()
-        time = session.get_calibration_time(calib_key)
-        em = session.extraction_model()
-        em.add_point(calib_key, time, *point)
-
-    def set_point(self, calib_key, index, point):
-        session = Session.get_instance()
-        time = session.get_calibration_time(calib_key)
-        em = session.extraction_model()
-        em.set_point(calib_key, index, time, *point)
-
-    def optimize_points(self, calib_key, radius=10):
-        session = Session.get_instance()
-        em = session.extraction_model()
-
-        img = session.get_calibration_image(calib_key, 0)
-
-        points = em.get_points(calib_key)
-        time = em.get_time(calib_key)
-        em.clear_points(calib_key)
-
-        for p in points:
-            new_point = find_max_in_radius(img, p, radius)
-            # Warning: x-axis in imshow is 1-axis in img, y-axis is 0-axis
-            em.add_point(
-                calib_key, time, new_point[0], new_point[1])
