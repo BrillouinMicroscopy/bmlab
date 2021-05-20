@@ -226,3 +226,29 @@ def test_get_frequency_by_time():
     expected[:, :, :, 1, :, 0] = 60
     expected[:, :, :, 1, :, 1] = 70
     np.testing.assert_allclose(frequencies, expected, atol=1.E-8)
+
+
+def test_RayleighFitSet_average_fits():
+    cm = CalibrationModel()
+
+    cm.add_rayleigh_fit('0', 0, 0,
+                        10, 1, 300, 100)
+    cm.add_rayleigh_fit('0', 0, 1,
+                        12, 1, 300, 100)
+
+    w0_avg = cm.rayleigh_fits.average_fits('0', 0)
+
+    assert w0_avg == 11.0
+
+
+def test_BrillouinFitSet_average_fits():
+    cm = CalibrationModel()
+
+    cm.add_brillouin_fit('0', 0, 0,
+                         10, 1, 300, 100)
+    cm.add_brillouin_fit('0', 0, 1,
+                         12, 1, 300, 100)
+
+    w0_avg = cm.brillouin_fits.average_fits('0', 0)
+
+    assert w0_avg == 11.0
