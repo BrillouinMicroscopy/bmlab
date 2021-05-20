@@ -1,5 +1,4 @@
 import numpy as np
-import skimage.transform
 from shapely.geometry import Polygon, Point
 from bmlab.utils import debug_timer
 
@@ -96,35 +95,6 @@ class Circle(object):
 
     def e_r(self, phi):
         return np.array([np.cos(phi), np.sin(phi)], dtype=float)
-
-    def rect_mask(self, img_shape, phi, length, width):
-        """
-        Returns a mask to extract a (rotated) rectangle along the circle.
-
-        Parameters
-        ----------
-        img_shape: 2-tuple of ints
-            The image shape and by the same time shape of the mask.
-        phi: float
-            The polar angle
-        length: int
-            Length of the rectangle in pixels.
-        width: int
-            Width of the rectangle in pixels.
-
-        Returns
-        -------
-        out: numpy.ndarray
-            Boolean mask with True representing a point in the rectangle.
-        """
-        mask = np.zeros(img_shape, dtype=np.bool)
-        pt = self.point(phi, integer=True)
-        phi_degree = phi / np.pi * 180.
-        mask[pt[0] - width // 2:pt[0] + width // 2,
-             pt[1] - length // 2:pt[1] + length // 2] = True
-        mask = skimage.transform.rotate(mask, phi_degree + 90,
-                                        center=(pt[1], pt[0]))
-        return np.array(mask, dtype=np.bool)
 
 
 class Rectangle(object):
