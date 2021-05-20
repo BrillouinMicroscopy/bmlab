@@ -28,6 +28,9 @@ def test_circle_point():
     sq2 = np.sqrt(2.)
     np.testing.assert_array_almost_equal(actual, (sq2/2., sq2/2.))
 
+    actual = circle.point(0, True)
+    np.testing.assert_array_equal(actual, (1, 0))
+
 
 def test_discretize_arc():
     circle = Circle((0, 0), 100)
