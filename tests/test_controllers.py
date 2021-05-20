@@ -19,14 +19,23 @@ def test_optimize_points_in_extraction_model(mocker):
     imgs[0, 80, 80] = 1
 
     em = ExtractionModel()
-    em.add_point('0', 0, 15, 15)
-    em.add_point('0', 0, 75, 85)
 
     mocker.patch('bmlab.session.Session.extraction_model', return_value=em)
     mocker.patch('bmlab.session.Session.get_calibration_image',
                  return_value=imgs)
+    mocker.patch('bmlab.session.Session.get_calibration_time',
+                 return_value=0)
 
     ec = ExtractionController()
+    ec.add_point('0', (15, 15))
+    ec.add_point('0', (5, 85))
+
+    opt_points = em.get_points('0')
+
+    assert (15, 15) == opt_points[0]
+    assert (5, 85) == opt_points[1]
+
+    ec.set_point('0', 1, (75, 85))
 
     ec.optimize_points('0', radius=10)
     opt_points = em.get_points('0')
