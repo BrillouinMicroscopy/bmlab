@@ -129,6 +129,9 @@ def test_get_frequency_by_calib_key():
     assert cm.get_frequency_by_calib_key(70.7, '0') == 70.7
     assert cm.get_frequency_by_calib_key(80, '1') == 90
 
+    cm.clear_frequencies('0')
+    assert cm.get_frequency_by_calib_key(70.7, '0') is None
+
 
 def test_get_frequencies_by_time():
     cm = CalibrationModel()
