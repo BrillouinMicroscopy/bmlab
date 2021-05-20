@@ -21,12 +21,18 @@ def test_circle_angle():
     actual = circle.angle((0, 1))
     np.testing.assert_almost_equal(actual, np.pi / 2.)
 
+    actual = circle.angle((0, -1))
+    np.testing.assert_almost_equal(actual, 3 * np.pi / 2.)
+
 
 def test_circle_point():
     circle = Circle((0, 0), 1)
     actual = circle.point(np.pi / 4.)
     sq2 = np.sqrt(2.)
     np.testing.assert_array_almost_equal(actual, (sq2/2., sq2/2.))
+
+    actual = circle.point(0, True)
+    np.testing.assert_array_equal(actual, (1, 0))
 
 
 def test_discretize_arc():
