@@ -5,6 +5,10 @@ import numpy as np
 
 def test_calibration_model_add_brillouin_region():
     cm = CalibrationModel()
+
+    brillouin_region = cm.get_brillouin_regions(0)
+    assert brillouin_region == []
+
     cm.add_brillouin_region(0, [0.9, 3])
     cm.add_brillouin_region(0, (2, 5))
 
@@ -29,9 +33,31 @@ def test_calibration_model_set_brillouin_region():
 
     assert brillouin_region_0 == [(1, 3)]
 
+    cm.set_brillouin_region(0, 0, (2, 5))
+
+    assert brillouin_region_0 == [(2, 5)]
+
+
+def test_calibration_model_clear_brillouin_region():
+    cm = CalibrationModel()
+    cm.add_brillouin_region(0, [0.9, 3])
+
+    brillouin_region_0 = cm.get_brillouin_regions(0)
+
+    assert brillouin_region_0 == [(1, 3)]
+
+    cm.clear_brillouin_regions(0)
+    brillouin_region_0 = cm.get_brillouin_regions(0)
+
+    assert brillouin_region_0 == []
+
 
 def test_calibration_model_add_rayleigh_region():
     cm = CalibrationModel()
+
+    rayleigh_region = cm.get_rayleigh_regions(0)
+    assert rayleigh_region == []
+
     cm.add_rayleigh_region(0, [0.9, 3])
     cm.add_rayleigh_region(0, (2, 5))
 
@@ -56,6 +82,24 @@ def test_calibration_model_set_rayleigh_region():
 
     assert rayleigh_region_0 == [(1, 3)]
 
+    cm.set_rayleigh_region(0, 0, (2, 5))
+
+    assert rayleigh_region_0 == [(2, 5)]
+
+
+def test_calibration_model_clear_rayleigh_region():
+    cm = CalibrationModel()
+    cm.add_rayleigh_region(0, [0.9, 3])
+
+    rayleigh_region_0 = cm.get_rayleigh_regions(0)
+
+    assert rayleigh_region_0 == [(1, 3)]
+
+    cm.clear_rayleigh_regions(0)
+    rayleigh_region_0 = cm.get_rayleigh_regions(0)
+
+    assert rayleigh_region_0 == []
+
 
 def test_get_frequencies_by_calib_key():
     cm = CalibrationModel()
@@ -68,6 +112,9 @@ def test_get_frequencies_by_calib_key():
 
     assert (cm.get_frequencies_by_calib_key('0') == frequencies0).all()
     assert (cm.get_frequencies_by_calib_key('1') == frequencies1).all()
+
+    cm.clear_frequencies('0')
+    assert cm.get_frequencies_by_calib_key('0') is None
 
 
 def test_get_frequency_by_calib_key():
