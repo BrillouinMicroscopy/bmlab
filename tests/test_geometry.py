@@ -21,6 +21,9 @@ def test_circle_angle():
     actual = circle.angle((0, 1))
     np.testing.assert_almost_equal(actual, np.pi / 2.)
 
+    actual = circle.angle((0, -1))
+    np.testing.assert_almost_equal(actual, 3 * np.pi / 2.)
+
 
 def test_circle_point():
     circle = Circle((0, 0), 1)
