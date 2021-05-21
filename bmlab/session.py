@@ -194,7 +194,8 @@ class Session(Serializer):
         if self.file is None:
             return
 
-        session_file_name = self.get_session_file_name(self.file.path)
+        session_file_name = self.get_session_file_name(self.file.path,
+                                                       create_folder=True)
 
         with h5py.File(session_file_name, 'w') as f:
             self.serialize(f, 'session', skip=['file'])
@@ -213,13 +214,16 @@ class Session(Serializer):
                 session.__dict__[var_name] = var_value
 
     @staticmethod
-    def get_session_file_name(h5_file_name):
+    def get_session_file_name(h5_file_name, create_folder=False):
         # If the raw data file is located in a 'RawData' folder,
         # we put the eval data file in an 'EvalData' folder and
         # don't append the 'session' string.
         file = Path(h5_file_name)
         if file.parent.name == 'RawData':
-            return str(file.parents[1] /
-                       'EvalData' / (str(file.name)[:-3] + '.h5'))
+            eval_folder = file.parents[1] / 'EvalData'
+            # Create the evaluation folder if necessary
+            if create_folder and not os.path.exists(eval_folder):
+                os.mkdir(eval_folder)
+            return str(eval_folder / (str(file.name)[:-3] + '.h5'))
         else:
             return str(h5_file_name)[:-3] + '.session.h5'
