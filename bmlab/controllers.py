@@ -45,7 +45,6 @@ class CalibrationController(object):
 
     def __init__(self):
         self.session = Session.get_instance()
-        self.setup = self.session.setup
         return
 
     def calibrate(self, calib_key, count=None, max_count=None):
@@ -55,7 +54,8 @@ class CalibrationController(object):
                 max_count.value = -1
             return
 
-        if not self.setup:
+        setup = self.session.setup
+        if not setup:
             if max_count is not None:
                 max_count.value = -1
             return
@@ -97,13 +97,13 @@ class CalibrationController(object):
         for frame_num, spectrum in enumerate(spectra):
             peaks = cm.get_sorted_peaks(calib_key, frame_num)
 
-            params = fit_vipa(peaks, self.setup)
+            params = fit_vipa(peaks, setup)
             if params is None:
                 continue
             vipa_params.append(params)
             xdata = np.arange(len(spectrum))
 
-            frequencies.append(VIPA(xdata, params) - self.setup.f0)
+            frequencies.append(VIPA(xdata, params) - setup.f0)
             if count is not None:
                 count.value += 1
 
@@ -141,6 +141,9 @@ class CalibrationController(object):
         cm = self.session.calibration_model()
         spectra = cm.get_spectra(calib_key)
         regions = cm.get_brillouin_regions(calib_key)
+        setup = self.session.setup
+        if not setup:
+            return
 
         cm.clear_brillouin_fits(calib_key)
         for frame_num, spectrum in enumerate(spectra):
@@ -151,7 +154,7 @@ class CalibrationController(object):
                         region,
                         xdata,
                         spectrum,
-                        self.setup.calibration.num_brillouin_samples
+                        setup.calibration.num_brillouin_samples
                     )
                 cm.add_brillouin_fit(calib_key, region_key, frame_num,
                                      w0s, fwhms, intensities, offset)
