@@ -2,6 +2,9 @@ import logging
 
 import numpy as np
 
+import multiprocessing as mp
+from itertools import repeat as irepeat
+
 from bmlab import Session
 from bmlab.fits import fit_vipa, VIPA, fit_lorentz_region
 from bmlab.image import extract_lines_along_arc, find_max_in_radius
@@ -247,6 +250,9 @@ class EvaluationController(object):
             'nr_rayleigh_regions': len(rayleigh_regions),
         })
 
+        pool_size = mp.cpu_count() * 2
+        pool = mp.Pool(processes=pool_size)
+
         # Loop over all measurement positions
         for ind_x in range(resolution[0]):
             for ind_y in range(resolution[1]):
@@ -266,30 +272,35 @@ class EvaluationController(object):
                         times
                     evm.results['intensity'][ind_x, ind_y, ind_z, :, 0, 0] =\
                         intensities
-                    # Loop over all frames per measurement position
+
+                    # Pack the data for parallel processing
+                    regions = brillouin_regions + rayleigh_regions
+                    packed_data = zip(irepeat(spectra), regions)
+                    # Process it
+                    results = pool.starmap(self.fit_spectra, packed_data)
+                    # Unpack the results
                     for frame_num, spectrum in enumerate(spectra):
-                        xdata = np.arange(len(spectrum))
-                        # Evaluate all selected regions
                         for region_key, region in enumerate(brillouin_regions):
                             ind = (ind_x, ind_y, ind_z,
                                    frame_num, region_key, 0)
-                            w0, fwhm, intensity, offset = \
-                                fit_lorentz_region(region, xdata, spectrum)
-                            # Save results into arrays
-                            evm.results['brillouin_peak_position'][ind] = w0
-                            evm.results['brillouin_peak_fwhm'][ind] = fwhm
+                            evm.results['brillouin_peak_position'][ind] =\
+                                results[region_key][frame_num][0]
+                            evm.results['brillouin_peak_fwhm'][ind] =\
+                                results[region_key][frame_num][1]
                             evm.results['brillouin_peak_intensity'][ind] =\
-                                intensity
-                        for region_key, region in enumerate(rayleigh_regions):
-                            ind = (ind_x, ind_y, ind_z,
-                                   frame_num, region_key)
-                            w0, fwhm, intensity, offset = \
-                                fit_lorentz_region(region, xdata, spectrum)
-                            # Save results into arrays
-                            evm.results['rayleigh_peak_position'][ind] = w0
-                            evm.results['rayleigh_peak_fwhm'][ind] = fwhm
+                                results[region_key][frame_num][2]
+
+                        for region_key, region \
+                                in enumerate(rayleigh_regions,
+                                             start=len(brillouin_regions)):
+                            ind = (ind_x, ind_y, ind_z, frame_num,
+                                   region_key - len(brillouin_regions))
+                            evm.results['rayleigh_peak_position'][ind] =\
+                                results[region_key][frame_num][0]
+                            evm.results['rayleigh_peak_fwhm'][ind] =\
+                                results[region_key][frame_num][1]
                             evm.results['rayleigh_peak_intensity'][ind] =\
-                                intensity
+                                results[region_key][frame_num][2]
 
                     if count is not None:
                         count.value += 1
@@ -297,6 +308,15 @@ class EvaluationController(object):
         calculate_derived_values()
 
         return
+
+    @staticmethod
+    def fit_spectra(spectra, region):
+        fits = []
+        for frame_num, spectrum in enumerate(spectra):
+            xdata = np.arange(len(spectrum))
+            fit = fit_lorentz_region(region, xdata, spectrum)
+            fits.append(fit)
+        return fits
 
     def extract_payload_spectra(self, image_key):
         em = self.session.extraction_model()
