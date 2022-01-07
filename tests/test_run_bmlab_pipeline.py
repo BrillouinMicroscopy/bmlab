@@ -31,6 +31,7 @@ def run_pipeline():
     })
 
     # Models
+    em = session.extraction_model()
     cm = session.calibration_model()
     pm = session.peak_selection_model()
 
@@ -38,18 +39,34 @@ def run_pipeline():
     cc = CalibrationController()
     evc = EvaluationController()
 
-    points = [
-        (107, 293),
-        (165, 236),
-        (255, 137),
-        (291, 93),
-    ]
+    points = {
+        '1': [
+            (31, 358),
+            (107, 293),
+            (165, 237),
+            (254, 137),
+            (291, 92),
+            (323, 51),
+        ],
+        '2': [
+            (30, 358),
+            (107, 293),
+            (165, 237),
+            (255, 137),
+            (291, 92),
+            (323, 51),
+            (335, 35),
+        ]
+    }
+
     # First add all extraction points because this
     # can influence the extraction for other calibrations
     for calib_key in session.get_calib_keys():
-        for p in points:
-            ec.add_point(calib_key, p)
-        ec.optimize_points(calib_key)
+        ec.find_points(calib_key)
+
+        p = em.get_points(calib_key)
+
+        assert p == points[calib_key]
 
     # Then do the calibration
     for calib_key in session.get_calib_keys():
