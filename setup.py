@@ -37,11 +37,14 @@ setup(
     description=description,
     long_description=open('README.rst').read() if exists('README.rst') else '',
     install_requires=["h5py>=2.10.0",
+                      "matplotlib>=3.5.0",
                       "numpy>=1.17.0",
                       "packaging>=20.8",
-                      "scikit-image",
+                      "pytest",
+                      "pytest_mock",
+                      "scikit-image>=0.19.0",
                       "scipy>=0.14.0",
-                      "shapely"
+                      "shapely>=1.8.0"
                       ],
     # not to be confused with definitions in pyproject.toml [build-system]
     python_requires=">=3.6",
