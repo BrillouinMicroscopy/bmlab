@@ -4,10 +4,7 @@ import numpy as np
 import pytest
 
 from bmlab.image import set_orientation, find_max_in_radius
-from bmlab.image import autofind_orientation
 from bmlab.image import extract_lines_along_arc
-from bmlab.file import BrillouinFile
-from bmlab.models.orientation import Orientation
 from bmlab.geometry import Circle
 
 
@@ -67,21 +64,6 @@ def test_find_max_in_radius():
 
     actual = find_max_in_radius(img, expected, 15)
     assert actual == expected
-
-
-def test_autofind_orientation():
-
-    bf = BrillouinFile(data_file_path('Water.h5'))
-    imgs = bf.get_repetition('0').calibration.get_image('1')
-    img = imgs[0, ...]
-
-    actual = autofind_orientation(img)
-
-    expected = Orientation()
-    expected.set_reflection(vertically=True)
-
-    assert actual.rotation == expected.rotation
-    assert actual.reflection == expected.reflection
 
 
 def test_extract_lines_along_arc():
