@@ -70,7 +70,7 @@ class Circle(object):
         center = Point(self.center)
         inter = center.buffer(self.radius).boundary.intersection(
             rect.poly).boundary
-        return [(p.x, p.y) for p in inter]
+        return [(p.x, p.y) for p in inter.geoms]
 
     def angle(self, point):
         """
