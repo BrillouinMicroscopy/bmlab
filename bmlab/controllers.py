@@ -1,6 +1,9 @@
 import logging
 
 import numpy as np
+from scipy.signal import medfilt2d
+from skimage.measure import label
+from skimage.morphology import closing, disk
 
 import multiprocessing as mp
 from itertools import repeat as irepeat
@@ -32,6 +35,7 @@ class ExtractionController(object):
 
         imgs = session.get_calibration_image(calib_key)
         img = np.nanmean(imgs, axis=0)
+        img = medfilt2d(img)
 
         points = em.get_points(calib_key)
         time = em.get_time(calib_key)
@@ -42,6 +46,59 @@ class ExtractionController(object):
             # Warning: x-axis in imshow is 1-axis in img, y-axis is 0-axis
             em.add_point(
                 calib_key, time, new_point[0], new_point[1])
+
+    def find_points(self, calib_key, min_height=10,
+                    min_area=20, max_distance=50):
+        session = Session.get_instance()
+        em = session.extraction_model()
+
+        imgs = session.get_calibration_image(calib_key)
+        img = np.nanmean(imgs, axis=0)
+        time = session.get_calibration_time(calib_key)
+
+        img = medfilt2d(img)
+        threshold = np.median(img)
+        img_closed = closing(img > (threshold + min_height), disk(10))
+
+        # Find all peaks higher than the min_height
+        all_peaks = []
+        image_label, num = label(img_closed, return_num=True)
+
+        for region in range(1, num + 1):
+            # Mask of everything but the peak
+            mask = (image_label != region)
+            # Set everything but the peak to zero
+            tmp = img.copy()
+            tmp[mask] = 0
+
+            # Discard all peaks with an area that is too small
+            if np.sum(np.logical_not(mask)) >= min_area:
+                # Find indices of peak maximum
+                ind = np.unravel_index(np.argmax(tmp, axis=None), tmp.shape)
+
+                all_peaks.append(ind)
+
+        # Filter found peaks
+        p0 = (0, img.shape[1])
+        p1 = (img.shape[0], 0)
+        peaks = filter(
+            lambda peak:
+            self.distance_point_to_line(peak, p0, p1) < max_distance,
+            all_peaks)
+
+        # Add found peaks to model
+        em.clear_points(calib_key)
+
+        for p in peaks:
+            # Warning: x-axis in imshow is 1-axis in img, y-axis is 0-axis
+            em.add_point(
+                calib_key, time, p[0], p[1])
+
+    def distance_point_to_line(self, point, line0, line1):
+        return abs(
+            (line1[1] - line0[1]) * (line0[0] - point[0]) -
+            (line0[1] - point[1]) * (line1[0] - line0[0]))\
+               / np.sqrt((line1[1] - line0[1])**2 + (line1[0] - line0[0])**2)
 
 
 class CalibrationController(object):
