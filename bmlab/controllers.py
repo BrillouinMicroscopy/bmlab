@@ -35,6 +35,7 @@ class ExtractionController(object):
 
         imgs = session.get_calibration_image(calib_key)
         img = np.nanmean(imgs, axis=0)
+        img = medfilt2d(img)
 
         points = em.get_points(calib_key)
         time = em.get_time(calib_key)

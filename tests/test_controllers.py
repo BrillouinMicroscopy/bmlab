@@ -15,8 +15,8 @@ def data_file_path(file_name):
 def test_optimize_points_in_extraction_model(mocker):
 
     imgs = np.zeros((1, 100, 100), dtype=int)
-    imgs[0, 20, 20] = 1
-    imgs[0, 80, 80] = 1
+    imgs[0, 19:22, 19:22] = 1
+    imgs[0, 79:82, 79:82] = 1
 
     em = ExtractionModel()
 
@@ -40,8 +40,8 @@ def test_optimize_points_in_extraction_model(mocker):
     ec.optimize_points('0', radius=10)
     opt_points = em.get_points('0')
 
-    assert (20, 20) == opt_points[0]
-    assert (80, 80) == opt_points[1]
+    assert (19, 20) == opt_points[0]
+    assert (79, 80) == opt_points[1]
 
 
 def test_distance_point_to_line():
