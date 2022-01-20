@@ -68,6 +68,9 @@ class Session(Serializer):
         - a file gets loaded
         - the image orientation changes
         """
+        if self.file is None:
+            return
+
         repetitions = self.file.repetition_keys()
         for repetition in repetitions:
             imgs = self.file.get_repetition(repetition).payload.get_image('0')
@@ -133,27 +136,39 @@ class Session(Serializer):
             Session.get_instance().file = file
 
     def get_calib_keys(self):
+        if self.current_repetition() is None:
+            return None
         return self.current_repetition().calibration.image_keys()
 
     def get_calibration_image(self, calib_key, frame_num=None):
+        if self.current_repetition() is None:
+            return None
         imgs = self.current_repetition().calibration.get_image(calib_key)
         if frame_num is not None:
             imgs = imgs[frame_num, ...]
         return self.orientation.apply(imgs)
 
     def get_calibration_time(self, calib_key):
+        if self.current_repetition() is None:
+            return None
         return self.current_repetition().calibration.get_time(calib_key)
 
     def get_image_keys(self):
+        if self.current_repetition() is None:
+            return None
         return self.current_repetition().payload.image_keys()
 
     def get_payload_image(self, image_key, frame_num=None):
+        if self.current_repetition() is None:
+            return None
         imgs = self.current_repetition().payload.get_image(image_key)
         if frame_num is not None:
             imgs = imgs[frame_num, ...]
         return self.orientation.apply(imgs)
 
     def get_payload_time(self, image_key):
+        if self.current_repetition() is None:
+            return None
         return self.current_repetition().payload.get_time(image_key)
 
     def clear(self):
