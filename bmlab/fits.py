@@ -13,7 +13,9 @@ class FitError(Exception):
 
 
 def lorentz(x, w0, fwhm, intensity):
-    return intensity * ((fwhm / 2) ** 2) / ((x - w0) ** 2 + (fwhm / 2) ** 2)
+    with np.errstate(divide='ignore', invalid='ignore'):
+        return intensity *\
+               ((fwhm / 2) ** 2) / ((x - w0) ** 2 + (fwhm / 2) ** 2)
 
 
 def fit_lorentz(x, y):
