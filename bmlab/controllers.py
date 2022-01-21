@@ -321,6 +321,7 @@ class EvaluationController(object):
         pool = mp.Pool(processes=pool_size)
 
         # Loop over all measurement positions
+        ind_total = 0
         for ind_x in range(resolution[0]):
             for ind_y in range(resolution[1]):
                 for ind_z in range(resolution[2]):
@@ -371,6 +372,11 @@ class EvaluationController(object):
 
                     if count is not None:
                         count.value += 1
+
+                    # Calculate the derived values every ten steps
+                    ind_total += 1
+                    if (ind_total % 10) == 0:
+                        calculate_derived_values()
 
         calculate_derived_values()
 
