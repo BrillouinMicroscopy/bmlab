@@ -105,10 +105,10 @@ def test_get_frequencies_by_calib_key():
     cm = CalibrationModel()
 
     frequencies0 = np.arange(100).reshape(1, -1)
-    cm.set_frequencies('0', 0, frequencies0)
+    cm.set_frequencies('0', 0, list(frequencies0))
 
     frequencies1 = np.arange(100).reshape(1, -1) + 10
-    cm.set_frequencies('1', 10, frequencies1)
+    cm.set_frequencies('1', 10, list(frequencies1))
 
     assert (cm.get_frequencies_by_calib_key('0') == frequencies0).all()
     assert (cm.get_frequencies_by_calib_key('1') == frequencies1).all()
@@ -120,10 +120,10 @@ def test_get_frequencies_by_calib_key():
 def test_get_frequency_by_calib_key():
     cm = CalibrationModel()
 
-    frequencies0 = np.arange(100).reshape(1, -1)
+    frequencies0 = list(np.arange(100).reshape(1, -1))
     cm.set_frequencies('0', 0, frequencies0)
 
-    frequencies1 = np.arange(100).reshape(1, -1) + 10
+    frequencies1 = list(np.arange(100).reshape(1, -1) + 10)
     cm.set_frequencies('1', 10, frequencies1)
 
     assert cm.get_frequency_by_calib_key(70.7, '0') == 70.7
@@ -141,7 +141,7 @@ def test_get_frequencies_by_time():
     """
     # Test that one calibration works
     frequencies0 = np.arange(100)
-    cm.set_frequencies('0', 0, frequencies0.reshape(1, -1))
+    cm.set_frequencies('0', 0, list(frequencies0.reshape(1, -1)))
 
     frequencies = cm.get_frequencies_by_time(0)
     np.testing.assert_allclose(frequencies, frequencies0, atol=1.E-8)
@@ -150,7 +150,7 @@ def test_get_frequencies_by_time():
     np.testing.assert_allclose(frequencies, frequencies0, atol=1.E-8)
 
     frequencies1 = np.arange(100) + 10
-    cm.set_frequencies('1', 10, frequencies1.reshape(1, -1))
+    cm.set_frequencies('1', 10, list(frequencies1.reshape(1, -1)))
 
     frequencies = cm.get_frequencies_by_time(0)
     np.testing.assert_allclose(frequencies, frequencies0, atol=1.E-8)
@@ -166,7 +166,7 @@ def test_get_frequency_by_time():
     Fill calibration model with values for calibrations
     """
     # Test that one calibration works
-    cm.set_frequencies('0', 0, np.arange(100).reshape(1, -1))
+    cm.set_frequencies('0', 0, list(np.arange(100).reshape(1, -1)))
 
     frequency = cm.get_frequency_by_time(0, 0)
     np.testing.assert_allclose(frequency, 0, atol=1.E-8)
@@ -183,7 +183,7 @@ def test_get_frequency_by_time():
     np.testing.assert_allclose(frequencies, expected, atol=1.E-8)
 
     # Test that two calibrations work
-    cm.set_frequencies('1', 10, np.arange(100).reshape(1, -1) + 10)
+    cm.set_frequencies('1', 10, list(np.arange(100).reshape(1, -1) + 10))
 
     frequency = cm.get_frequency_by_time(0, 0)
     np.testing.assert_allclose(frequency, 0, atol=1.E-8)
@@ -200,7 +200,7 @@ def test_get_frequency_by_time():
     np.testing.assert_allclose(frequencies, expected, atol=1.E-8)
 
     # Test that three calibrations work
-    cm.set_frequencies('2', 30, np.arange(100).reshape(1, -1) + 30)
+    cm.set_frequencies('2', 30, list(np.arange(100).reshape(1, -1) + 30))
 
     frequency = cm.get_frequency_by_time(0, 0)
     np.testing.assert_allclose(frequency, 0, atol=1.E-8)
