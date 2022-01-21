@@ -14,7 +14,7 @@ authors = [
 ]
 description = 'Library for Brillouin microscopy data analysis'
 name = 'bmlab'
-year = "2021"
+year = "2022"
 
 
 sys.path.insert(0, realpath(dirname(__file__))+"/"+name)
