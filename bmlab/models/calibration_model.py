@@ -181,7 +181,7 @@ class CalibrationModel(Serializer):
         """
         for calib_key in self.frequencies:
             frequencies = self.get_frequencies_by_calib_key(calib_key)
-            if frequencies is None:
+            if frequencies is None or not frequencies:
                 return
             frequency = np.mean(np.array(frequencies), axis=0)
 
