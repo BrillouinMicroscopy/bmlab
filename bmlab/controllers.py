@@ -1,7 +1,7 @@
 import logging
 
 import numpy as np
-from scipy.signal import medfilt2d
+from scipy.signal import medfilt2d, find_peaks
 from skimage.measure import label
 from skimage.morphology import closing, disk
 
@@ -116,6 +116,62 @@ class CalibrationController(object):
     def __init__(self):
         self.session = Session.get_instance()
         return
+
+    def find_peaks(self, calib_key, min_prominence=15,
+                   num_brillouin_samples=2):
+        spectra = self.extract_calibration_spectra(calib_key)
+        spectrum = np.mean(spectra, axis=0)
+        peaks, properties = find_peaks(
+            spectrum, prominence=min_prominence, width=True)
+
+        # Number of peaks we are searching for
+        # (2 Rayleigh + 2 times number calibration samples)
+        num_peaks_brillouin = 2 * num_brillouin_samples
+        num_peaks_rayleigh = 2
+        num_peaks = num_peaks_rayleigh + num_peaks_brillouin
+
+        # Check if we found enough peak candidates
+        if len(peaks) < num_peaks:
+            return
+
+        # Calculate the center of mass
+        center_weighted = sum(spectrum * range(1, len(spectrum) + 1))\
+            / sum(spectrum)
+
+        # Sort the peak by distance to center
+        indices_sorted = np.argsort(abs(peaks - center_weighted))
+        indices_brillouin = sorted(
+            indices_sorted[0:num_peaks_brillouin])
+        indices_rayleigh = sorted(
+            indices_sorted[num_peaks_brillouin:num_peaks])
+
+        def peak_to_region(idx):
+            return tuple(
+                (
+                        peaks[idx]
+                        + properties['widths'][idx] * np.array((-4, 4))
+                ).astype(int)
+            )
+
+        regions_brillouin = list(map(peak_to_region, indices_brillouin))
+        # Merge the Brillouin regions if necessary
+        if num_brillouin_samples > 1:
+            regions_brillouin = [
+                (regions_brillouin[0][0],
+                 regions_brillouin[num_brillouin_samples - 1][1]),
+                (regions_brillouin[num_brillouin_samples][0],
+                 regions_brillouin[-1][1]),
+            ]
+
+        regions_rayleigh = map(peak_to_region, indices_rayleigh)
+
+        cm = self.session.calibration_model()
+        # Add Brillouin regions
+        for region in regions_brillouin:
+            cm.add_brillouin_region(calib_key, region)
+        # Add Rayleigh regions
+        for region in regions_rayleigh:
+            cm.add_rayleigh_region(calib_key, region)
 
     def calibrate(self, calib_key, count=None, max_count=None):
 
