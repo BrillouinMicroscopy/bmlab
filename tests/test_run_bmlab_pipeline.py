@@ -68,13 +68,21 @@ def run_pipeline():
 
         assert p == points[calib_key]
 
+    brillouin_region_centers = [230, 330]
+    rayleigh_region_centers = [130, 390]
+
     # Then do the calibration
     for calib_key in session.get_calib_keys():
-        # this values should work for both repetitions
-        cm.add_brillouin_region(calib_key, (190, 250))
-        cm.add_brillouin_region(calib_key, (290, 350))
-        cm.add_rayleigh_region(calib_key, (110, 155))
-        cm.add_rayleigh_region(calib_key, (370, 410))
+        cc.find_peaks(calib_key)
+
+        brillouin_regions = cm.get_brillouin_regions(calib_key)
+        rayleigh_regions = cm.get_rayleigh_regions(calib_key)
+
+        for center in brillouin_region_centers:
+            assert region_found(center, brillouin_regions)
+
+        for center in rayleigh_region_centers:
+            assert region_found(center, rayleigh_regions)
 
         cc.calibrate(calib_key)
 
@@ -85,6 +93,13 @@ def run_pipeline():
 
     evc.evaluate()
     return session
+
+
+def region_found(center, regions):
+    for region in regions:
+        if region[0] <= center <= region[1]:
+            return True
+    return False
 
 
 def test_run_pipeline():
