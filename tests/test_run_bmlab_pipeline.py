@@ -31,8 +31,8 @@ def run_pipeline():
 
 
 def test_run_pipeline():
-
     session = run_pipeline()
     evm = session.evaluation_model()
-    np.testing.assert_allclose(
-        evm.results['brillouin_shift_f'], 5.03e9, atol=50E6)
+    shift = evm.results['brillouin_shift_f']
+    assert shift.size != 0
+    np.testing.assert_allclose(shift, 5.03e9, atol=50E6)
