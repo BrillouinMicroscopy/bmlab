@@ -17,27 +17,28 @@ logger = logging.getLogger(__name__)
 
 class ExtractionController(object):
 
+    def __init__(self):
+        self.session = Session.get_instance()
+        return
+
     def add_point(self, calib_key, point):
-        session = Session.get_instance()
-        time = session.get_calibration_time(calib_key)
+        time = self.session.get_calibration_time(calib_key)
         if time is None:
             return
-        em = session.extraction_model()
+        em = self.session.extraction_model()
         em.add_point(calib_key, time, *point)
 
     def set_point(self, calib_key, index, point):
-        session = Session.get_instance()
-        time = session.get_calibration_time(calib_key)
+        time = self.session.get_calibration_time(calib_key)
         if time is None:
             return
-        em = session.extraction_model()
+        em = self.session.extraction_model()
         em.set_point(calib_key, index, time, *point)
 
     def optimize_points(self, calib_key, radius=10):
-        session = Session.get_instance()
-        em = session.extraction_model()
+        em = self.session.extraction_model()
 
-        imgs = session.get_calibration_image(calib_key)
+        imgs = self.session.get_calibration_image(calib_key)
         if imgs is None:
             return
         img = np.nanmean(imgs, axis=0)
@@ -55,14 +56,13 @@ class ExtractionController(object):
 
     def find_points(self, calib_key, min_height=10,
                     min_area=20, max_distance=50):
-        session = Session.get_instance()
-        em = session.extraction_model()
+        em = self.session.extraction_model()
 
-        imgs = session.get_calibration_image(calib_key)
+        imgs = self.session.get_calibration_image(calib_key)
         if imgs is None:
             return
         img = np.nanmean(imgs, axis=0)
-        time = session.get_calibration_time(calib_key)
+        time = self.session.get_calibration_time(calib_key)
         if time is None:
             return
 
@@ -615,3 +615,55 @@ def calculate_fwhm_f(time, peak_position, peak_fwhm):
             brillouin_peak_left_slope_f
         )
     return np.full(np.shape(peak_position), np.nan)
+
+
+class Controller(object):
+
+    def __init__(self):
+        self.session = Session.get_instance()
+        return
+
+    def evaluate(self, filepath, setup, orientation,
+                 brillouin_regions, rayleigh_regions, repetitions=None):
+        # Load data file
+        self.session.set_file(filepath)
+
+        # Evaluate all repetitions if not requested differently
+        if repetitions is None:
+            repetitions = self.session.file.repetition_keys()
+
+        for repetition in repetitions:
+            # Select repetition
+            self.session.set_current_repetition(repetition)
+            self.session.set_setup(setup)
+
+            # Set orientation
+            self.session.orientation = orientation
+
+            # Models
+            pm = self.session.peak_selection_model()
+
+            ec = ExtractionController()
+            cc = CalibrationController()
+            evc = EvaluationController()
+
+            # First add all extraction points because this
+            # can influence the extraction for other calibrations
+            for calib_key in self.session.get_calib_keys():
+                ec.find_points(calib_key)
+
+            # Then do the calibration
+            for calib_key in self.session.get_calib_keys():
+                cc.find_peaks(calib_key)
+
+                cc.calibrate(calib_key)
+
+            for region in brillouin_regions:
+                pm.add_brillouin_region(region)
+
+            for region in rayleigh_regions:
+                pm.add_rayleigh_region(region)
+
+            evc.evaluate()
+
+        return self.session
