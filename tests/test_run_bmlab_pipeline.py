@@ -15,8 +15,9 @@ def run_pipeline():
             'vertically': False, 'horizontally': False
         })
 
-    brillouin_regions = [(190, 250), (290, 350)]
-    rayleigh_regions = [(110, 155), (370, 410)]
+    # Frequency ranges to evaluate in GHz
+    brillouin_regions = [(-2.0e9, 2.0e9), (13.0e9, 17.0e9)]
+    rayleigh_regions = [(4.0e9, 6.0e9), (9.0e9, 11.0e9)]
 
     session = Controller().evaluate(
         filepath,
@@ -30,8 +31,8 @@ def run_pipeline():
 
 
 def test_run_pipeline():
-
     session = run_pipeline()
     evm = session.evaluation_model()
-    np.testing.assert_allclose(
-        evm.results['brillouin_shift_f'], 5.03e9, atol=50E6)
+    shift = evm.results['brillouin_shift_f']
+    assert shift.size != 0
+    np.testing.assert_allclose(shift, 5.03e9, atol=50E6)

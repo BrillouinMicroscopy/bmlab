@@ -333,6 +333,23 @@ class CalibrationModel(Serializer):
         if self.frequency_by_time_interpolator is not None:
             return self.frequency_by_time_interpolator(time, position)
 
+    def get_position_by_time(self, time, frequencies):
+        """
+        Returns the position on the spectrum in pix for a given frequency
+        at a certain time
+
+        Parameters
+        ----------
+        time: The time
+        frequencies: [GHz] The frequencies we want to convert to pixel
+
+        Returns
+        -------
+
+        """
+        spectrum = self.get_frequencies_by_time(time)
+        return list(map(lambda f: np.argmin(abs(spectrum - f)), frequencies))
+
 
 class FitSet(Serializer):
 
