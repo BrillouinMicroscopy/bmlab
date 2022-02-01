@@ -228,6 +228,19 @@ def test_get_frequency_by_time():
     np.testing.assert_allclose(frequencies, expected, atol=1.E-8)
 
 
+def test_get_position_by_time():
+    cm = CalibrationModel()
+
+    frequencies0 = list(np.arange(100).reshape(1, -1))
+    cm.set_frequencies('0', 0, frequencies0)
+
+    frequencies1 = list(np.arange(100).reshape(1, -1) + 10)
+    cm.set_frequencies('1', 10, frequencies1)
+
+    positions = cm.get_position_by_time(0, [10])
+    assert positions == [10]
+
+
 def test_RayleighFitSet_average_fits():
     cm = CalibrationModel()
 
