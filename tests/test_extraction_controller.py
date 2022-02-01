@@ -1,7 +1,11 @@
+import pathlib
+
 import numpy as np
 
+from bmlab.session import Session
 from bmlab.controllers import ExtractionController
-from bmlab.models import ExtractionModel
+from bmlab.models import ExtractionModel, Orientation
+from bmlab.models.setup import AVAILABLE_SETUPS
 
 
 def test_add_point(mocker):
@@ -131,3 +135,51 @@ def test_find_points(mocker):
     assert len(opt_points) == 2
     assert (19, 180) == opt_points[0]
     assert (379, 20) == opt_points[1]
+
+
+def test_find_points_real_data():
+    # Start session
+    session = Session.get_instance()
+
+    # Load data file
+    session.set_file(pathlib.Path(__file__).parent / 'data' / 'Water.h5')
+
+    # Select repetition
+    session.set_current_repetition('0')
+    session.set_setup(AVAILABLE_SETUPS[0])
+
+    # Set orientation
+    session.orientation = Orientation(rotation=1, reflection={
+        'vertically': False, 'horizontally': False
+    })
+
+    em = session.extraction_model()
+
+    ec = ExtractionController()
+
+    points = {
+        '1': [
+            (31, 358),
+            (107, 293),
+            (165, 237),
+            (254, 137),
+            (291, 92),
+            (323, 51),
+        ],
+        '2': [
+            (30, 358),
+            (107, 293),
+            (165, 237),
+            (255, 137),
+            (291, 92),
+            (323, 51),
+            (335, 35),
+        ]
+    }
+
+    for calib_key in session.get_calib_keys():
+        ec.find_points(calib_key)
+
+        p = em.get_points(calib_key)
+
+        assert p == points[calib_key]
