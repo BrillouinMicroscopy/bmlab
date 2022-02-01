@@ -312,6 +312,33 @@ class CalibrationController(object):
         return spectra
 
 
+class PeakSelectionController(object):
+
+    def __init__(self):
+        self.session = Session.get_instance()
+        return
+
+    def add_brillouin_region_frequency(self, region_frequency):
+        cm = self.session.calibration_model()
+        # We use the first measurement image here
+        time = self.session.get_payload_time('0')
+        region_pix = tuple(
+            cm.get_position_by_time(time, list(region_frequency)))
+
+        psm = self.session.peak_selection_model()
+        psm.add_brillouin_region(region_pix)
+
+    def add_rayleigh_region_frequency(self, region_frequency):
+        cm = self.session.calibration_model()
+        # We use the first measurement image here
+        time = self.session.get_payload_time('0')
+        region_pix = tuple(
+            cm.get_position_by_time(time, list(region_frequency)))
+
+        psm = self.session.peak_selection_model()
+        psm.add_rayleigh_region(region_pix)
+
+
 class EvaluationController(object):
 
     def __init__(self):
@@ -640,11 +667,9 @@ class Controller(object):
             # Set orientation
             self.session.orientation = orientation
 
-            # Models
-            pm = self.session.peak_selection_model()
-
             ec = ExtractionController()
             cc = CalibrationController()
+            psc = PeakSelectionController()
             evc = EvaluationController()
 
             # First add all extraction points because this
@@ -659,10 +684,10 @@ class Controller(object):
                 cc.calibrate(calib_key)
 
             for region in brillouin_regions:
-                pm.add_brillouin_region(region)
+                psc.add_brillouin_region_frequency(region)
 
             for region in rayleigh_regions:
-                pm.add_rayleigh_region(region)
+                psc.add_rayleigh_region_frequency(region)
 
             evc.evaluate()
 
