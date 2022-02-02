@@ -134,6 +134,8 @@ class CalibrationController(object):
         if len(peaks) < num_peaks:
             return
 
+        # Subtract background value so it does not affect the center
+        spectrum = spectrum - np.median(spectrum)
         # Calculate the center of mass
         center_weighted = sum(spectrum * range(1, len(spectrum) + 1))\
             / sum(spectrum)
