@@ -134,14 +134,24 @@ class CalibrationController(object):
         if len(peaks) < num_peaks:
             return
 
-        # Subtract background value so it does not affect the center
-        spectrum = spectrum - np.median(spectrum)
-        # Calculate the center of mass
-        center_weighted = sum(spectrum * range(1, len(spectrum) + 1))\
-            / sum(spectrum)
+        # We need to identify the position between the
+        # Stokes and Anti-Stokes Brillouin peaks
+
+        # In case there are just enough peaks,
+        # we use the position in the middle:
+        if len(peaks) == num_peaks:
+            idx = int(num_peaks / 2)
+            center = np.mean(peaks[idx - 1:idx + 1])
+        # Otherwise we use the center of mass as the middle
+        else:
+            # Subtract background value so it does not affect the center
+            spectrum = spectrum - np.median(spectrum)
+            # Calculate the center of mass
+            center = sum(spectrum * range(1, len(spectrum) + 1))\
+                / sum(spectrum)
 
         # Sort the peak by distance to center
-        indices_sorted = np.argsort(abs(peaks - center_weighted))
+        indices_sorted = np.argsort(abs(peaks - center))
         indices_brillouin = sorted(
             indices_sorted[0:num_peaks_brillouin])
         indices_rayleigh = sorted(
