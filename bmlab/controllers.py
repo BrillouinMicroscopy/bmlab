@@ -461,6 +461,8 @@ class EvaluationController(object):
                     if (ind_total % 10) == 0:
                         calculate_derived_values()
 
+        pool.close()
+        pool.join()
         calculate_derived_values()
 
         return
