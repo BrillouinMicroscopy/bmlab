@@ -16,8 +16,8 @@ def run_pipeline():
         })
 
     # Frequency ranges to evaluate in GHz
-    brillouin_regions = [(-2.0e9, 2.0e9), (13.0e9, 17.0e9)]
-    rayleigh_regions = [(4.0e9, 6.0e9), (9.0e9, 11.0e9)]
+    brillouin_regions = [(4.0e9, 6.0e9), (9.0e9, 11.0e9)]
+    rayleigh_regions = [(-2.0e9, 2.0e9), (13.0e9, 17.0e9)]
 
     session = Controller().evaluate(
         filepath,
