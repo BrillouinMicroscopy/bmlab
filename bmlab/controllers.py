@@ -157,13 +157,13 @@ class CalibrationController(object):
         indices_rayleigh = sorted(
             indices_sorted[num_peaks_brillouin:num_peaks])
 
-        def peak_to_region(idx):
-            return tuple(
-                (
-                        peaks[idx]
-                        + properties['widths'][idx] * np.array((-4, 4))
+        def peak_to_region(i):
+            r = (
+                        peaks[i]
+                        + properties['widths'][i] * np.array((-4, 4))
                 ).astype(int)
-            )
+            r[r > len(spectrum)] = len(spectrum)
+            return tuple(r)
 
         regions_brillouin = list(map(peak_to_region, indices_brillouin))
         # Merge the Brillouin regions if necessary
