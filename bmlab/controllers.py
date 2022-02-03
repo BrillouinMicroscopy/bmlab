@@ -120,6 +120,8 @@ class CalibrationController(object):
     def find_peaks(self, calib_key, min_prominence=15,
                    num_brillouin_samples=2):
         spectra = self.extract_calibration_spectra(calib_key)
+        if spectra is None:
+            return
         spectrum = np.mean(spectra, axis=0)
         peaks, properties = find_peaks(
             spectrum, prominence=min_prominence, width=True)
