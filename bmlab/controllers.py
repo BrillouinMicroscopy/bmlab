@@ -179,11 +179,15 @@ class CalibrationController(object):
 
         cm = self.session.calibration_model()
         # Add Brillouin regions
-        for region in regions_brillouin:
-            cm.add_brillouin_region(calib_key, region)
+        for i, region in enumerate(regions_brillouin):
+            # We use "set_brillouin_region" here so overlapping
+            # regions don't get merged
+            cm.set_brillouin_region(calib_key, i, region)
         # Add Rayleigh regions
-        for region in regions_rayleigh:
-            cm.add_rayleigh_region(calib_key, region)
+        for i, region in enumerate(regions_rayleigh):
+            # We use "set_brillouin_region" here so overlapping
+            # regions don't get merged
+            cm.set_rayleigh_region(calib_key, i, region)
 
     def calibrate(self, calib_key, count=None, max_count=None):
 
