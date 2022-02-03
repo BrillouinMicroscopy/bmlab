@@ -37,6 +37,14 @@ def test_calibration_model_set_brillouin_region():
 
     assert brillouin_region_0 == [(2, 5)]
 
+    cm.set_brillouin_region(0, 1, (4, 7))
+
+    assert brillouin_region_0 == [(2, 5), (4, 7)]
+
+    cm.set_brillouin_region(0, 3, (8, 9))
+
+    assert brillouin_region_0 == [(2, 5), (4, 7), (8, 9)]
+
 
 def test_calibration_model_clear_brillouin_region():
     cm = CalibrationModel()
@@ -85,6 +93,14 @@ def test_calibration_model_set_rayleigh_region():
     cm.set_rayleigh_region(0, 0, (2, 5))
 
     assert rayleigh_region_0 == [(2, 5)]
+
+    cm.set_rayleigh_region(0, 1, (4, 7))
+
+    assert rayleigh_region_0 == [(2, 5), (4, 7)]
+
+    cm.set_rayleigh_region(0, 3, (8, 9))
+
+    assert rayleigh_region_0 == [(2, 5), (4, 7), (8, 9)]
 
 
 def test_calibration_model_clear_rayleigh_region():
