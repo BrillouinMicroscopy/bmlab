@@ -120,6 +120,8 @@ class CalibrationController(object):
     def find_peaks(self, calib_key, min_prominence=15,
                    num_brillouin_samples=2):
         spectra = self.extract_calibration_spectra(calib_key)
+        if spectra is None:
+            return
         spectrum = np.mean(spectra, axis=0)
         peaks, properties = find_peaks(
             spectrum, prominence=min_prominence, width=True)
@@ -134,24 +136,55 @@ class CalibrationController(object):
         if len(peaks) < num_peaks:
             return
 
-        # Calculate the center of mass
-        center_weighted = sum(spectrum * range(1, len(spectrum) + 1))\
-            / sum(spectrum)
+        # We need to identify the position between the
+        # Stokes and Anti-Stokes Brillouin peaks
 
-        # Sort the peak by distance to center
-        indices_sorted = np.argsort(abs(peaks - center_weighted))
-        indices_brillouin = sorted(
-            indices_sorted[0:num_peaks_brillouin])
-        indices_rayleigh = sorted(
-            indices_sorted[num_peaks_brillouin:num_peaks])
+        # In case there are just enough peaks,
+        # we use the position in the middle:
+        if len(peaks) == num_peaks:
+            idx = int(num_peaks / 2)
+            center = np.mean(peaks[idx - 1:idx + 1])
+        # Otherwise we use the center of mass as the middle
+        else:
+            # Subtract background value so it does not affect the center
+            spectrum = spectrum - np.nanmedian(spectrum)
+            # Calculate the center of mass
+            center = np.nansum(spectrum * range(1, len(spectrum) + 1))\
+                / np.nansum(spectrum)
 
-        def peak_to_region(idx):
-            return tuple(
-                (
-                        peaks[idx]
-                        + properties['widths'][idx] * np.array((-4, 4))
+            # Check that we have enough peaks on both sides of the center
+            num_peaks_right = len(peaks[peaks > center])
+            num_peaks_left = len(peaks[peaks <= center])
+
+            # If not enough peaks on the right, shift center to the left
+            if num_peaks_right < (num_brillouin_samples + 1):
+                center = np.mean(
+                    peaks[num_brillouin_samples:num_brillouin_samples+2]
+                )
+            # If not enough peaks on the left, shift center to the right
+            elif num_peaks_left < (num_brillouin_samples + 1):
+                center = np.mean(
+                    peaks[-(num_brillouin_samples+2):-num_brillouin_samples]
+                )
+
+        num_peaks_left = len(peaks[peaks <= center])
+
+        indices_brillouin = range(
+            num_peaks_left - num_brillouin_samples,
+            num_peaks_left + num_brillouin_samples
+        )
+        indices_rayleigh = [
+            num_peaks_left - num_brillouin_samples - 1,
+            num_peaks_left + num_brillouin_samples
+        ]
+
+        def peak_to_region(i):
+            r = (
+                        peaks[i]
+                        + properties['widths'][i] * np.array((-4, 4))
                 ).astype(int)
-            )
+            r[r > len(spectrum)] = len(spectrum)
+            return tuple(r)
 
         regions_brillouin = list(map(peak_to_region, indices_brillouin))
         # Merge the Brillouin regions if necessary
@@ -167,11 +200,15 @@ class CalibrationController(object):
 
         cm = self.session.calibration_model()
         # Add Brillouin regions
-        for region in regions_brillouin:
-            cm.add_brillouin_region(calib_key, region)
+        for i, region in enumerate(regions_brillouin):
+            # We use "set_brillouin_region" here so overlapping
+            # regions don't get merged
+            cm.set_brillouin_region(calib_key, i, region)
         # Add Rayleigh regions
-        for region in regions_rayleigh:
-            cm.add_rayleigh_region(calib_key, region)
+        for i, region in enumerate(regions_rayleigh):
+            # We use "set_brillouin_region" here so overlapping
+            # regions don't get merged
+            cm.set_rayleigh_region(calib_key, i, region)
 
     def calibrate(self, calib_key, count=None, max_count=None):
 

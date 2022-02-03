@@ -44,7 +44,10 @@ class CalibrationModel(Serializer):
 
         region = tuple(round(x) for x in region)
 
-        self.brillouin_regions[calib_key][index] = region
+        if index < len(self.brillouin_regions[calib_key]):
+            self.brillouin_regions[calib_key][index] = region
+        else:
+            self.brillouin_regions[calib_key].append(region)
 
     def get_brillouin_regions(self, calib_key):
         regions = self.brillouin_regions.get(calib_key)
@@ -82,7 +85,10 @@ class CalibrationModel(Serializer):
 
         region = tuple(round(x) for x in region)
 
-        self.rayleigh_regions[calib_key][index] = region
+        if index < len(self.rayleigh_regions[calib_key]):
+            self.rayleigh_regions[calib_key][index] = region
+        else:
+            self.rayleigh_regions[calib_key].append(region)
 
     def get_rayleigh_regions(self, calib_key):
         regions = self.rayleigh_regions.get(calib_key)
