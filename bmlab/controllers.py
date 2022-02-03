@@ -145,10 +145,10 @@ class CalibrationController(object):
         # Otherwise we use the center of mass as the middle
         else:
             # Subtract background value so it does not affect the center
-            spectrum = spectrum - np.median(spectrum)
+            spectrum = spectrum - np.nanmedian(spectrum)
             # Calculate the center of mass
-            center = sum(spectrum * range(1, len(spectrum) + 1))\
-                / sum(spectrum)
+            center = np.nansum(spectrum * range(1, len(spectrum) + 1))\
+                / np.nansum(spectrum)
 
         # Sort the peak by distance to center
         indices_sorted = np.argsort(abs(peaks - center))
