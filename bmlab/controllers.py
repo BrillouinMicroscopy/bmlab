@@ -150,12 +150,31 @@ class CalibrationController(object):
             center = np.nansum(spectrum * range(1, len(spectrum) + 1))\
                 / np.nansum(spectrum)
 
-        # Sort the peak by distance to center
-        indices_sorted = np.argsort(abs(peaks - center))
-        indices_brillouin = sorted(
-            indices_sorted[0:num_peaks_brillouin])
-        indices_rayleigh = sorted(
-            indices_sorted[num_peaks_brillouin:num_peaks])
+            # Check that we have enough peaks on both sides of the center
+            num_peaks_right = len(peaks[peaks > center])
+            num_peaks_left = len(peaks[peaks <= center])
+
+            # If not enough peaks on the right, shift center to the left
+            if num_peaks_right < (num_brillouin_samples + 1):
+                center = np.mean(
+                    peaks[num_brillouin_samples:num_brillouin_samples+2]
+                )
+            # If not enough peaks on the left, shift center to the right
+            elif num_peaks_left < (num_brillouin_samples + 1):
+                center = np.mean(
+                    peaks[-(num_brillouin_samples+2):-num_brillouin_samples]
+                )
+
+        num_peaks_left = len(peaks[peaks <= center])
+
+        indices_brillouin = range(
+            num_peaks_left - num_brillouin_samples,
+            num_peaks_left + num_brillouin_samples
+        )
+        indices_rayleigh = [
+            num_peaks_left - num_brillouin_samples - 1,
+            num_peaks_left + num_brillouin_samples
+        ]
 
         def peak_to_region(i):
             r = (
