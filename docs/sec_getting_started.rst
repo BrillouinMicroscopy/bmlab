@@ -30,7 +30,7 @@ Basic usage
             'vertically': False, 'horizontally': False
         })
 
-    # Frequency ranges to evaluate in GHz
+    # Frequency ranges to evaluate in Hz
     brillouin_regions = [(4.0e9, 6.0e9), (9.0e9, 11.0e9)]
     rayleigh_regions = [(-2.0e9, 2.0e9), (13.0e9, 17.0e9)]
 
