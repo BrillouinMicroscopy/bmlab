@@ -216,25 +216,14 @@ class CalibrationController(object):
 
     def calibrate(self, calib_key, count=None, max_count=None):
 
-        if not calib_key:
-            if max_count is not None:
-                max_count.value = -1
-            return
-
         setup = self.session.setup
-        if not setup:
-            if max_count is not None:
-                max_count.value = -1
-            return
-
         em = self.session.extraction_model()
-        if not em:
-            if max_count is not None:
-                max_count.value = -1
-            return
-
         cm = self.session.calibration_model()
-        if not cm:
+
+        if not calib_key\
+                or not setup\
+                or not em\
+                or not cm:
             if max_count is not None:
                 max_count.value = -1
             return
@@ -242,12 +231,7 @@ class CalibrationController(object):
         spectra = self.extract_calibration_spectra(calib_key)
         time = self.session.get_calibration_time(calib_key)
 
-        if spectra is None:
-            if max_count is not None:
-                max_count.value = -1
-            return
-
-        if len(spectra) == 0:
+        if spectra is None or len(spectra) == 0:
             if max_count is not None:
                 max_count.value = -1
             return
