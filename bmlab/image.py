@@ -46,7 +46,7 @@ def set_orientation(image, rotate=0, flip_ud=False, flip_lr=False):
     numpy.rot90, numpy.flipud, numpy.fliplr
     """
     if np.shape(np.shape(image)) == (2,):
-        if rotate > 0:
+        if rotate != 0:
             image = np.rot90(image, k=rotate, axes=(1, 0))
 
         if flip_ud:
@@ -55,7 +55,7 @@ def set_orientation(image, rotate=0, flip_ud=False, flip_lr=False):
         if flip_lr:
             image = np.fliplr(image)
     elif np.shape(np.shape(image)) == (3,):
-        if rotate > 0:
+        if rotate != 0:
             image = np.rot90(image, k=rotate, axes=(2, 1))
 
         if flip_ud:
