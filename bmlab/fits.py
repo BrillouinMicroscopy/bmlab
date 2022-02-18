@@ -24,6 +24,11 @@ def fit_lorentz(x, y):
     intensity_guess = np.max(y) - offset_guess
     fwhm_guess = float(2 * np.abs(
         w0_guess - x[np.argmax(y > (offset_guess + intensity_guess / 2))]))
+    # Ensure a value larger than zero for the FWHM
+    # (it might fail if the peak is not symmetric and its maximum is the
+    # first value higher than offset_guess + intensity_guess/2)
+    if fwhm_guess <= 0.0:
+        fwhm_guess = 1.0
 
     def error(params, xdata, ydata):
         return (ydata
