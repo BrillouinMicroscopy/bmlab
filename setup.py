@@ -37,7 +37,6 @@ setup(
     description=description,
     long_description=open('README.rst').read() if exists('README.rst') else '',
     install_requires=["h5py>=2.10.0",
-                      "matplotlib>=3.5.0",
                       "numpy>=1.17.0",
                       "packaging>=20.8",
                       "pytest",

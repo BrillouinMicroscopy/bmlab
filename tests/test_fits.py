@@ -1,7 +1,6 @@
 import pathlib
 
 import numpy as np
-# import matplotlib.pyplot as plt
 
 from bmlab.fits import lorentz, fit_lorentz, fit_circle,\
     fit_double_lorentz, calculate_exact_circle, fit_vipa, VIPA
@@ -19,9 +18,6 @@ def test_fit_lorentz():
     offset = 10.
     intensity = 10.
     y_data = lorentz(x, w0, fwhm, intensity) + offset
-
-    # plt.plot(x, y_data)
-    # plt.show()
 
     actual_w0, actual_fwhm, actual_intensity, actual_offset =\
         fit_lorentz(x, y_data)
@@ -63,9 +59,6 @@ def test_fit_double_lorentz():
     offset = 10.
     y_data = lorentz(x, w0_left, fwhm_left, intensity_left)
     y_data += lorentz(x, w0_right, fwhm_right, intensity_right) + offset
-
-    # plt.plot(w, y_data)
-    # plt.show()
 
     w0s, fwhms, intens, actual_offset\
         = fit_double_lorentz(x, y_data)
