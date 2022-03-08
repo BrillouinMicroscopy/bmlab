@@ -4,6 +4,7 @@ from pathlib import Path
 
 import h5py
 
+from bmlab import __version__ as version
 from bmlab.file import BrillouinFile
 from bmlab.models.extraction_model import ExtractionModel
 from bmlab.models.orientation import Orientation
@@ -214,6 +215,8 @@ class Session(Serializer):
 
         with h5py.File(session_file_name, 'w') as f:
             self.serialize(f, 'session', skip=['file'])
+            # Store the current bmlab version
+            f.attrs['version'] = 'bmlab_' + version
 
     def load(self, h5_file_name):
 

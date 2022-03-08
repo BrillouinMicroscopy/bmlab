@@ -103,6 +103,7 @@ def test_serialize_session(tmp_dir):
 
     with h5py.File('Water.session.h5', 'r') as f:
         assert 'session/extraction_models/0/points/1' in f
+        assert f.attrs['version'].startswith('bmlab')
 
     session.clear()
 
