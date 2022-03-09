@@ -25,6 +25,46 @@ def _get_datetime(time_stamp):
         return None
 
 
+def is_source_file(path):
+    try:
+        with h5py.File(path, "r") as h5:
+            file_format = h5.attrs.get('version')
+            if file_format is not None:
+                # Is this a file from BrillouinAcquisition?
+                # Then we get an ndarray with a bytes object inside
+                # (because the version attribute is stored
+                # as 'cset=H5T_CSET_ASCII').
+                if isinstance(file_format, np.ndarray)\
+                        and isinstance(file_format[0], bytes):
+                    file_format = file_format[0].decode('ascii')
+                # This is from BrillouinAcquisition!
+                if file_format.startswith('H5BM'):
+                    return True
+        return False
+    except Exception:
+        return False
+
+
+def is_session_file(path):
+    try:
+        with h5py.File(path, "r") as h5:
+            file_format = h5.attrs.get('version')
+            if file_format is not None:
+                # This is a bmlab session file created
+                # with bmlab>=0.0.14
+                if isinstance(file_format, str)\
+                        and file_format.startswith('bmlab'):
+                    return True
+
+            # This is a bmlab session file created with bmlab<0.0.14
+            if 'session' in h5.keys()\
+                    and h5['session'].attrs.get('type').startswith('bmlab'):
+                return True
+        return False
+    except Exception:
+        return False
+
+
 class BrillouinFile(object):
 
     def __init__(self, path):
@@ -33,7 +73,7 @@ class BrillouinFile(object):
 
         Parameters
         ----------
-        path : str
+        path : Path
             path of the file to load
 
         Raises
