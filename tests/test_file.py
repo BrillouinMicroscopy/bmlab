@@ -2,11 +2,34 @@ import pytest
 import pathlib
 import datetime
 
-from bmlab.file import BrillouinFile, BadFileException
+from bmlab.file import BrillouinFile,\
+    BadFileException, is_source_file, is_session_file
 
 
 def data_file_path(file_name):
     return pathlib.Path(__file__).parent / 'data' / file_name
+
+
+def test_is_source_file():
+    # File from BrillouinAcquisition
+    assert is_source_file(data_file_path('Water.h5'))
+    # Session file from bmlab<0.0.14
+    assert not is_source_file(data_file_path('1D-x.session.h5'))
+    # Session file from bmlab>=0.0.14
+    assert not is_source_file(data_file_path('1D-y.session.h5'))
+    # Non-existing file
+    assert not is_source_file(data_file_path('Unavailable.h5'))
+
+
+def test_is_session_file():
+    # Session file from bmlab<0.0.14
+    assert is_session_file(data_file_path('1D-x.session.h5'))
+    # Session file from bmlab>=0.0.14
+    assert is_session_file(data_file_path('1D-y.session.h5'))
+    # File from BrillouinAcquisition
+    assert not is_session_file(data_file_path('Water.h5'))
+    # Non-existing file
+    assert not is_session_file(data_file_path('Unavailable.h5'))
 
 
 def test_file_has_one_repetition():

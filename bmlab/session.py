@@ -5,13 +5,51 @@ from pathlib import Path
 import h5py
 
 from bmlab import __version__ as version
-from bmlab.file import BrillouinFile
+from bmlab.file import BrillouinFile, is_source_file, is_session_file
 from bmlab.models.extraction_model import ExtractionModel
 from bmlab.models.orientation import Orientation
 from bmlab.models.calibration_model import CalibrationModel
 from bmlab.models.peak_selection_model import PeakSelectionModel
 from bmlab.models.evaluation_model import EvaluationModel
 from bmlab.serializer import Serializer
+
+
+def get_session_file_path(source_file, create_folder=False):
+    # If the raw data file is located in a 'RawData' folder,
+    # we put the eval data file in an 'EvalData' folder and
+    # don't append the 'session' string.
+    file = Path(source_file)
+    if file.parent.name == 'RawData':
+        eval_folder = file.parents[1] / 'EvalData'
+        # Create the evaluation folder if necessary
+        if create_folder and not os.path.exists(eval_folder):
+            os.mkdir(eval_folder)
+        return Path(str(eval_folder / (str(file.name)[:-3] + '.h5')))
+    else:
+        return Path(str(source_file)[:-3] + '.session.h5')
+
+
+def get_source_file_path(session_file):
+    # If the session file is located in a 'EvalData' folder,
+    # we find the source file in an 'RawData' folder
+    file = Path(session_file)
+    if file.parent.name == 'EvalData':
+        raw_folder = file.parents[1] / 'RawData'
+        return Path(str(raw_folder / (str(file.name)[:-3] + '.h5')))
+    else:
+        return Path(str(session_file)[:-11] + '.h5')
+
+
+def get_valid_source(path):
+    # If this is a session file, we need to check whether
+    # the source file exists
+    if is_session_file(path):
+        path = get_source_file_path(path)
+
+    if is_source_file(path):
+        return path
+
+    return None
 
 
 class Session(Serializer):
@@ -103,6 +141,12 @@ class Session(Serializer):
             The file name.
 
         """
+        # Get the source file in case it's a session file
+        file_name = get_valid_source(file_name)
+        # There is no valid source file
+        if file_name is None:
+            raise Exception('No source data file found')
+
         try:
             file = BrillouinFile(file_name)
         except Exception as e:
@@ -210,8 +254,8 @@ class Session(Serializer):
         if self.file is None:
             return
 
-        session_file_name = self.get_session_file_name(self.file.path,
-                                                       create_folder=True)
+        session_file_name = get_session_file_path(self.file.path,
+                                                  create_folder=True)
 
         with h5py.File(session_file_name, 'w') as f:
             self.serialize(f, 'session', skip=['file'])
@@ -220,7 +264,7 @@ class Session(Serializer):
 
     def load(self, h5_file_name):
 
-        session_file_name = self.get_session_file_name(h5_file_name)
+        session_file_name = get_session_file_path(h5_file_name)
 
         if not os.path.exists(session_file_name):
             return
@@ -230,18 +274,3 @@ class Session(Serializer):
             session = Session.get_instance()
             for var_name, var_value in new_session.__dict__.items():
                 session.__dict__[var_name] = var_value
-
-    @staticmethod
-    def get_session_file_name(h5_file_name, create_folder=False):
-        # If the raw data file is located in a 'RawData' folder,
-        # we put the eval data file in an 'EvalData' folder and
-        # don't append the 'session' string.
-        file = Path(h5_file_name)
-        if file.parent.name == 'RawData':
-            eval_folder = file.parents[1] / 'EvalData'
-            # Create the evaluation folder if necessary
-            if create_folder and not os.path.exists(eval_folder):
-                os.mkdir(eval_folder)
-            return str(eval_folder / (str(file.name)[:-3] + '.h5'))
-        else:
-            return str(h5_file_name)[:-3] + '.session.h5'

@@ -2,11 +2,41 @@ import pathlib
 
 import pytest
 
-from bmlab.session import Session
+from bmlab.session import Session, get_valid_source,\
+    get_source_file_path, get_session_file_path
 
 
 def data_file_path(file_name):
     return pathlib.Path(__file__).parent / 'data' / file_name
+
+
+def test_get_source_file_path():
+    assert get_source_file_path(data_file_path('EvalData/Water.h5')) \
+           == data_file_path('RawData/Water.h5')
+    assert get_source_file_path(data_file_path('Water.session.h5'))\
+           == data_file_path('Water.h5')
+
+
+def test_get_session_file_path():
+    assert get_session_file_path(data_file_path('RawData/Water.h5')) \
+           == data_file_path('EvalData/Water.h5')
+    assert get_session_file_path(data_file_path('Water.h5'))\
+           == data_file_path('Water.session.h5')
+
+
+def test_get_valid_source_file():
+    # File from BrillouinAcquisition
+    assert get_valid_source(data_file_path('Water.h5')) \
+           == data_file_path('Water.h5')
+    # Session file from bmlab<0.0.14
+    assert get_valid_source(data_file_path('1D-x.session.h5'))\
+           == data_file_path('1D-x.h5')
+    # Session file from bmlab>=0.0.14
+    assert get_valid_source(data_file_path('1D-y.session.h5'))\
+           == data_file_path('1D-y.h5')
+    # Session file from bmlab>=0.0.14
+    assert get_valid_source(data_file_path('Unavailable.h5'))\
+           is None
 
 
 def test_session_is_singleton():
