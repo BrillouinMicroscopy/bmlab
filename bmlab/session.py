@@ -3,6 +3,7 @@ import os
 from pathlib import Path
 
 import h5py
+from numpy import transpose
 
 from bmlab import __version__ as version
 from bmlab.file import BrillouinFile, is_source_file, is_session_file
@@ -215,6 +216,21 @@ class Session(Serializer):
         if self.current_repetition() is None:
             return None
         return self.current_repetition().payload.get_time(image_key)
+
+    def get_payload_resolution(self):
+        if self.current_repetition() is None:
+            return None
+        return self.current_repetition().payload.resolution
+
+    def get_payload_positions(self):
+        if self.current_repetition() is None:
+            return None
+        positions = self.current_repetition().payload.positions
+        # We need to correctly transpose the array to have the
+        # axes in order x-y-z
+        for axis in positions:
+            positions[axis] = transpose(positions[axis], axes=(1, 2, 0))
+        return positions
 
     def clear(self):
         """

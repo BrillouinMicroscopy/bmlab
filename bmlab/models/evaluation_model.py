@@ -13,25 +13,95 @@ class EvaluationModel(Serializer):
         self.nr_brillouin_peaks = 1
         self.spectra = {}
 
-        self.results = {
-            # Fitted values
-            'brillouin_peak_position': [],   # [pix]  Brillouin peak position
-            'brillouin_peak_fwhm': [],       # [pix]  Brillouin peak FWHM
-            'brillouin_peak_intensity': [],  # [a.u.] Brillouin peak intensity
+        # @since 0.1.0
+        self.parameters = self.get_default_parameters()
 
-            'rayleigh_peak_position': [],   # [pix]   Rayleigh peak position
-            'rayleigh_peak_fwhm': [],       # [pix]   Rayleigh peak FWHM
-            'rayleigh_peak_intensity': [],  # [a.u.]  Rayleigh peak intensity
+        self.results = {}
+        for key in self.parameters.keys():
+            self.results[key] = np.empty((0,))
 
-            'intensity': [],                # [a.u.]  Overall intensity
-            'time': [],                     # [s]     The time the measurement
-                                            #         point was taken at
+    def post_deserialize(self):
+        # Migrations from 0.0.13 to 0.1.0
+        # Check that the parameters attribute is present
+        # @since 0.1.0
+        if not hasattr(self, 'parameters'):
+            self.parameters = self.get_default_parameters()
 
-            # Derived values
-            'brillouin_shift': [],          # [pix]   Brillouin frequency shift
-            'brillouin_shift_f': [],        # [GHz]   Brillouin frequency shift
-            'brillouin_peak_fwhm_f': [],    # [GHz]   Brillouin peak FWHM
-            'rayleigh_peak_fwhm_f': [],     # [GHz]   Rayleigh peak FWHM
+    @staticmethod
+    def get_default_parameters():
+        return {
+            'brillouin_shift_f': {          # [GHz] Brillouin frequency shift
+                'unit': 'GHz',
+                'symbol': r'$\nu_\mathrm{B}$',
+                'label': 'Brillouin frequency shift',
+                'scaling': 1e-9,
+            },
+            'brillouin_shift': {            # [pix] Brillouin frequency shift
+                'unit': 'pix',
+                'symbol': r'$\nu_\mathrm{B}$',
+                'label': 'Brillouin frequency shift',
+                'scaling': 1,
+            },
+            'brillouin_peak_fwhm_f': {      # [GHz] Brillouin peak FWHM
+                'unit': 'GHz',
+                'symbol': r'$\Delta_\mathrm{B}$',
+                'label': 'Brillouin peak width',
+                'scaling': 1e-9,
+            },
+            'brillouin_peak_fwhm': {        # [pix] Brillouin peak FWHM
+                'unit': 'pix',
+                'symbol': r'$\Delta_\mathrm{B}$',
+                'label': 'Brillouin peak width',
+                'scaling': 1,
+            },
+            'brillouin_peak_position': {    # [pix] Brillouin peak position
+                'unit': 'pix',
+                'symbol': r'$s_\mathrm{B}$',
+                'label': 'Brillouin peak position',
+                'scaling': 1,
+            },
+            'brillouin_peak_intensity': {   # [a.u.] Brillouin peak intensity
+                'unit': 'a.u.',
+                'symbol': r'$I_\mathrm{B}$',
+                'label': 'Brillouin peak intensity',
+                'scaling': 1,
+            },
+            'rayleigh_peak_fwhm_f': {       # [GHz] Rayleigh peak FWHM
+                'unit': 'GHz',
+                'symbol': r'$\Delta_\mathrm{R}$',
+                'label': 'Rayleigh peak width',
+                'scaling': 1e-9,
+            },
+            'rayleigh_peak_fwhm': {         # [pix] Rayleigh peak FWHM
+                'unit': 'pix',
+                'symbol': r'$\Delta_\mathrm{R}$',
+                'label': 'Rayleigh peak width',
+                'scaling': 1,
+            },
+            'rayleigh_peak_position': {     # [pix] Rayleigh peak position
+                'unit': 'pix',
+                'symbol': r'$s_\mathrm{R}$',
+                'label': 'Rayleigh peak position',
+                'scaling': 1,
+            },
+            'rayleigh_peak_intensity': {    # [a.u.] Rayleigh peak intensity
+                'unit': 'a.u.',
+                'symbol': r'$I_\mathrm{R}$',
+                'label': 'Rayleigh peak intensity',
+                'scaling': 1,
+            },
+            'intensity': {                  # [a.u.] Overall intensity of image
+                'unit': 'a.u.',
+                'symbol': r'$I_\mathrm{total}$',
+                'label': 'Intensity',
+                'scaling': 1,
+            },
+            'time': {                       # [s] The time the measurement
+                'unit': 's',                # point was taken at
+                'symbol': r'$t$',
+                'label': 'Time',
+                'scaling': 1,
+            },
         }
 
     def initialize_results_arrays(self, dims):
@@ -107,3 +177,6 @@ class EvaluationModel(Serializer):
         if spectra:
             return spectra
         return None
+
+    def get_parameter_keys(self):
+        return self.parameters

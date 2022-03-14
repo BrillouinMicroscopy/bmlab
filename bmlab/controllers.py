@@ -12,6 +12,8 @@ from bmlab import Session
 from bmlab.fits import fit_vipa, VIPA, fit_lorentz_region
 from bmlab.image import extract_lines_along_arc, find_max_in_radius
 
+import warnings
+
 logger = logging.getLogger(__name__)
 
 
@@ -530,6 +532,57 @@ class EvaluationController(object):
 
         evm.set_spectra(image_key, spectra)
         return spectra, times, intensities
+
+    def get_data(self, parameter_key):
+        """
+        This function returns the evaluated data,
+        its positions, dimensionality and labels
+        Parameters
+        ----------
+        parameter_key: str
+            The key of the parameter requested.
+            See bmlab.model.evaluation_model.get_parameter_keys()
+
+        Returns
+        -------
+        data: np.ndarray
+            The data to show. This is always a 3-dimensional array.
+        positions: list
+            This is a list of length 3 containing ndarrays with
+            the spatial positions of the data points.
+        dimensionality: int
+            Whether it's a 0, 1, 2, or 3D measurement
+        labels: list
+            The labels of the positions
+        """
+        resolution = self.session.get_payload_resolution()
+
+        dimensionality = sum(np.array(resolution) > 1)
+
+        # Get the positions and squeeze them
+        pos = self.session.get_payload_positions()
+
+        positions = list(pos.values())
+        labels = list(map(lambda l: r'$' + l + '$ [$\\mu$m]', ['x', 'y', 'z']))
+
+        evm = self.session.evaluation_model()
+        data = evm.results[parameter_key]
+        # Average all non-spatial dimensions.
+        # Do not show warning which occurs when a slice contains only NaNs.
+        with warnings.catch_warnings():
+            warnings.filterwarnings(
+                action='ignore',
+                message='Mean of empty slice'
+            )
+            data = np.nanmean(
+                data,
+                axis=tuple(range(3, data.ndim))
+            )
+
+        # Scale the date in case of GHz
+        data = evm.parameters[parameter_key]['scaling'] * data
+
+        return data, positions, dimensionality, labels
 
 
 def calculate_derived_values():
