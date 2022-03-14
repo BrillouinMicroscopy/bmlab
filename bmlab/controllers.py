@@ -567,6 +567,13 @@ class EvaluationController(object):
 
         evm = self.session.evaluation_model()
         data = evm.results[parameter_key]
+
+        # Ensure that we always get the expected shape
+        # (even if the array was not initialized yet)
+        if data.size == 0:
+            data = np.empty(resolution)
+            data[:] = np.nan
+
         # Average all non-spatial dimensions.
         # Do not show warning which occurs when a slice contains only NaNs.
         with warnings.catch_warnings():
