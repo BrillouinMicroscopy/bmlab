@@ -405,7 +405,7 @@ class EvaluationController(object):
         brillouin_regions = pm.get_brillouin_regions()
         rayleigh_regions = pm.get_rayleigh_regions()
 
-        resolution = self.session.current_repetition().payload.resolution
+        resolution = self.session.get_payload_resolution()
 
         # Get first spectrum to find number of images
         spectra, _, _ = self.extract_payload_spectra('0')
