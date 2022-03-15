@@ -1,11 +1,69 @@
-0.0.4
- - setup: use "pytest" command instead of deprecated "setup.py test"
- - get metadata from HDF file
- - set image orientation
-0.0.3
- - testing connection with BMicro
-0.0.2
- - CI test release
-0.0.1
- - dummy release
+## 0.1.1 - 2022-03-15
+
+### Added
+- Provide session files for source files #74
+
+### Fixed
+- Ensure we always get the expected data shape #75
+
+## 0.1.0 - 2022-03-14
+
+### Added
+- Implement getting results maps #70
+- Save bmlab version in session file #71
+- Allow to open session files directly #72
+
+## 0.0.13 - 2022-02-21
+
+### Fixed
+- Fix lorentz fit for special case #68
+
+## 0.0.12 - 2022-02-16
+
+### Added
+- Add example for standalone evaluation #61
+- Allow finding peaks in extraction view for all calibrations #65
+- Allow to rotate the image by negative number #67
+
+### Changed
+- Improve the peak finding for calibration spectra #63
+- Code cleanup #66
+
+### Fixed
+- Correctly close and join mp pool #60
+- Fix switched Rayleigh and Brillouin regions in test #62
+
+## 0.0.11 - 2022-02-01
+
+### Added
+- Implement peak finding for calibration spectra #56
+- Allow to add regions by frequency #59
+
+### Changed
+- Don't show runtime warning for fitting #54
+- Calculate derived values during evaluation #55
+- Bundle auto evaluation in a general controller #58
+- Code cleanup #52 #57
+
+### Fixed
+- Correct bmlab citation hint #51
+- Don't fail when not enough peaks for frequency axis #53
+
+## 0.0.4
+
+- setup: use "pytest" command instead of deprecated "setup.py test"
+- get metadata from HDF file
+- set image orientation
+
+## 0.0.3
+
+- testing connection with BMicro
+
+## 0.0.2
+
+- CI test release
+
+## 0.0.1
+
+- dummy release
 
