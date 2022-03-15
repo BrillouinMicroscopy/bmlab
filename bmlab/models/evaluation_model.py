@@ -1,5 +1,6 @@
 import logging
 import numpy as np
+from collections import OrderedDict
 
 from bmlab.serializer import Serializer
 
@@ -24,12 +25,13 @@ class EvaluationModel(Serializer):
         # Migrations from 0.0.13 to 0.1.0
         # Check that the parameters attribute is present
         # @since 0.1.0
-        if not hasattr(self, 'parameters'):
+        if not hasattr(self, 'parameters')\
+                or not isinstance(self, OrderedDict):
             self.parameters = self.get_default_parameters()
 
     @staticmethod
     def get_default_parameters():
-        return {
+        return OrderedDict({
             'brillouin_shift_f': {          # [GHz] Brillouin frequency shift
                 'unit': 'GHz',
                 'symbol': r'$\nu_\mathrm{B}$',
@@ -102,7 +104,7 @@ class EvaluationModel(Serializer):
                 'label': 'Time',
                 'scaling': 1,
             },
-        }
+        })
 
     def initialize_results_arrays(self, dims):
         shape_general = (
