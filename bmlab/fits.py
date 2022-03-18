@@ -189,6 +189,13 @@ def calculate_exact_circle(points):
     if len(points) < 3:
         return
 
+    # If the first three points are all on the same line,
+    # we slightly shift the first point so that we can
+    # fit a circle
+    if are_points_on_line(points):
+        (x, y) = points[0]
+        points[0] = (x - 1, y)
+
     x1 = points[0][0]
     y1 = points[0][1]
     x2 = points[1][0]
@@ -226,6 +233,34 @@ def calculate_exact_circle(points):
     r = np.sqrt(x0 ** 2 + y0 ** 2 - c)
 
     return (x0, y0), r
+
+
+def are_points_on_line(points):
+    """
+    This function checks if the first three points in the given
+    list lay on the same line
+    Parameters
+    ----------
+    points: list of tuples representing points
+
+    Returns
+    -------
+    boolean
+    Whether the given points lay on the same line
+    """
+    if len(points) < 3:
+        return True
+    # We calculate a line form the first two points
+    # and check whether the remaining points lay on it
+    m = (points[0][1] - points[1][1]) /\
+        (points[0][0] - points[1][0])
+    n = points[0][1] - m * points[0][0]
+
+    for point in points[:3]:
+        if point[1] != (m * point[0] + n):
+            return False
+
+    return True
 
 
 def fit_vipa(peaks, setup):
