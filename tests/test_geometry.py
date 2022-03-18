@@ -2,6 +2,14 @@ import numpy as np
 from bmlab.geometry import Circle, Rectangle, discretize_arc
 
 
+def test_circle():
+    assert Circle((1, 1), 1).is_valid()
+    assert not Circle((1, 1), 0).is_valid()
+    assert not Circle((1, 1), np.nan).is_valid()
+    assert not Circle((1, np.inf), 1).is_valid()
+    assert not Circle((-np.inf, 0), 1).is_valid()
+
+
 def test_intersect_circle_rectangle():
     circle = Circle((-1, -1), 2)
     rect = Rectangle((1, 1))

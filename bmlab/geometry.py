@@ -26,6 +26,18 @@ class Circle(object):
         self.center = np.array(center)
         self.radius = radius
 
+        # Check that we have a valid circle
+        # - no property is Inf or NaN
+        # - radius is not zero
+        self.valid = True
+        if radius == 0 or\
+            not np.isfinite(center).all() or\
+                not np.isfinite(radius):
+            self.valid = False
+
+    def is_valid(self):
+        return self.valid
+
     def point(self, phi, integer=False):
         """
         Returns the xy-coordinates of a point with given polar angle phi.
@@ -45,6 +57,8 @@ class Circle(object):
             The xy-coordinates of the point.
 
         """
+        if not self.valid:
+            return None
         e_r = np.array([np.cos(phi), np.sin(phi)])
         pt = self.center + self.radius * e_r
         if integer:
@@ -67,6 +81,8 @@ class Circle(object):
         intersection: list of 2-tuples
             Points of intersection.
         """
+        if not self.valid:
+            return None
         center = Point(self.center)
         inter = center.buffer(self.radius).boundary.intersection(
             rect.poly).boundary
@@ -86,6 +102,8 @@ class Circle(object):
         angle: float
             The polar angle.
         """
+        if not self.valid:
+            return None
         delta = np.array(point) - self.center
         if abs(delta[0]) < 1.E-9:
             if delta[1] > 0:
@@ -125,7 +143,9 @@ def discretize_arc(circle, img_shape, num_points=200):
     """
     rect = Rectangle(img_shape)
     cut_edges = circle.intersection(rect)
+    if not cut_edges:
+        return []
     phis_edges = [circle.angle(p) for p in cut_edges]
-    if not cut_edges or not phis_edges:
+    if not phis_edges:
         return []
     return np.linspace(max(phis_edges), min(phis_edges), num_points)
