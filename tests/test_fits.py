@@ -3,7 +3,8 @@ import pathlib
 import numpy as np
 
 from bmlab.fits import lorentz, fit_lorentz, fit_circle,\
-    fit_double_lorentz, calculate_exact_circle, fit_vipa, VIPA
+    fit_double_lorentz, calculate_exact_circle, fit_vipa, VIPA,\
+    are_points_on_line
 
 from bmlab.models.setup import AVAILABLE_SETUPS
 
@@ -143,6 +144,14 @@ def test_calculate_exact_circle():
 
     np.testing.assert_allclose(center, [-2, -2], rtol=1e-2)
     np.testing.assert_allclose(radius, 10, rtol=1e-2)
+
+
+def test_are_points_on_line():
+    assert are_points_on_line([(0, 0), (1, 1), (2, 2)])
+    assert are_points_on_line([(0, 0), (1, 1)])
+    assert not are_points_on_line([(0, 0), (1, 1), (3, 2)])
+    assert not are_points_on_line([(0, 0), (1, 1), (3, 2), (4, 4)])
+    assert are_points_on_line([(0, 0), (1, 1), (2, 2), (3, 4)])
 
 
 def test_fit_vipa():
