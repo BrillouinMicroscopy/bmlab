@@ -5,9 +5,6 @@ from scipy.signal import medfilt2d, find_peaks
 from skimage.measure import label
 from skimage.morphology import closing, disk
 
-import multiprocessing as mp
-from itertools import repeat as irepeat
-
 from bmlab import Session
 from bmlab.fits import fit_vipa, VIPA, fit_lorentz_region
 from bmlab.image import extract_lines_along_arc, find_max_in_radius
@@ -427,9 +424,6 @@ class EvaluationController(object):
             'nr_rayleigh_regions': len(rayleigh_regions),
         })
 
-        pool_size = mp.cpu_count() * 2
-        pool = mp.Pool(processes=pool_size)
-
         # Loop over all measurement positions
         ind_total = 0
         for ind_x in range(resolution[0]):
@@ -451,34 +445,34 @@ class EvaluationController(object):
                     evm.results['intensity'][ind_x, ind_y, ind_z, :, 0, 0] =\
                         intensities
 
-                    # Pack the data for parallel processing
-                    regions = brillouin_regions + rayleigh_regions
-                    packed_data = zip(irepeat(spectra), regions)
-                    # Process it
-                    results = pool.starmap(self.fit_spectra, packed_data)
-                    # Unpack the results
-                    for frame_num, spectrum in enumerate(spectra):
-                        for region_key, region in enumerate(brillouin_regions):
-                            ind = (ind_x, ind_y, ind_z,
-                                   frame_num, region_key, 0)
-                            evm.results['brillouin_peak_position'][ind] =\
-                                results[region_key][frame_num][0]
-                            evm.results['brillouin_peak_fwhm'][ind] =\
-                                results[region_key][frame_num][1]
-                            evm.results['brillouin_peak_intensity'][ind] =\
-                                results[region_key][frame_num][2]
+                    for region_key, brillouin_region \
+                            in enumerate(brillouin_regions):
 
-                        for region_key, region \
-                                in enumerate(rayleigh_regions,
-                                             start=len(brillouin_regions)):
+                        brillouin_fits = \
+                            self.fit_spectra(spectra, brillouin_region)
+                        for frame_num, spectrum in enumerate(spectra):
                             ind = (ind_x, ind_y, ind_z, frame_num,
-                                   region_key - len(brillouin_regions))
+                                   region_key, 0)
+                            evm.results['brillouin_peak_position'][ind] =\
+                                brillouin_fits[frame_num][0]
+                            evm.results['brillouin_peak_fwhm'][ind] =\
+                                brillouin_fits[frame_num][1]
+                            evm.results['brillouin_peak_intensity'][ind] =\
+                                brillouin_fits[frame_num][2]
+
+                    for region_key, rayleigh_region \
+                            in enumerate(rayleigh_regions):
+                        rayleigh_fits = \
+                            self.fit_spectra(spectra, rayleigh_region)
+                        for frame_num, spectrum in enumerate(spectra):
+
+                            ind = (ind_x, ind_y, ind_z, frame_num, region_key)
                             evm.results['rayleigh_peak_position'][ind] =\
-                                results[region_key][frame_num][0]
+                                rayleigh_fits[frame_num][0]
                             evm.results['rayleigh_peak_fwhm'][ind] =\
-                                results[region_key][frame_num][1]
+                                rayleigh_fits[frame_num][1]
                             evm.results['rayleigh_peak_intensity'][ind] =\
-                                results[region_key][frame_num][2]
+                                rayleigh_fits[frame_num][2]
 
                     if count is not None:
                         count.value += 1
@@ -488,8 +482,6 @@ class EvaluationController(object):
                     if (ind_total % 10) == 0:
                         calculate_derived_values()
 
-        pool.close()
-        pool.join()
         calculate_derived_values()
 
         return
