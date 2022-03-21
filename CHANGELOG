@@ -1,3 +1,9 @@
+## 0.1.3 - 2022-03-21
+
+### Fixed
+- Improve circle fit for points on straight line #80
+- Remove multiprocessing support for now #81
+
 ## 0.1.2 - 2022-03-15
 
 ### Fixed
