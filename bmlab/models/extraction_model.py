@@ -177,7 +177,7 @@ class ExtractionModel(Serializer):
     # TODO: This needs to be called automatically
     #  on file load or when the image orientation is changed
     def set_image_shape(self, shape):
-        if self.image_shape != shape:
+        if not hasattr(self, 'image_shape') or self.image_shape != shape:
             self.image_shape = shape
             self.update_extraction_angles()
 
