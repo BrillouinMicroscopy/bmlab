@@ -76,3 +76,10 @@ def test_clear_session():
     assert session.file is None
     assert session.orientation.rotation == 0
     assert session.current_repetition() is None
+
+
+def test_session_aborted_repetition():
+    session = Session.get_instance()
+    session.set_file(data_file_path('aborted_repetition0.h5'))
+    session.set_current_repetition('0')
+    session.set_current_repetition('1')
