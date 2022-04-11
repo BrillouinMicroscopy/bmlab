@@ -114,6 +114,9 @@ class Session(Serializer):
         repetitions = self.file.repetition_keys()
         for repetition in repetitions:
             imgs = self.file.get_repetition(repetition).payload.get_image('0')
+            # If no images are available, skip this repetition
+            if imgs is None:
+                continue
             img = self.orientation.apply(imgs[0, ...])
             self.extraction_models.get(repetition).set_image_shape(img.shape)
 

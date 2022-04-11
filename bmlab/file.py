@@ -232,7 +232,10 @@ class Payload(object):
         out: numpy.ndarray
             Array representing the image.
         """
-        return np.array(self.data.get(image_key))
+        imgs = self.data.get(image_key)
+        if imgs is None:
+            return None
+        return np.array(imgs)
 
     def get_date(self, image_key):
         """"
@@ -312,7 +315,10 @@ class Calibration(object):
         out: numpy.ndarray
             Array representing the image.
         """
-        return np.array(self.data.get(image_key))
+        imgs = self.data.get(image_key)
+        if imgs is None:
+            return None
+        return np.array(imgs)
 
     def get_date(self, image_key):
         """"
