@@ -73,13 +73,22 @@ class ExtractionController(object):
             return
 
         img = medfilt2d(img)
+        # This is the background level
         threshold = np.median(img)
-        img_closed = closing(img > (threshold + min_height), disk(10))
+
+        # Try to find a signal dependent estimate
+        # for the minimal peak height.
+        # Discard all values smaller than the background noise
+        # plus a minimal peak height
+        img_peaks = img[img > threshold + min_height]
+        # Calculate the signal dependent peak threshold
+        height = (np.nanmean(img_peaks) + threshold) / 2
+        img_closed = closing(img > height, disk(10))
 
         # Find all peaks higher than the min_height
-        all_peaks = []
         image_label, num = label(img_closed, return_num=True)
 
+        all_peaks = []
         for region in range(1, num + 1):
             # Mask of everything but the peak
             mask = (image_label != region)
