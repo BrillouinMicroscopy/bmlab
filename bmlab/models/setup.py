@@ -92,7 +92,20 @@ class Calibration(Serializer):
         self.num_brillouin_samples = num_brillouin_samples
         self.shift_methanol = shift_methanol
         self.shift_water = shift_water
+        self.shifts = np.array([])
+        self.orders = np.array([])
 
+        self.update_calibration()
+
+    def set_shift_water(self, shift_water):
+        self.shift_water = shift_water
+        self.update_calibration()
+
+    def set_shift_methanol(self, shift_methanol):
+        self.shift_methanol = shift_methanol
+        self.update_calibration()
+
+    def update_calibration(self):
         # Construct array with the frequency shifts
         tmp = [self.shift_methanol, self.shift_water]
         self.shifts = np.full(2 + 2 * self.num_brillouin_samples, 0.0)
