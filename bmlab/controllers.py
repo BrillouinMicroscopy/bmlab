@@ -282,6 +282,7 @@ class CalibrationController(object):
         cm.clear_brillouin_fits(calib_key)
         cm.clear_rayleigh_fits(calib_key)
         cm.clear_frequencies(calib_key)
+        cm.clear_vipa_params(calib_key)
 
         calculate_derived_values()
 
