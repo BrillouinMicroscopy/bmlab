@@ -150,6 +150,10 @@ class CalibrationModel(Serializer):
     def set_vipa_params(self, calib_key, vipa_params):
         self.vipa_params[calib_key] = vipa_params
 
+    def clear_vipa_params(self, calib_key):
+        if calib_key in self.vipa_params:
+            del self.vipa_params[calib_key]
+
     def set_frequencies(self, calib_key, time, frequencies):
         self.frequencies[calib_key] = frequencies
         self.calib_times[calib_key] = time
