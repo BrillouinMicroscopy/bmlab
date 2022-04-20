@@ -237,12 +237,6 @@ class Payload(object):
             return None
         return np.array(imgs)
 
-    def get_image_count(self, image_key):
-        imgs = self.data.get(image_key)
-        if imgs is None:
-            return 0
-        return imgs.shape[0]
-
     def get_date(self, image_key):
         """"
         Returns the date of a payload image
@@ -325,12 +319,6 @@ class Calibration(object):
         if imgs is None:
             return None
         return np.array(imgs)
-
-    def get_image_count(self, image_key):
-        imgs = self.data.get(image_key)
-        if imgs is None:
-            return 0
-        return imgs.shape[0]
 
     def get_date(self, image_key):
         """"
