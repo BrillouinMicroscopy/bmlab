@@ -114,7 +114,8 @@ class Calibration(Serializer):
             self.shifts[-1 * (i + 2)] = -1 * tmp[i]
 
         # The interference orders to which the peaks belong
-        self.orders = np.array([0, 0, 0, 1, 1, 1])
+        self.orders = np.full(2 + 2 * self.num_brillouin_samples, 0)
+        self.orders[-(1 + self.num_brillouin_samples):] = 1
 
 
 AVAILABLE_SETUPS = [
