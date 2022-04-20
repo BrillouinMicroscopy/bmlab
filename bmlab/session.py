@@ -197,6 +197,10 @@ class Session(Serializer):
             imgs = imgs[frame_num, ...]
         return self.orientation.apply(imgs)
 
+    def get_calibration_image_count(self, calib_key):
+        return self.current_repetition()\
+            .calibration.get_image_count(calib_key)
+
     def get_calibration_time(self, calib_key):
         if self.current_repetition() is None:
             return None
@@ -214,6 +218,9 @@ class Session(Serializer):
         if frame_num is not None:
             imgs = imgs[frame_num, ...]
         return self.orientation.apply(imgs)
+
+    def get_payload_image_count(self, calib_key):
+        return self.current_repetition().payload.get_image_count(calib_key)
 
     def get_payload_time(self, image_key):
         if self.current_repetition() is None:
