@@ -184,10 +184,11 @@ class Session(Serializer):
         else:
             Session.get_instance().file = file
 
-    def get_calib_keys(self):
+    def get_calib_keys(self, sort_by_time=False):
         if self.current_repetition() is None:
             return None
-        return self.current_repetition().calibration.image_keys()
+        return self.current_repetition()\
+            .calibration.image_keys(sort_by_time=sort_by_time)
 
     def get_calibration_image(self, calib_key, frame_num=None):
         if self.current_repetition() is None:

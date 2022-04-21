@@ -302,9 +302,17 @@ class Calibration(object):
     def is_empty(self):
         return self.data is None or len(self.data) == 0
 
-    def image_keys(self):
+    def image_keys(self, sort_by_time=False):
         if self.data:
-            return list(self.data.keys())
+            keys = list(self.data.keys())
+            if not sort_by_time:
+                return keys
+
+            dates = []
+            for key in keys:
+                dates.append(self.get_date(key))
+
+            return [i for _, i in sorted(zip(dates, keys))]
         return []
 
     def get_image(self, image_key):
