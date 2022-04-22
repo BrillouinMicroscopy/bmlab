@@ -348,6 +348,17 @@ class CalibrationController(object):
             cm.set_spectra(calib_key, spectra)
         return spectra
 
+    def expected_frequencies(self, calib_key=None, current_frame=None):
+        cm = self.session.calibration_model()
+
+        if calib_key not in cm.vipa_params or \
+                current_frame > len(cm.vipa_params[calib_key]) - 1:
+            return None
+
+        return self.session.setup.calibration.shifts \
+            + self.session.setup.calibration.orders \
+            * cm.vipa_params[calib_key][current_frame][3]
+
 
 class PeakSelectionController(object):
 
