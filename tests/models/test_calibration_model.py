@@ -1,4 +1,5 @@
-from bmlab.models.calibration_model import CalibrationModel
+from bmlab.models.calibration_model import CalibrationModel,\
+    FitSet, BrillouinFit
 
 import numpy as np
 
@@ -281,3 +282,31 @@ def test_BrillouinFitSet_average_fits():
     w0_avg = cm.brillouin_fits.average_fits('0', 0)
 
     assert w0_avg == 11.0
+
+
+def test_fitset():
+    fit_set = FitSet()
+
+    assert fit_set.make_key('1', 0, 0) == '1::0::0'
+    assert fit_set.make_key('10', 0, 0) == '10::0::0'
+    assert fit_set.split_key('1::0::0') == ['1', 0, 0]
+    assert fit_set.split_key('10::0::0') == ['10', 0, 0]
+
+    fit0 = BrillouinFit('1', 1, 4, 11., 12., 13., 14.)
+    fit_set.add_fit(fit0)
+    fit1 = BrillouinFit('10', 3, 4, 11., 12., 13., 14.)
+    fit_set.add_fit(fit1)
+
+    assert fit_set.get_fit('1', 1, 4) == fit0
+    assert fit_set.get_fit('1', 2, 4) is None
+    assert fit_set.get_fit('10', 3, 4) == fit1
+    assert fit_set.get_fit('2', 3, 4) is None
+
+    fit_set.clear('1')
+
+    assert fit_set.get_fit('1', 1, 4) is None
+    assert fit_set.get_fit('10', 3, 4) == fit1
+
+    fit_set.clear('10')
+
+    assert fit_set.get_fit('10', 3, 4) is None
