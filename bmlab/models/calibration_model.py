@@ -386,7 +386,7 @@ class FitSet(Serializer):
     def clear(self, calib_key):
         keys = []
         for key, value in self.fits.items():
-            if calib_key == key[0]:
+            if calib_key == self.split_key(key)[0]:
                 keys.append(key)
         for key in keys:
             del self.fits[key]
