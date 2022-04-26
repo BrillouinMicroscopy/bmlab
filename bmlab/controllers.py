@@ -554,7 +554,7 @@ class EvaluationController(object):
         evm.set_spectra(image_key, spectra)
         return spectra, times, intensities
 
-    def get_data(self, parameter_key):
+    def get_data(self, parameter_key, brillouin_peak_index=0):
         """
         This function returns the evaluated data,
         its positions, dimensionality and labels
@@ -563,6 +563,13 @@ class EvaluationController(object):
         parameter_key: str
             The key of the parameter requested.
             See bmlab.model.evaluation_model.get_parameter_keys()
+        brillouin_peak_index: int
+            The index of the Brillouin peak to show in case
+            we did a multi-peak fit
+            0: the single-peak fit
+            1:nr_brillouin_peaks: the multi-peak fits
+            nr_brillouin_peaks+1: all multi-peak fits average
+            nr_brillouin_peaks+1: all multi-peak fits weighted average
 
         Returns
         -------
@@ -595,6 +602,24 @@ class EvaluationController(object):
             data = np.empty(resolution)
             data[:] = np.nan
 
+        # Slice the appropriate Brillouin peak if necessary
+        nr_peaks_stored = data.shape[5]
+        if nr_peaks_stored > 1 and brillouin_peak_index < nr_peaks_stored + 2:
+            if brillouin_peak_index < nr_peaks_stored:
+                sliced = data[:, :, :, :, :, brillouin_peak_index]
+            # Average all multi-peak fits
+            if brillouin_peak_index == nr_peaks_stored:
+                sliced = data[:, :, :, :, :, 1:]
+            # Weighted average of all multi-peak fits
+            if brillouin_peak_index == nr_peaks_stored + 1:
+                weight =\
+                    evm.results['brillouin_peak_intensity'][:, :, :, :, :, 1:]\
+                    * evm.results['brillouin_peak_fwhm'][:, :, :, :, :, 1:]
+                sliced = np.nansum(data[:, :, :, :, :, 1:] * weight, axis=5)\
+                    / np.nansum(weight, axis=5)
+        else:
+            sliced = data[:, :, :, :, :, 0]
+
         # Average all non-spatial dimensions.
         # Do not show warning which occurs when a slice contains only NaNs.
         with warnings.catch_warnings():
@@ -603,8 +628,8 @@ class EvaluationController(object):
                 message='Mean of empty slice'
             )
             data = np.nanmean(
-                data,
-                axis=tuple(range(3, data.ndim))
+                sliced,
+                axis=tuple(range(3, sliced.ndim))
             )
 
         # Scale the date in case of GHz
