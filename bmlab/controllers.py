@@ -602,23 +602,29 @@ class EvaluationController(object):
             data = np.empty(resolution)
             data[:] = np.nan
 
-        # Slice the appropriate Brillouin peak if necessary
-        nr_peaks_stored = data.shape[5]
-        if nr_peaks_stored > 1 and brillouin_peak_index < nr_peaks_stored + 2:
-            if brillouin_peak_index < nr_peaks_stored:
-                sliced = data[:, :, :, :, :, brillouin_peak_index]
-            # Average all multi-peak fits
-            if brillouin_peak_index == nr_peaks_stored:
-                sliced = data[:, :, :, :, :, 1:]
-            # Weighted average of all multi-peak fits
-            if brillouin_peak_index == nr_peaks_stored + 1:
-                weight =\
-                    evm.results['brillouin_peak_intensity'][:, :, :, :, :, 1:]\
-                    * evm.results['brillouin_peak_fwhm'][:, :, :, :, :, 1:]
-                sliced = np.nansum(data[:, :, :, :, :, 1:] * weight, axis=5)\
-                    / np.nansum(weight, axis=5)
+        # Slice the appropriate Brillouin peak if necessary and possible
+        if data.ndim >= 6:
+            nr_peaks_stored = data.shape[5]
+            if nr_peaks_stored > 1\
+                    and brillouin_peak_index < nr_peaks_stored + 2:
+                if brillouin_peak_index < nr_peaks_stored:
+                    sliced = data[:, :, :, :, :, brillouin_peak_index]
+                # Average all multi-peak fits
+                if brillouin_peak_index == nr_peaks_stored:
+                    sliced = data[:, :, :, :, :, 1:]
+                # Weighted average of all multi-peak fits
+                if brillouin_peak_index == nr_peaks_stored + 1:
+                    weight =\
+                        evm.results[
+                            'brillouin_peak_intensity'][:, :, :, :, :, 1:]\
+                        * evm.results['brillouin_peak_fwhm'][:, :, :, :, :, 1:]
+                    sliced = \
+                        np.nansum(data[:, :, :, :, :, 1:] * weight, axis=5)\
+                        / np.nansum(weight, axis=5)
+            else:
+                sliced = data[:, :, :, :, :, 0]
         else:
-            sliced = data[:, :, :, :, :, 0]
+            sliced = data
 
         # Average all non-spatial dimensions.
         # Do not show warning which occurs when a slice contains only NaNs.
