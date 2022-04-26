@@ -122,13 +122,20 @@ class EvaluationModel(Serializer):
         self.results['time'] = np.empty(shape_general)
         self.results['time'][:] = np.nan
 
+        # We always do a single-peak fit, plus a multi-peak fit if requested.
+        # Hence, we have to store
+        # (nr_brillouin_peaks + 1) peaks, if nr_brillouin_peaks > 1.
+        nr_brillouin_peaks_to_store = dims['nr_brillouin_peaks']
+        if dims['nr_brillouin_peaks'] > 1:
+            nr_brillouin_peaks_to_store = nr_brillouin_peaks_to_store + 1
+
         shape_brillouin = (
             dims['dim_x'],
             dims['dim_y'],
             dims['dim_z'],
             dims['nr_images'],
             dims['nr_brillouin_regions'],
-            dims['nr_brillouin_peaks'],
+            nr_brillouin_peaks_to_store,
         )
 
         self.results['brillouin_peak_position'] = np.empty(shape_brillouin)
