@@ -478,3 +478,76 @@ def test_get_data_3D(mocker):
     assert (positions[1] == pos_y).all()
     assert (positions[2] == pos_z).all()
     assert labels == [r'$x$ [$\mu$m]', r'$y$ [$\mu$m]', r'$z$ [$\mu$m]']
+
+
+def test_get_data_3D_peak_index():
+    evc = EvaluationController()
+    evc.session.set_file(data_file_path('3D.h5'))
+    evc.session.set_current_repetition('0')
+
+    evm = evc.session.evaluation_model()
+
+    resolution = evc.session.get_payload_resolution()
+
+    # Initialize results array
+    evm.initialize_results_arrays({
+        'dim_x': resolution[0],
+        'dim_y': resolution[1],
+        'dim_z': resolution[2],
+        'nr_images': 2,
+        'nr_brillouin_regions': 2,
+        'nr_brillouin_peaks': 2,
+        'nr_rayleigh_regions': 2,
+    })
+    evm.results['brillouin_shift_f'][:, :, :, :, :, 0] = 2e9  # [Hz]
+    evm.results['brillouin_shift_f'][:, :, :, :, :, 1] = 4e9  # [Hz]
+    evm.results['brillouin_shift_f'][:, :, :, :, :, 2] = 6e9  # [Hz]
+
+    evm.results['brillouin_peak_fwhm'][:, :, :, :, :, 0] = 1e9  # [Hz]
+    evm.results['brillouin_peak_fwhm'][:, :, :, :, :, 1] = 1e9  # [Hz]
+    evm.results['brillouin_peak_fwhm'][:, :, :, :, :, 2] = 2e9  # [Hz]
+
+    evm.results['brillouin_peak_intensity'][:, :, :, :, :, 0] = 1e9  # [Hz]
+    evm.results['brillouin_peak_intensity'][:, :, :, :, :, 1] = 2e9  # [Hz]
+    evm.results['brillouin_peak_intensity'][:, :, :, :, :, 2] = 3e9  # [Hz]
+
+    # Get first peak
+    data, positions, dimensionality, labels =\
+        evc.get_data('brillouin_shift_f')
+    assert data.shape == resolution
+    assert (data == 2 * np.ones(resolution)).all()  # [GHz]
+
+    data, positions, dimensionality, labels =\
+        evc.get_data('brillouin_shift_f', 0)
+    assert data.shape == resolution
+    assert (data == 2 * np.ones(resolution)).all()  # [GHz]
+
+    # Get first peak of multi-peak fit
+    data, positions, dimensionality, labels =\
+        evc.get_data('brillouin_shift_f', 1)
+    assert data.shape == resolution
+    assert (data == 4 * np.ones(resolution)).all()  # [GHz]
+
+    # Get second peak of multi-peak fit
+    data, positions, dimensionality, labels =\
+        evc.get_data('brillouin_shift_f', 2)
+    assert data.shape == resolution
+    assert (data == 6 * np.ones(resolution)).all()  # [GHz]
+
+    # Get average of multi-peak fits
+    data, positions, dimensionality, labels =\
+        evc.get_data('brillouin_shift_f', 3)
+    assert data.shape == resolution
+    assert (data == 5 * np.ones(resolution)).all()  # [GHz]
+
+    # Get weighted average of multi-peak fits
+    data, positions, dimensionality, labels =\
+        evc.get_data('brillouin_shift_f', 4)
+    assert data.shape == resolution
+    assert (data == 5.5 * np.ones(resolution)).all()  # [GHz]
+
+    # Get single-peak fit when out of bounds
+    data, positions, dimensionality, labels =\
+        evc.get_data('brillouin_shift_f', 5)
+    assert data.shape == resolution
+    assert (data == 2 * np.ones(resolution)).all()  # [GHz]
