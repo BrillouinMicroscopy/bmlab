@@ -49,7 +49,7 @@ def fit_lorentz(x, y):
     return w0, fwhm, intensity, offset
 
 
-def fit_double_lorentz(x, y):
+def fit_double_lorentz(x, y, bounds_w0=None):
     offset_guess = (y[0] + y[-1]) / 2.
     # gam_guess = (w0_guess ** 2 * (np.max(y) - offset_guess)) ** -0.5
     fwhm_guess = 4
@@ -74,13 +74,30 @@ def fit_double_lorentz(x, y):
                 - lorentz(xdata, *params[3:6])
                 - params[6]) ** 2
 
+    # Create the bounds array
+    if bounds_w0 is not None:
+        bounds_lower = -np.Inf * np.ones(7)
+        bounds_lower[0] = bounds_w0[0][0]
+        bounds_lower[3] = bounds_w0[1][0]
+        bounds_upper = np.Inf * np.ones(7)
+        bounds_upper[0] = bounds_w0[0][1]
+        bounds_upper[3] = bounds_w0[1][1]
+        bounds = (bounds_lower, bounds_upper)
+
+        # Check that the initial guesses are within the bounds
+        w0_guess_left = np.clip(w0_guess_left, *bounds_w0[0])
+        w0_guess_right = np.clip(w0_guess_right, *bounds_w0[1])
+    else:
+        bounds = (-np.Inf, np.Inf)
+
     opt_result = least_squares(
         error,
         x0=(w0_guess_left, fwhm_guess, intensity_guess,
             w0_guess_right, fwhm_guess, intensity_guess,
             offset_guess
             ),
-        args=(x, y)
+        args=(x, y),
+        bounds=bounds
     )
 
     if not opt_result.success:
