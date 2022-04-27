@@ -256,6 +256,10 @@ def test_get_position_by_time():
 
     positions = cm.get_position_by_time(0, [10])
     assert positions == [10]
+    positions = cm.get_position_by_time(0, [10.5])
+    assert positions == [10.5]
+    positions = cm.get_position_by_time(5, [10])
+    assert positions == [5]
 
 
 def test_RayleighFitSet_average_fits():

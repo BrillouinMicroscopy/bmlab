@@ -358,7 +358,8 @@ class CalibrationModel(Serializer):
 
         """
         spectrum = self.get_frequencies_by_time(time)
-        return list(map(lambda f: np.argmin(abs(spectrum - f)), frequencies))
+        f = interpolate.interp1d(spectrum, range(len(spectrum)))
+        return f(frequencies)
 
 
 class FitSet(Serializer):
