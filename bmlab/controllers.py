@@ -133,23 +133,30 @@ class CalibrationController(object):
         return
 
     def find_peaks(self, calib_key, min_prominence=15,
-                   num_brillouin_samples=2):
+                   num_brillouin_samples=2, min_height=15):
         spectra = self.extract_calibration_spectra(calib_key)
         if spectra is None:
             return
         spectrum = np.mean(spectra, axis=0)
+        # This is the background value
+        base = np.nanmedian(spectrum)
         peaks, properties = find_peaks(
-            spectrum, prominence=min_prominence, width=True)
+            spectrum, prominence=min_prominence, width=True,
+            height=min_height+base)
 
         # Number of peaks we are searching for
         # (2 Rayleigh + 2 times number calibration samples)
-        num_peaks_brillouin = 2 * num_brillouin_samples
-        num_peaks_rayleigh = 2
-        num_peaks = num_peaks_rayleigh + num_peaks_brillouin
+        num_peaks = 2 + 2 * num_brillouin_samples
 
         # Check if we found enough peak candidates
         if len(peaks) < num_peaks:
-            return
+            # If we didn't find enough peaks, we try again
+            # without a minimum height
+            peaks, properties = find_peaks(
+                spectrum, prominence=min_prominence, width=True)
+            # If there a still too few, we give up
+            if len(peaks) < num_peaks:
+                return
 
         # We need to identify the position between the
         # Stokes and Anti-Stokes Brillouin peaks
@@ -161,8 +168,9 @@ class CalibrationController(object):
             center = np.mean(peaks[idx - 1:idx + 1])
         # Otherwise we use the center of mass as the middle
         else:
-            # Subtract background value so it does not affect the center
-            spectrum = spectrum - np.nanmedian(spectrum)
+            # Set everything below the background value to zero,
+            # so it does not affect the center calculation
+            spectrum[spectrum < base] = 0
             # Calculate the center of mass
             center = np.nansum(spectrum * range(1, len(spectrum) + 1))\
                 / np.nansum(spectrum)
@@ -174,12 +182,12 @@ class CalibrationController(object):
             # If not enough peaks on the right, shift center to the left
             if num_peaks_right < (num_brillouin_samples + 1):
                 center = np.mean(
-                    peaks[num_brillouin_samples:num_brillouin_samples+2]
+                    peaks[-(num_brillouin_samples + 2):-num_brillouin_samples]
                 )
             # If not enough peaks on the left, shift center to the right
             elif num_peaks_left < (num_brillouin_samples + 1):
                 center = np.mean(
-                    peaks[-(num_brillouin_samples+2):-num_brillouin_samples]
+                    peaks[num_brillouin_samples:num_brillouin_samples + 2]
                 )
 
         num_peaks_left = len(peaks[peaks <= center])
