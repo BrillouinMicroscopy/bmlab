@@ -171,7 +171,7 @@ def _circle_opt(c, x_coord, y_coord):
          - c[2] ** 2) ** 2)
 
 
-def fit_lorentz_region(region, xdata, ydata, nr_peaks=1):
+def fit_lorentz_region(region, xdata, ydata, nr_peaks=1, bounds_w0=None):
     """
     Fits a lorentz or double lorentz fit to the given region
 
@@ -181,6 +181,7 @@ def fit_lorentz_region(region, xdata, ydata, nr_peaks=1):
     xdata: The x-data
     ydata: The y-data to fit
     nr_peaks: The number of peaks to fit
+    bounds_w0: The bounds for the lorentz fit value of the maximum position
 
     Returns
     -------
@@ -189,7 +190,8 @@ def fit_lorentz_region(region, xdata, ydata, nr_peaks=1):
     try:
         if nr_peaks == 2:
             w0s, fwhms, intensities, offset = fit_double_lorentz(
-                xdata[range(*region)], ydata[range(*region)])
+                xdata[range(*region)], ydata[range(*region)],
+                bounds_w0=bounds_w0)
         elif nr_peaks == 1:
             w0s, fwhms, intensities, offset = fit_lorentz(
                 xdata[range(*region)], ydata[range(*region)])

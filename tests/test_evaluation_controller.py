@@ -2,6 +2,7 @@ import pathlib
 import numpy as np
 
 from bmlab.controllers import EvaluationController, calculate_derived_values
+from bmlab.models import CalibrationModel, EvaluationModel
 
 
 def data_file_path(file_name):
@@ -551,3 +552,45 @@ def test_get_data_3D_peak_index():
         evc.get_data('brillouin_shift_f', 5)
     assert data.shape == resolution
     assert (data == 2 * np.ones(resolution)).all()  # [GHz]
+
+
+def test_create_bounds(mocker):
+    cm = CalibrationModel()
+    evm = EvaluationModel()
+    mocker.patch('bmlab.session.Session.calibration_model', return_value=cm)
+    mocker.patch('bmlab.session.Session.evaluation_model', return_value=evm)
+    evc = EvaluationController()
+
+    # Set the calibration data
+    cm.set_frequencies('0', 0,
+                       list(1e9 * np.linspace(
+                           -1, 16, 681).reshape(1, -1)))
+    cm.set_frequencies('1', 1,
+                       list(1e9 * np.linspace(
+                           -0.975, 16.025, 681).reshape(1, -1)))
+    cm.set_frequencies('2', 2,
+                       list(1e9 * np.linspace(
+                           -0.95, 16.05, 681).reshape(1, -1)))
+
+    # If we don't supply regions and times, we get no bounds
+    fit_bounds = EvaluationController().create_bounds(None, None, None)
+    assert fit_bounds is None
+
+    evm.bounds = [['min', '5'], ['5.5', 'Inf'], ['-inf', 'max']]
+
+    brillouin_regions = [(200, 280), (400, 480)]
+    times = [0, 1, 2]
+    rayleigh_peaks = np.array([[40, 40, 41], [640, 640, 641]])
+    fit_bounds = evc.create_bounds(brillouin_regions, times, rayleigh_peaks)
+
+    np.testing.assert_allclose([
+        [
+            [[200, 240], [260, np.inf], [-np.inf, 280]],
+            [[200, 240], [260, np.inf], [-np.inf, 280]],
+            [[200, 241], [261, np.inf], [-np.inf, 280]]
+        ], [
+            [[440, 480], [-np.inf, 420], [400, np.inf]],
+            [[440, 480], [-np.inf, 420], [400, np.inf]],
+            [[441, 480], [-np.inf, 421], [400, np.inf]]
+        ]
+    ], fit_bounds, atol=1.E-3)
