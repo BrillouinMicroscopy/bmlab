@@ -76,10 +76,36 @@ def fit_double_lorentz(x, y, bounds_w0=None):
 
     # Create the bounds array
     if bounds_w0 is not None:
+        # Lower limits
         bounds_lower = -np.Inf * np.ones(7)
+
+        # 1st peak:
+        # central position
         bounds_lower[0] = bounds_w0[0][0]
+        # full-width-half-maximum
+        # The VIPA spectrometer has an instrument width of
+        # approx. 750 MHz, which translates to around
+        # 7 px minimum peak width (FOB setup)
+        # and 180 MHz and 4 px (780 nm setup).
+        # We limit the minimal fit width to 3 px here.
+        bounds_lower[1] = 3
+        # intensity
+        bounds_lower[2] = 0
+
+        # 2nd peak:
+        # central position
         bounds_lower[3] = bounds_w0[1][0]
+        # full-width-half-maximum
+        bounds_lower[4] = 3
+        # intensity
+        bounds_lower[5] = 0
+
+        # offset
+        bounds_lower[6] = 0
+
+        # Upper limits
         bounds_upper = np.Inf * np.ones(7)
+
         bounds_upper[0] = bounds_w0[0][1]
         bounds_upper[3] = bounds_w0[1][1]
         bounds = (bounds_lower, bounds_upper)
