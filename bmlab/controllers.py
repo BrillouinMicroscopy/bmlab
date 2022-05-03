@@ -485,6 +485,7 @@ class EvaluationController(object):
                     packed_data = zip(irepeat(spectra), regions)
                     # Process it
                     results = pool.starmap(self.fit_spectra, packed_data)
+
                     # Unpack the results
                     for frame_num, spectrum in enumerate(spectra):
                         for region_key, region in enumerate(brillouin_regions):
@@ -509,6 +510,49 @@ class EvaluationController(object):
                             evm.results['rayleigh_peak_intensity'][ind] =\
                                 results[region_key][frame_num][2]
 
+                    # We can only do a multi-peak fit after the single-peak
+                    # Rayleigh fit is done, because we have to know the
+                    # Rayleigh peak positions in GHz in order to convert
+                    # the multi-peak fit bounds given in GHz into the position
+                    # in pixels.
+                    if evm.nr_brillouin_peaks > 1:
+                        ind =\
+                            (ind_x, ind_y, ind_z, slice(None), slice(None), 0)
+                        rayleigh_peaks = np.transpose(
+                            np.squeeze(
+                                evm.results['rayleigh_peak_position'][ind]))
+                        bounds = self.create_bounds(
+                            brillouin_regions,
+                            times,
+                            rayleigh_peaks
+                        )
+                        packed_data_multi_peak =\
+                            zip(irepeat(spectra), brillouin_regions,
+                                irepeat(evm.nr_brillouin_peaks),
+                                bounds)
+                        # Process it
+                        results_multi_peak = pool.starmap(
+                            self.fit_spectra, packed_data_multi_peak)
+
+                        for frame_num, spectrum in enumerate(spectra):
+                            for region_key, region in enumerate(
+                                    brillouin_regions):
+                                ind = (ind_x, ind_y, ind_z,
+                                       frame_num, region_key,
+                                       slice(1, evm.nr_brillouin_peaks+1))
+                                evm.results[
+                                    'brillouin_peak_position'][ind] = \
+                                    results_multi_peak[
+                                        region_key][frame_num][0]
+                                evm.results[
+                                    'brillouin_peak_fwhm'][ind] = \
+                                    results_multi_peak[
+                                        region_key][frame_num][1]
+                                evm.results[
+                                    'brillouin_peak_intensity'][ind] = \
+                                    results_multi_peak[
+                                        region_key][frame_num][2]
+
                     if count is not None:
                         count.value += 1
 
@@ -524,13 +568,98 @@ class EvaluationController(object):
         return
 
     @staticmethod
-    def fit_spectra(spectra, region):
+    def fit_spectra(spectra, region, nr_peaks=1, bounds_w0=None):
         fits = []
         for frame_num, spectrum in enumerate(spectra):
             xdata = np.arange(len(spectrum))
-            fit = fit_lorentz_region(region, xdata, spectrum)
+            if bounds_w0 is None:
+                fit = fit_lorentz_region(region, xdata, spectrum,
+                                         nr_peaks)
+            else:
+                fit = fit_lorentz_region(region, xdata, spectrum,
+                                         nr_peaks, bounds_w0[frame_num])
             fits.append(fit)
         return fits
+
+    def create_bounds(self, brillouin_regions, times, rayleigh_peaks):
+        """
+        This function converts the bounds settings into
+        a bounds object for the fitting function
+        Allowed parameters for the bounds settings are
+        - 'min'/'max'   -> Will be converted to the respective
+            lower or upper limit of the given region
+        - '-Inf', 'Inf' -> Will be converted to -np.Inf or np.Inf
+        - number [GHz]  -> Will be converted into the pixel
+            position of the given frequency
+        Parameters
+        ----------
+        brillouin_regions
+        times
+        rayleigh_peaks
+
+        Returns
+        -------
+
+        """
+        cm = self.session.calibration_model()
+        evm = self.session.evaluation_model()
+        bounds = evm.bounds
+        if bounds is None:
+            return None
+
+        # We need a Rayleigh peak position for
+        # every combination of brillouin_region and time
+        if rayleigh_peaks.shape != (len(brillouin_regions), len(times)):
+            return None
+
+        w0_bounds = []
+        # We have to create a separate bound for every region
+        for region_idx, region in enumerate(brillouin_regions):
+            local_time = []
+            for time_idx, time in enumerate(times):
+                # In case this is an Anti-Stokes peak, we find the peak
+                # with the higher frequency on the left hand side and
+                # have to flip the bounds
+                is_anti_stokes = np.mean(region) <\
+                                 rayleigh_peaks[region_idx][time_idx]
+                f_rayleigh = cm.get_frequency_by_time(
+                    time,
+                    rayleigh_peaks[region_idx][time_idx]
+                )[()]
+
+                local_bound = []
+                for bound in bounds:
+                    local_limit = []
+                    for limit in bound:
+                        if limit.lower() == 'min':
+                            val = region[is_anti_stokes]
+                        elif limit.lower() == 'max':
+                            val = region[not is_anti_stokes]
+                        elif limit.lower() == '-inf':
+                            val = -((-1) ** is_anti_stokes)\
+                                          * np.Inf
+                        elif limit.lower() == 'inf':
+                            val = ((-1) ** is_anti_stokes)\
+                                          * np.Inf
+                        else:
+                            # Try to convert the value in GHz into
+                            # a value in pixel depending on the time
+                            try:
+                                f = ((-1) ** is_anti_stokes)\
+                                          * 1e9 * float(limit) + f_rayleigh
+                                val = cm.get_position_by_time(time, f)[()]
+                            except BaseException:
+                                val = np.Inf
+
+                        local_limit.append(val)
+                    # Check that the bounds are sorted ascendingly
+                    # (for anti-stokes, they might not).
+                    local_limit.sort()
+                    local_bound.append(local_limit)
+                local_time.append(local_bound)
+            w0_bounds.append(local_time)
+
+        return w0_bounds
 
     def extract_payload_spectra(self, image_key):
         em = self.session.extraction_model()

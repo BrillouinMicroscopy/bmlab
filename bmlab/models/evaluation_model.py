@@ -16,6 +16,8 @@ class EvaluationModel(Serializer):
 
         # @since 0.1.0
         self.parameters = self.get_default_parameters()
+        # @since 0.1.8
+        self.bounds = None
 
         self.results = {}
         for key in self.parameters.keys():
@@ -28,6 +30,11 @@ class EvaluationModel(Serializer):
         if not hasattr(self, 'parameters')\
                 or not isinstance(self, OrderedDict):
             self.parameters = self.get_default_parameters()
+        # Migrations from 0.1.7 to 0.1.8
+        # Check that the bounds attribute is present
+        # @since 0.1.8
+        if not hasattr(self, 'bounds'):
+            self.bounds = None
 
     @staticmethod
     def get_default_parameters():
@@ -189,3 +196,12 @@ class EvaluationModel(Serializer):
 
     def get_parameter_keys(self):
         return self.parameters
+
+    def setNrBrillouinPeaks(self, nr_brillouin_peaks):
+        self.nr_brillouin_peaks = nr_brillouin_peaks
+
+        # Initialize the bounds if necessary
+        if nr_brillouin_peaks > 1 and\
+                (self.bounds is None or
+                 len(self.bounds) is not nr_brillouin_peaks):
+            self.bounds = [['min', 'max'] for _ in range(nr_brillouin_peaks)]

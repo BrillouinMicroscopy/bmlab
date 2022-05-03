@@ -77,23 +77,23 @@ def test_fit_double_lorentz():
 
 def test_fit_double_lorentz_with_bounds():
     # Arrange
-    x = np.linspace(0, 60, 200)
-    w0_left = 10.
+    x = np.linspace(0, 60, 500)
+    w0_left = 20.
     intensity_left = 8.
-    fwhm_left = 2.
-    w0_right = 20.
+    fwhm_left = 4.0
+    w0_right = 40.
     intensity_right = 12.
-    fwhm_right = 4.
+    fwhm_right = 5.0
     offset = 10.
     y_data = lorentz(x, w0_left, fwhm_left, intensity_left)
     y_data += lorentz(x, w0_right, fwhm_right, intensity_right) + offset
 
-    bounds = ((9, 9.9), (-np.Inf, np.Inf))
+    bounds = ((19, 19.9), (-np.Inf, np.Inf))
 
     w0s, fwhms, intens, actual_offset \
         = fit_double_lorentz(x, y_data, bounds)
 
-    np.testing.assert_almost_equal(w0s[0], 9.9, decimal=2)
+    np.testing.assert_almost_equal(w0s[0], 19.9, decimal=2)
     np.testing.assert_almost_equal(fwhms[0], fwhm_left, decimal=1)
     np.testing.assert_almost_equal(intens[0], intensity_left, decimal=1)
 
@@ -108,13 +108,13 @@ def test_fit_double_lorentz_with_bounds():
     w0s, fwhms, intens, actual_offset \
         = fit_double_lorentz(x, y_data, bounds)
 
-    np.testing.assert_almost_equal(w0s[0], w0_left, decimal=2)
-    np.testing.assert_almost_equal(fwhms[0], fwhm_left, decimal=1)
-    np.testing.assert_almost_equal(intens[0], intensity_left, decimal=1)
+    np.testing.assert_almost_equal(w0s[0], w0_right, decimal=1)
+    np.testing.assert_almost_equal(fwhms[0], fwhm_right, decimal=1)
+    np.testing.assert_almost_equal(intens[0], intensity_right, decimal=1)
 
     np.testing.assert_almost_equal(w0s[1], 20.1, decimal=1)
-    np.testing.assert_almost_equal(fwhms[1], fwhm_right, decimal=1)
-    np.testing.assert_almost_equal(intens[1], intensity_right, decimal=1)
+    np.testing.assert_almost_equal(fwhms[1], fwhm_left, decimal=1)
+    np.testing.assert_almost_equal(intens[1], intensity_left, decimal=1)
 
     np.testing.assert_almost_equal(actual_offset, offset, decimal=1)
 
