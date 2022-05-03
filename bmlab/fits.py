@@ -65,8 +65,7 @@ def fit_double_lorentz(x, y, bounds_w0=None):
         return
 
     idx_sort = np.sort(peaks[idx[0:2]])
-    w0_guess_left = x[idx_sort[0]]
-    w0_guess_right = x[idx_sort[1]]
+    w0_guess = list(x[idx_sort])
 
     def error(params, xdata, ydata):
         return (ydata
@@ -110,16 +109,21 @@ def fit_double_lorentz(x, y, bounds_w0=None):
         bounds_upper[3] = bounds_w0[1][1]
         bounds = (bounds_lower, bounds_upper)
 
+        # Sort the guesses to the bounds
+        bounds_w0_center = [np.mean(
+            np.clip(bound, *x[::len(x) - 1])) for bound in bounds_w0]
+        w0_guess.sort(reverse=(bounds_w0_center[0] > bounds_w0_center[1]))
+
         # Check that the initial guesses are within the bounds
-        w0_guess_left = np.clip(w0_guess_left, *bounds_w0[0])
-        w0_guess_right = np.clip(w0_guess_right, *bounds_w0[1])
+        w0_guess = [np.clip(
+            guess, *bounds_w0[idx]) for idx, guess in enumerate(w0_guess)]
     else:
         bounds = (-np.Inf, np.Inf)
 
     opt_result = least_squares(
         error,
-        x0=(w0_guess_left, fwhm_guess, intensity_guess,
-            w0_guess_right, fwhm_guess, intensity_guess,
+        x0=(w0_guess[0], fwhm_guess, intensity_guess,
+            w0_guess[1], fwhm_guess, intensity_guess,
             offset_guess
             ),
         args=(x, y),
