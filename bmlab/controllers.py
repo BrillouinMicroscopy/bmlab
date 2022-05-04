@@ -519,17 +519,23 @@ class EvaluationController(object):
                         ind =\
                             (ind_x, ind_y, ind_z, slice(None), slice(None), 0)
                         rayleigh_peaks = np.transpose(
-                            np.squeeze(
-                                evm.results['rayleigh_peak_position'][ind]))
+                            evm.results['rayleigh_peak_position'][ind]
+                        )
                         bounds = self.create_bounds(
                             brillouin_regions,
                             times,
                             rayleigh_peaks
                         )
-                        packed_data_multi_peak =\
-                            zip(irepeat(spectra), brillouin_regions,
-                                irepeat(evm.nr_brillouin_peaks),
-                                bounds)
+                        if bounds is not None:
+                            packed_data_multi_peak =\
+                                zip(irepeat(spectra), brillouin_regions,
+                                    irepeat(evm.nr_brillouin_peaks),
+                                    bounds)
+                        else:
+                            packed_data_multi_peak =\
+                                zip(irepeat(spectra), brillouin_regions,
+                                    irepeat(evm.nr_brillouin_peaks),
+                                    irepeat(bounds))
                         # Process it
                         results_multi_peak = pool.starmap(
                             self.fit_spectra, packed_data_multi_peak)
