@@ -526,10 +526,16 @@ class EvaluationController(object):
                             times,
                             rayleigh_peaks
                         )
-                        packed_data_multi_peak =\
-                            zip(irepeat(spectra), brillouin_regions,
-                                irepeat(evm.nr_brillouin_peaks),
-                                bounds)
+                        if bounds is not None:
+                            packed_data_multi_peak =\
+                                zip(irepeat(spectra), brillouin_regions,
+                                    irepeat(evm.nr_brillouin_peaks),
+                                    bounds)
+                        else:
+                            packed_data_multi_peak =\
+                                zip(irepeat(spectra), brillouin_regions,
+                                    irepeat(evm.nr_brillouin_peaks),
+                                    irepeat(bounds))
                         # Process it
                         results_multi_peak = pool.starmap(
                             self.fit_spectra, packed_data_multi_peak)
