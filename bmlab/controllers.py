@@ -519,8 +519,8 @@ class EvaluationController(object):
                         ind =\
                             (ind_x, ind_y, ind_z, slice(None), slice(None), 0)
                         rayleigh_peaks = np.transpose(
-                            np.squeeze(
-                                evm.results['rayleigh_peak_position'][ind]))
+                            evm.results['rayleigh_peak_position'][ind]
+                        )
                         bounds = self.create_bounds(
                             brillouin_regions,
                             times,
