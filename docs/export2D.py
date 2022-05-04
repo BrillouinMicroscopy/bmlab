@@ -80,6 +80,10 @@ plot.set_ylim(
     np.nanmin(positions[idx[1]][tuple(dslice)]),
     np.nanmax(positions[idx[1]][tuple(dslice)])
 )
+value_min = np.nanmin(image_map)
+value_max = np.nanmax(image_map)
+# Adjust the colorbar scale here if desired
+ims.set_clim(value_min, value_max)
 
 # Export plot
 plot_dir = pathlib.Path(__file__).parent / 'Plots'
