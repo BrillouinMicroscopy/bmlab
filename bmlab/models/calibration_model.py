@@ -236,7 +236,11 @@ class CalibrationModel(Serializer):
         # interpolate by peak position only
         if len(sorted_keys) < 2:
             frequencies = np.squeeze(frequencies)
-            f = interpolate.interp1d(indices, frequencies)
+            f = interpolate.interp1d(
+                indices,
+                frequencies,
+                bounds_error=False
+            )
             self.frequency_by_time_interpolator =\
                 lambda time, position: f(position)
         # Otherwise we can interpolate by time as well

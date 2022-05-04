@@ -190,6 +190,13 @@ def test_get_frequency_by_time():
     frequency = cm.get_frequency_by_time(10, 0)
     np.testing.assert_allclose(frequency, 0, atol=1.E-8)
 
+    # Ensure we don't throw a hard error in case our requested value
+    # is outside the interpolation range
+    frequency = cm.get_frequency_by_time(0, -1)
+    np.testing.assert_array_equal(frequency, np.nan)
+    frequency = cm.get_frequency_by_time(0, 100)
+    np.testing.assert_array_equal(frequency, np.nan)
+
     times = 10 * np.ones((5, 5, 5, 2, 2, 2))
     positions = np.zeros((5, 5, 5, 2, 2, 2))
     positions[:, :, :, 1, :, :] = 50
@@ -206,6 +213,13 @@ def test_get_frequency_by_time():
     np.testing.assert_allclose(frequency, 0, atol=1.E-8)
     frequency = cm.get_frequency_by_time(10, 0)
     np.testing.assert_allclose(frequency, 10, atol=1.E-8)
+
+    # Ensure we don't throw a hard error in case our requested value
+    # is outside the interpolation range
+    frequency = cm.get_frequency_by_time(0, -1)
+    np.testing.assert_array_equal(frequency, np.nan)
+    frequency = cm.get_frequency_by_time(0, 100)
+    np.testing.assert_array_equal(frequency, np.nan)
 
     times = 10 * np.ones((5, 5, 5, 2, 2, 2))
     positions = np.zeros((5, 5, 5, 2, 2, 2))
