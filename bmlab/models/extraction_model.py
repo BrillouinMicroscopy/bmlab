@@ -26,6 +26,9 @@ class ExtractionModel(Serializer):
         self.points[calib_key].append((xdata, ydata))
         if len(self.points[calib_key]) >= 3:
             center, radius = fit_circle(self.points[calib_key])
+            # Check that we got a valid circle before continuing
+            if not Circle(center, radius).valid:
+                return
             self.circle_fits[calib_key] = CircleFit(center, radius)
             self.calib_times[calib_key] = time
             self.refresh_circle_fits_interpolation()
