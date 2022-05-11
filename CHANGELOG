@@ -1,3 +1,37 @@
+## 0.1.9 - 2022-05-06
+
+### Fixed
+- Don't fail hard for values outside interpolation range #104
+- Fix calculating and handling bounds #105
+
+## 0.1.8 - 2022-05-03
+
+### Added
+- Support multi-peak fitting for measurement data #99 #102
+- Adjust evaluation model to store multi-peak fit results #96
+- Implement getting correct multi-peak fit data #97
+- Add an example script for exporting 2D data #101
+
+### Changed
+- Interpolate to find index for given frequency #100
+- Improve the calibration peak finding #103
+
+## 0.1.7 - 2022-04-22
+
+### Added
+- Allow to set calibration frequencies #87
+- Add functions to get image count #92
+- Allow to sort calibration keys by time #93
+- Add function to get expected calibration frequencies #95
+
+### Changed
+- Adjust required peak height to signal level #86
+
+### Fixed
+- Delete VIPA params when clearing calibration #88
+- Fix issue when only one calibration sample is used #89
+- Only clear correct fit, add test for FitSet #94
+
 ## 0.1.6 - 2022-04-11
 
 ### Fixed
