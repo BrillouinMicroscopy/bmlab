@@ -439,6 +439,10 @@ class EvaluationController(object):
         # Get first spectrum to find number of images
         spectra, _, _ = self.extract_payload_spectra('0')
 
+        # We create a variable for this value here,
+        # so changing nr_brillouin_peaks during evaluation
+        # does not create issues
+        nr_brillouin_peaks = evm.nr_brillouin_peaks
         evm.initialize_results_arrays({
             # measurement points in x direction
             'dim_x': resolution[0],
@@ -451,7 +455,7 @@ class EvaluationController(object):
             # number of Brillouin regions
             'nr_brillouin_regions': len(brillouin_regions),
             # number of peaks to fit per region
-            'nr_brillouin_peaks': evm.nr_brillouin_peaks,
+            'nr_brillouin_peaks': nr_brillouin_peaks,
             # number of Rayleigh regions
             'nr_rayleigh_regions': len(rayleigh_regions),
         })
@@ -515,7 +519,7 @@ class EvaluationController(object):
                     # Rayleigh peak positions in GHz in order to convert
                     # the multi-peak fit bounds given in GHz into the position
                     # in pixels.
-                    if evm.nr_brillouin_peaks > 1:
+                    if nr_brillouin_peaks > 1:
                         ind =\
                             (ind_x, ind_y, ind_z, slice(None), slice(None), 0)
                         rayleigh_peaks = np.transpose(
@@ -529,12 +533,12 @@ class EvaluationController(object):
                         if bounds is not None:
                             packed_data_multi_peak =\
                                 zip(irepeat(spectra), brillouin_regions,
-                                    irepeat(evm.nr_brillouin_peaks),
+                                    irepeat(nr_brillouin_peaks),
                                     bounds)
                         else:
                             packed_data_multi_peak =\
                                 zip(irepeat(spectra), brillouin_regions,
-                                    irepeat(evm.nr_brillouin_peaks),
+                                    irepeat(nr_brillouin_peaks),
                                     irepeat(bounds))
                         # Process it
                         results_multi_peak = pool.starmap(
@@ -545,7 +549,7 @@ class EvaluationController(object):
                                     brillouin_regions):
                                 ind = (ind_x, ind_y, ind_z,
                                        frame_num, region_key,
-                                       slice(1, evm.nr_brillouin_peaks+1))
+                                       slice(1, nr_brillouin_peaks+1))
                                 evm.results[
                                     'brillouin_peak_position'][ind] = \
                                     results_multi_peak[
