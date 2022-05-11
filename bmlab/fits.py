@@ -234,9 +234,14 @@ def fit_lorentz_region(region, xdata, ydata, nr_peaks=1, bounds_w0=None):
 
 
 def calculate_exact_circle(points):
-    # We only consider the first three points given
+    # We need at least three points to fit a circle
     if len(points) < 3:
         return
+
+    # If there are more than three points given,
+    # we use the first and last and one in the center
+    points = [points[idx]
+              for idx in np.linspace(0, len(points) - 1, 3, dtype=int)]
 
     # If the first three points are all on the same line,
     # we slightly shift the first point so that we can
