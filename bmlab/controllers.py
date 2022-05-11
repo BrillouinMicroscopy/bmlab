@@ -471,6 +471,10 @@ class EvaluationController(object):
                     # Calculate the image key for the given position
                     image_key = str(ind_z * (resolution[0] * resolution[1])
                                     + ind_y * resolution[0] + ind_x)
+                    # Check that this image key actually exists
+                    # (in case of e.g. an aborted measurement it does not)
+                    if image_key not in image_keys:
+                        continue
 
                     if (abort is not None) and abort.value:
                         calculate_derived_values()
@@ -479,6 +483,8 @@ class EvaluationController(object):
                         return
                     spectra, times, intensities =\
                         self.extract_payload_spectra(image_key)
+                    if spectra is None:
+                        continue
                     evm.results['time'][ind_x, ind_y, ind_z, :, 0, 0] =\
                         times
                     evm.results['intensity'][ind_x, ind_y, ind_z, :, 0, 0] =\
