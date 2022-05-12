@@ -1,3 +1,14 @@
+## 0.1.10 - 2022-05-12
+
+### Changed
+- Raise proper exceptions if source or session files are lacking #106 #111
+- Improve exact circle calculation #108
+
+### Fixed
+- Don't fail hard for invalid circle fits #107
+- Don't crash when changing number peaks during evaluation #109
+- Don't fail hard for aborted measurements #110
+
 ## 0.1.9 - 2022-05-06
 
 ### Fixed
