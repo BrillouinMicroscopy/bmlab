@@ -343,6 +343,15 @@ class Session(Serializer):
         if not os.path.exists(session_file_name):
             return
 
+        if not is_session_file(session_file_name):
+            raise BmlabInvalidFileError(
+                errno.ENOENT,
+                "Could not load the session file '{}'."
+                .format(session_file_name)
+                + " Please ensure the session file is valid.",
+                session_file_name
+            )
+
         with h5py.File(session_file_name, 'r') as f:
             new_session = Serializer.deserialize(f['session'])
             session = Session.get_instance()
