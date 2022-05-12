@@ -1,4 +1,5 @@
 import os
+import errno
 
 from pathlib import Path
 
@@ -42,15 +43,61 @@ def get_source_file_path(session_file):
 
 
 def get_valid_source(path):
+    # Check whether this file exists at all
+    if not os.path.exists(path):
+        raise FileNotFoundError(
+            errno.ENOENT,
+            "The file '{}' does not exist."
+            .format(Path(path)),
+            Path(path)
+        )
+
     # If this is a session file, we need to check whether
-    # the source file exists
+    # the source file exists and is valid.
     if is_session_file(path):
-        path = get_source_file_path(path)
+        source_file_path = get_source_file_path(path)
+        # If the session file is valid, but the source file
+        # does not exist, we raise a file not found error.
+        if not os.path.exists(source_file_path):
+            raise FileNotFoundError(
+                errno.ENOENT,
+                "Could not find the corresponding source"
+                " data file '{}' for session file '{}'."
+                .format(source_file_path, Path(path))
+                + " Please ensure the source data file exists.",
+                source_file_path
+            )
+        if is_source_file(source_file_path):
+            return source_file_path
+        # If the session file is valid, but the source file
+        # is not, we raise a BmlabInvalidFileError
+        else:
+            raise BmlabInvalidFileError(
+                errno.ENOENT,
+                "Could not open file '{}.".format(source_file_path)
+                + " The file is not a valid BrillouinAcquisition file.",
+                source_file_path
+            )
 
+    # If this is a source file, just return its path
     if is_source_file(path):
-        return path
+        return Path(path)
 
-    return None
+    # If we end up here,
+    # the file provided was neither a bmlab session file
+    # nor a raw data file from BrillouinAcquisition.
+    raise BmlabInvalidFileError(
+        errno.ENOENT,
+        "Could not open file '{}'.".format(Path(path))
+        + " The provided file is neither a valid"
+          " BrillouinAcquisition nor bmlab file.",
+        Path(path)
+    )
+
+
+class BmlabInvalidFileError(FileNotFoundError):
+    def __init__(self, *args, **kwargs):
+        super(BmlabInvalidFileError, self).__init__(*args, **kwargs)
 
 
 class Session(Serializer):

@@ -3,7 +3,7 @@ import pathlib
 import pytest
 
 from bmlab.session import Session, get_valid_source,\
-    get_source_file_path, get_session_file_path
+    get_source_file_path, get_session_file_path, BmlabInvalidFileError
 
 
 def data_file_path(file_name):
@@ -34,9 +34,36 @@ def test_get_valid_source_file():
     # Session file from bmlab>=0.0.14
     assert get_valid_source(data_file_path('1D-y.session.h5'))\
            == data_file_path('1D-y.h5')
-    # Session file from bmlab>=0.0.14
-    assert get_valid_source(data_file_path('Unavailable.h5'))\
-           is None
+
+    # Non-existent source data file
+    with pytest.raises(FileNotFoundError) as err:
+        get_valid_source(data_file_path('Unavailable.h5'))
+    assert err.typename == 'FileNotFoundError'
+    assert 'Unavailable.h5' in str(err.value.filename)
+
+    # Session file without source data file
+    with pytest.raises(FileNotFoundError) as err:
+        get_valid_source(data_file_path('lonely.session.h5'))
+    assert err.typename == 'FileNotFoundError'
+    assert 'lonely.h5' in str(err.value.filename)
+
+    # Session file with invalid source data file
+    with pytest.raises(BmlabInvalidFileError) as err:
+        get_valid_source(data_file_path('invalid.session.h5'))
+    assert err.typename == 'BmlabInvalidFileError'
+    assert 'invalid.h5' in str(err.value.filename)
+
+    # Source data file with invalid session file
+    with pytest.raises(BmlabInvalidFileError) as err:
+        get_valid_source(data_file_path('invalid2.session.h5'))
+    assert err.typename == 'BmlabInvalidFileError'
+    assert 'invalid2.session.h5' in str(err.value.filename)
+
+    # Invalid source data file
+    with pytest.raises(BmlabInvalidFileError) as err:
+        get_valid_source(data_file_path('invalid.h5'))
+    assert err.typename == 'BmlabInvalidFileError'
+    assert 'invalid.h5' in str(err.value.filename)
 
 
 def test_session_is_singleton():
