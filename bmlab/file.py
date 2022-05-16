@@ -182,7 +182,7 @@ class Repetition(object):
         self.file = file
 
 
-class Payload(object):
+class MeasurementData(object):
 
     def __init__(self, payload_group, repetition):
         """
@@ -196,113 +196,22 @@ class Payload(object):
 
         """
         self.repetition = repetition
-        self.resolution = tuple(int(payload_group.attrs.get(
-            'resolution-%s' % axis)[0]) for axis in ['x', 'y', 'z'])
-        self.positions = {
-            'x': np.array(payload_group.get('positions-x')),
-            'y': np.array(payload_group.get('positions-y')),
-            'z': np.array(payload_group.get('positions-z')),
-        }
         self.data = payload_group.get('data')
 
-    def image_keys(self):
+    def image_keys(self, sort_by_time=False):
         """
-        Returns the keys of the images stored in the payload.
+        Returns the keys of the images stored in the payload,
+        optionally sorted by time.
+
+        Parameters
+        ----------
+        sort_by_time : bool
 
         Returns
         -------
         out: list of str
             Keys of images in payload.
         """
-        if self.data:
-            return list(self.data.keys())
-        return []
-
-    def get_image(self, image_key):
-        """
-        Returns the image from the payload for given key.
-
-        Parameters
-        ----------
-        image_key: str
-            Key for the image.
-
-        Returns
-        -------
-        out: numpy.ndarray
-            Array representing the image.
-        """
-        imgs = self.data.get(image_key)
-        if imgs is None:
-            return None
-        return np.array(imgs)
-
-    def get_image_count(self, image_key):
-        imgs = self.data.get(image_key)
-        if imgs is None:
-            return 0
-        return imgs.shape[0]
-
-    def get_date(self, image_key):
-        """"
-        Returns the date of a payload image
-        with the given key
-        """
-        try:
-            return _get_datetime(
-                self.data.get(image_key).attrs.get('date')[0].decode('utf-8'))
-        except Exception:
-            return ''
-
-    def get_time(self, image_key):
-        try:
-            # Get date of the calibration
-            date = self.get_date(image_key)
-            # Get the reference date
-            ref = self.repetition.file.date
-            # return the difference in seconds
-            return (date - ref).total_seconds()
-        except Exception:
-            return None
-
-    def get_exposure(self, image_key):
-        """"
-        Returns the exposure time of a payload image
-        with the given key
-        """
-        try:
-            return self.data.get(image_key).attrs\
-                .get('exposure')[0].decode('utf-8')
-        except Exception:
-            # For older files we return a default value
-            return 0.5
-
-
-class Calibration(object):
-
-    def __init__(self, calibration_group, repetition):
-        """
-        Creates a calibration representation from the corresponding group of
-        a HDF file.
-
-        Parameters
-        ----------
-        calibration_group : HDF group
-            Calibration data of a repetition from an HDF file.
-        """
-        self.repetition = repetition
-        self.data = calibration_group.get('data')
-        """
-        For H5BM files < 0.0.4
-        there was an inconsistency with the group naming
-        """
-        if self.data is None:
-            self.data = calibration_group.get('calibrationData')
-
-    def is_empty(self):
-        return self.data is None or len(self.data) == 0
-
-    def image_keys(self, sort_by_time=False):
         if self.data:
             keys = list(self.data.keys())
             if not sort_by_time:
@@ -342,7 +251,7 @@ class Calibration(object):
 
     def get_date(self, image_key):
         """"
-        Returns the date of a calibration image
+        Returns the date of an image
         with the given key
         """
         try:
@@ -361,6 +270,65 @@ class Calibration(object):
             return (date - ref).total_seconds()
         except Exception:
             return None
+
+    def is_empty(self):
+        return self.data is None or len(self.data) == 0
+
+    def get_exposure(self, image_key):
+        """"
+        Returns the exposure time of a payload image
+        with the given key
+        """
+        try:
+            return self.data.get(image_key).attrs\
+                .get('exposure')[0].decode('utf-8')
+        except Exception:
+            # For older files we return a default value
+            return 0.5
+
+
+class Payload(MeasurementData):
+
+    def __init__(self, payload_group, repetition):
+        """
+        Creates a payload representation from the corresponding group of a
+        HDF file.
+
+        Parameters
+        ----------
+        payload_group : HDF group
+            The payload of a repetition, basically a set of images
+
+        """
+        super(Payload, self).__init__(payload_group, repetition)
+        self.resolution = tuple(int(payload_group.attrs.get(
+            'resolution-%s' % axis)[0]) for axis in ['x', 'y', 'z'])
+        self.positions = {
+            'x': np.array(payload_group.get('positions-x')),
+            'y': np.array(payload_group.get('positions-y')),
+            'z': np.array(payload_group.get('positions-z')),
+        }
+
+
+class Calibration(MeasurementData):
+
+    def __init__(self, payload_group, repetition):
+        """
+        Creates a calibration representation from the corresponding group of
+        a HDF file.
+
+        Parameters
+        ----------
+        payload_group : HDF group
+            Calibration data of a repetition from an HDF file.
+        """
+        super(Calibration, self).__init__(payload_group, repetition)
+        """
+        For H5BM files < 0.0.4
+        there was an inconsistency with the group naming
+        """
+        if self.data is None:
+            self.data = payload_group.get('calibrationData')
 
 
 class BadFileException(Exception):
