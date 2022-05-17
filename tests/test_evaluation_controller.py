@@ -1,12 +1,84 @@
 import pathlib
 import numpy as np
 
+import pytest
+
 from bmlab.controllers import EvaluationController, calculate_derived_values
 from bmlab.models import CalibrationModel, EvaluationModel
 
 
 def data_file_path(file_name):
     return pathlib.Path(__file__).parent / 'data' / file_name
+
+
+def test_get_key_from_indices():
+    resolution = (7, 8, 9)
+    assert EvaluationController\
+        .get_key_from_indices(resolution, 0, 0, 0) == '0'
+    assert EvaluationController\
+        .get_key_from_indices(resolution, 6, 0, 0) == '6'
+    assert EvaluationController\
+        .get_key_from_indices(resolution, 0, 1, 0) == '7'
+    assert EvaluationController\
+        .get_key_from_indices(resolution, 1, 1, 0) == '8'
+    assert EvaluationController\
+        .get_key_from_indices(resolution, 6, 7, 0) == '55'
+    assert EvaluationController\
+        .get_key_from_indices(resolution, 0, 0, 1) == '56'
+    assert EvaluationController\
+        .get_key_from_indices(resolution, 0, 1, 1) == '63'
+    assert EvaluationController\
+        .get_key_from_indices(resolution, 0, 0, 8) == '448'
+    assert EvaluationController\
+        .get_key_from_indices(resolution, 1, 0, 8) == '449'
+    assert EvaluationController\
+        .get_key_from_indices(resolution, 1, 1, 8) == '456'
+    assert EvaluationController\
+        .get_key_from_indices(resolution, 6, 7, 8) == '503'
+
+    # Resolution is not three-dimensional
+    with pytest.raises(ValueError) as err:
+        EvaluationController \
+            .get_key_from_indices((7, 8), 6, 7, 8)
+    assert err.typename == 'ValueError'
+
+    # x index is out or range
+    with pytest.raises(IndexError) as err:
+        EvaluationController \
+            .get_key_from_indices((7, 8, 9), 7, 9, 9)
+    assert err.typename == 'IndexError'
+
+
+def test_get_indices_from_key():
+    resolution = (7, 8, 9)
+    assert EvaluationController\
+        .get_indices_from_key(resolution, '0') == (0, 0, 0)
+    assert EvaluationController\
+        .get_indices_from_key(resolution, '6') == (6, 0, 0)
+    assert EvaluationController\
+        .get_indices_from_key(resolution, '7') == (0, 1, 0)
+    assert EvaluationController\
+        .get_indices_from_key(resolution, '8') == (1, 1, 0)
+    assert EvaluationController\
+        .get_indices_from_key(resolution, '55') == (6, 7, 0)
+    assert EvaluationController\
+        .get_indices_from_key(resolution, '56') == (0, 0, 1)
+    assert EvaluationController\
+        .get_indices_from_key(resolution, '63') == (0, 1, 1)
+    assert EvaluationController\
+        .get_indices_from_key(resolution, '448') == (0, 0, 8)
+    assert EvaluationController\
+        .get_indices_from_key(resolution, '449') == (1, 0, 8)
+    assert EvaluationController\
+        .get_indices_from_key(resolution, '456') == (1, 1, 8)
+    assert EvaluationController\
+        .get_indices_from_key(resolution, '503') == (6, 7, 8)
+
+    # Key is invalid
+    with pytest.raises(ValueError) as err:
+        EvaluationController \
+            .get_indices_from_key((7, 8, 9), '504')
+    assert err.typename == 'ValueError'
 
 
 def test_evaluate():
