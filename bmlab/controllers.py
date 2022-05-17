@@ -5,6 +5,8 @@ from scipy.signal import medfilt2d, find_peaks
 from skimage.measure import label
 from skimage.morphology import closing, disk
 
+from math import floor
+
 import multiprocessing as mp
 from itertools import repeat as irepeat
 
@@ -469,8 +471,9 @@ class EvaluationController(object):
             for ind_y in range(resolution[1]):
                 for ind_z in range(resolution[2]):
                     # Calculate the image key for the given position
-                    image_key = str(ind_z * (resolution[0] * resolution[1])
-                                    + ind_y * resolution[0] + ind_x)
+                    image_key = self.get_key_from_indices(
+                        resolution, ind_x, ind_y, ind_z)
+
                     # Check that this image key actually exists
                     # (in case of e.g. an aborted measurement it does not)
                     if image_key not in image_keys:
@@ -795,6 +798,32 @@ class EvaluationController(object):
         data = evm.parameters[parameter_key]['scaling'] * data
 
         return data, positions, dimensionality, labels
+
+    @staticmethod
+    def get_key_from_indices(resolution, ind_x, ind_y, ind_z):
+        if len(resolution) != 3:
+            raise ValueError('resolution has wrong dimension')
+        if ind_x >= resolution[0]:
+            raise IndexError('x index out of range')
+        if ind_y >= resolution[1]:
+            raise IndexError('y index out of range')
+        if ind_z >= resolution[2]:
+            raise IndexError('z index out of range')
+        return str(ind_z * (resolution[0] * resolution[1])
+                   + ind_y * resolution[0] + ind_x)
+
+    @staticmethod
+    def get_indices_from_key(resolution, key):
+        key = int(key)
+        ind_z = floor(key / (resolution[0] * resolution[1]))
+        ind_y = floor((key - ind_z * (resolution[0] * resolution[1])) / resolution[0])
+        ind_x = (key % (resolution[0] * resolution[1])) % resolution[0]
+        # ind_y = (key - ind_x) % resolution[0]
+        if ind_x >= resolution[0]\
+                or ind_y >= resolution[1]\
+                or ind_z >= resolution[2]:
+            raise ValueError('Invalid key')
+        return ind_x, ind_y, ind_z
 
 
 def calculate_derived_values():
