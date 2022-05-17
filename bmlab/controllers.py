@@ -431,7 +431,7 @@ class EvaluationController(object):
         image_keys = self.session.get_image_keys(True)
 
         if max_count is not None:
-            max_count.value += len(image_keys)
+            max_count.value = len(image_keys)
 
         brillouin_regions = pm.get_brillouin_regions()
         rayleigh_regions = pm.get_rayleigh_regions()
