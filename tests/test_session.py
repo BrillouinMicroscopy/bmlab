@@ -110,3 +110,28 @@ def test_session_aborted_repetition():
     session.set_file(data_file_path('aborted_repetition0.h5'))
     session.set_current_repetition('0')
     session.set_current_repetition('1')
+
+
+def test_session_get_calib_keys():
+    session = Session.get_instance()
+    session.set_file(data_file_path('2D-xy.h5'))
+    session.set_current_repetition('0')
+
+    keys = session.get_calib_keys()
+    assert len(keys) == 1
+    keys = session.get_calib_keys(True)
+    assert keys == ['1']
+
+
+def test_session_get_image_keys():
+    session = Session.get_instance()
+    session.set_file(data_file_path('2D-xy.h5'))
+    session.set_current_repetition('0')
+
+    image_keys = session.get_image_keys()
+    assert len(image_keys) == 15
+    image_keys = session.get_image_keys(True)
+    assert image_keys == \
+           ['0', '3', '6', '9', '12',
+            '1', '4', '7', '10', '13',
+            '2', '5', '8', '11', '14']

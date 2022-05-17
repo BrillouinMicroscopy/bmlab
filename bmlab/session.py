@@ -254,10 +254,11 @@ class Session(Serializer):
             return None
         return self.current_repetition().calibration.get_time(calib_key)
 
-    def get_image_keys(self):
+    def get_image_keys(self, sort_by_time=False):
         if self.current_repetition() is None:
             return None
-        return self.current_repetition().payload.image_keys()
+        return self.current_repetition()\
+            .payload.image_keys(sort_by_time=sort_by_time)
 
     def get_payload_image(self, image_key, frame_num=None):
         if self.current_repetition() is None:

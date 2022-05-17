@@ -428,7 +428,7 @@ class EvaluationController(object):
                 max_count.value = -1
             return
 
-        image_keys = self.session.get_image_keys()
+        image_keys = self.session.get_image_keys(True)
 
         if max_count is not None:
             max_count.value += len(image_keys)
