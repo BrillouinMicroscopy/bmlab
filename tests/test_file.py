@@ -67,8 +67,12 @@ def test_file_get_repetition_keys():
     bf = BrillouinFile(data_file_path('Water.h5'))
     assert bf.repetition_keys() == ['0']
 
+    assert bf.repetition_keys('Fluorescence') == []
+
     bf = BrillouinFile(data_file_path('Water_old.h5'))
     assert bf.repetition_keys() == ['0']
+
+    assert bf.repetition_keys('Fluorescence') == []
 
 
 def test_file_get_repetition_date():
@@ -161,3 +165,37 @@ def test_file_calibration_get_time():
     bf = BrillouinFile(data_file_path('Water.h5'))
     time = bf.get_repetition('0').calibration.get_time('1')
     assert time == 36.802
+
+
+def test_file_get_fluorescence_images():
+    bf = BrillouinFile(data_file_path('Fluorescence.h5'))
+    mode = 'Fluorescence'
+
+    rep_keys = bf.repetition_keys(mode)
+    assert rep_keys == ['0', '1']
+
+    repetition = bf.get_repetition(rep_keys[0], mode)
+
+    image_keys = repetition.payload.image_keys()
+    assert image_keys == ['0', '1', '2', '3']
+
+    time = repetition.payload.get_time(image_keys[0])
+    assert time == 22.376
+
+    channel = repetition.payload.get_channel(image_keys[0])
+    assert channel == 'Blue'
+
+    roi = repetition.payload.get_ROI(image_keys[0])
+    assert roi == dict({
+        'bottom': 152,
+        'height_binned': 700,
+        'height_physical': 700,
+        'left': 200,
+        'right': 202,
+        'top': 150,
+        'width_binned': 600,
+        'width_physical': 600
+    })
+
+    image = repetition.payload.get_image(image_keys[0])
+    assert image.shape == (1, 700, 600)
