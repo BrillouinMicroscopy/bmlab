@@ -466,119 +466,110 @@ class EvaluationController(object):
         pool = mp.Pool(processes=pool_size)
 
         # Loop over all measurement positions
-        ind_total = 0
-        for ind_x in range(resolution[0]):
-            for ind_y in range(resolution[1]):
-                for ind_z in range(resolution[2]):
-                    # Calculate the image key for the given position
-                    image_key = self.get_key_from_indices(
-                        resolution, ind_x, ind_y, ind_z)
+        for idx, image_key in enumerate(image_keys):
+            # Calculate the indices for the given key
+            (ind_x, ind_y, ind_z) =\
+                self.get_indices_from_key(resolution, image_key)
 
-                    # Check that this image key actually exists
-                    # (in case of e.g. an aborted measurement it does not)
-                    if image_key not in image_keys:
-                        continue
+            if (abort is not None) and abort.value:
+                calculate_derived_values()
+                if max_count is not None:
+                    max_count.value = -1
+                return
+            spectra, times, intensities =\
+                self.extract_payload_spectra(image_key)
+            if spectra is None:
+                continue
+            evm.results['time'][ind_x, ind_y, ind_z, :, 0, 0] =\
+                times
+            evm.results['intensity'][ind_x, ind_y, ind_z, :, 0, 0] =\
+                intensities
 
-                    if (abort is not None) and abort.value:
-                        calculate_derived_values()
-                        if max_count is not None:
-                            max_count.value = -1
-                        return
-                    spectra, times, intensities =\
-                        self.extract_payload_spectra(image_key)
-                    if spectra is None:
-                        continue
-                    evm.results['time'][ind_x, ind_y, ind_z, :, 0, 0] =\
-                        times
-                    evm.results['intensity'][ind_x, ind_y, ind_z, :, 0, 0] =\
-                        intensities
+            # Pack the data for parallel processing
+            regions = brillouin_regions + rayleigh_regions
+            packed_data = zip(irepeat(spectra), regions)
+            # Process it
+            results = pool.starmap(self.fit_spectra, packed_data)
 
-                    # Pack the data for parallel processing
-                    regions = brillouin_regions + rayleigh_regions
-                    packed_data = zip(irepeat(spectra), regions)
-                    # Process it
-                    results = pool.starmap(self.fit_spectra, packed_data)
+            # Unpack the results
+            for frame_num, spectrum in enumerate(spectra):
+                for region_key, region in enumerate(brillouin_regions):
+                    ind = (ind_x, ind_y, ind_z,
+                           frame_num, region_key, 0)
+                    evm.results['brillouin_peak_position'][ind] =\
+                        results[region_key][frame_num][0]
+                    evm.results['brillouin_peak_fwhm'][ind] =\
+                        results[region_key][frame_num][1]
+                    evm.results['brillouin_peak_intensity'][ind] =\
+                        results[region_key][frame_num][2]
 
-                    # Unpack the results
-                    for frame_num, spectrum in enumerate(spectra):
-                        for region_key, region in enumerate(brillouin_regions):
-                            ind = (ind_x, ind_y, ind_z,
-                                   frame_num, region_key, 0)
-                            evm.results['brillouin_peak_position'][ind] =\
-                                results[region_key][frame_num][0]
-                            evm.results['brillouin_peak_fwhm'][ind] =\
-                                results[region_key][frame_num][1]
-                            evm.results['brillouin_peak_intensity'][ind] =\
-                                results[region_key][frame_num][2]
+                for region_key, region \
+                        in enumerate(rayleigh_regions,
+                                     start=len(brillouin_regions)):
+                    ind = (ind_x, ind_y, ind_z, frame_num,
+                           region_key - len(brillouin_regions))
+                    evm.results['rayleigh_peak_position'][ind] =\
+                        results[region_key][frame_num][0]
+                    evm.results['rayleigh_peak_fwhm'][ind] =\
+                        results[region_key][frame_num][1]
+                    evm.results['rayleigh_peak_intensity'][ind] =\
+                        results[region_key][frame_num][2]
 
-                        for region_key, region \
-                                in enumerate(rayleigh_regions,
-                                             start=len(brillouin_regions)):
-                            ind = (ind_x, ind_y, ind_z, frame_num,
-                                   region_key - len(brillouin_regions))
-                            evm.results['rayleigh_peak_position'][ind] =\
-                                results[region_key][frame_num][0]
-                            evm.results['rayleigh_peak_fwhm'][ind] =\
-                                results[region_key][frame_num][1]
-                            evm.results['rayleigh_peak_intensity'][ind] =\
-                                results[region_key][frame_num][2]
+            # We can only do a multi-peak fit after the single-peak
+            # Rayleigh fit is done, because we have to know the
+            # Rayleigh peak positions in GHz in order to convert
+            # the multi-peak fit bounds given in GHz into the position
+            # in pixels.
+            if nr_brillouin_peaks > 1:
+                ind =\
+                    (ind_x, ind_y, ind_z, slice(None), slice(None), 0)
+                rayleigh_peaks = np.transpose(
+                    evm.results['rayleigh_peak_position'][ind]
+                )
+                bounds = self.create_bounds(
+                    brillouin_regions,
+                    times,
+                    rayleigh_peaks
+                )
+                if bounds is not None:
+                    packed_data_multi_peak =\
+                        zip(irepeat(spectra), brillouin_regions,
+                            irepeat(nr_brillouin_peaks),
+                            bounds)
+                else:
+                    packed_data_multi_peak =\
+                        zip(irepeat(spectra), brillouin_regions,
+                            irepeat(nr_brillouin_peaks),
+                            irepeat(bounds))
+                # Process it
+                results_multi_peak = pool.starmap(
+                    self.fit_spectra, packed_data_multi_peak)
 
-                    # We can only do a multi-peak fit after the single-peak
-                    # Rayleigh fit is done, because we have to know the
-                    # Rayleigh peak positions in GHz in order to convert
-                    # the multi-peak fit bounds given in GHz into the position
-                    # in pixels.
-                    if nr_brillouin_peaks > 1:
-                        ind =\
-                            (ind_x, ind_y, ind_z, slice(None), slice(None), 0)
-                        rayleigh_peaks = np.transpose(
-                            evm.results['rayleigh_peak_position'][ind]
-                        )
-                        bounds = self.create_bounds(
-                            brillouin_regions,
-                            times,
-                            rayleigh_peaks
-                        )
-                        if bounds is not None:
-                            packed_data_multi_peak =\
-                                zip(irepeat(spectra), brillouin_regions,
-                                    irepeat(nr_brillouin_peaks),
-                                    bounds)
-                        else:
-                            packed_data_multi_peak =\
-                                zip(irepeat(spectra), brillouin_regions,
-                                    irepeat(nr_brillouin_peaks),
-                                    irepeat(bounds))
-                        # Process it
-                        results_multi_peak = pool.starmap(
-                            self.fit_spectra, packed_data_multi_peak)
+                for frame_num, spectrum in enumerate(spectra):
+                    for region_key, region in enumerate(
+                            brillouin_regions):
+                        ind = (ind_x, ind_y, ind_z,
+                               frame_num, region_key,
+                               slice(1, nr_brillouin_peaks+1))
+                        evm.results[
+                            'brillouin_peak_position'][ind] = \
+                            results_multi_peak[
+                                region_key][frame_num][0]
+                        evm.results[
+                            'brillouin_peak_fwhm'][ind] = \
+                            results_multi_peak[
+                                region_key][frame_num][1]
+                        evm.results[
+                            'brillouin_peak_intensity'][ind] = \
+                            results_multi_peak[
+                                region_key][frame_num][2]
 
-                        for frame_num, spectrum in enumerate(spectra):
-                            for region_key, region in enumerate(
-                                    brillouin_regions):
-                                ind = (ind_x, ind_y, ind_z,
-                                       frame_num, region_key,
-                                       slice(1, nr_brillouin_peaks+1))
-                                evm.results[
-                                    'brillouin_peak_position'][ind] = \
-                                    results_multi_peak[
-                                        region_key][frame_num][0]
-                                evm.results[
-                                    'brillouin_peak_fwhm'][ind] = \
-                                    results_multi_peak[
-                                        region_key][frame_num][1]
-                                evm.results[
-                                    'brillouin_peak_intensity'][ind] = \
-                                    results_multi_peak[
-                                        region_key][frame_num][2]
+            if count is not None:
+                count.value += 1
 
-                    if count is not None:
-                        count.value += 1
-
-                    # Calculate the derived values every ten steps
-                    ind_total += 1
-                    if (ind_total % 10) == 0:
-                        calculate_derived_values()
+            # Calculate the derived values every ten steps
+            if not (idx % 10):
+                calculate_derived_values()
 
         pool.close()
         pool.join()
