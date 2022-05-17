@@ -15,6 +15,7 @@ import h5py
 from packaging import version
 
 BRILLOUIN_GROUP = 'Brillouin'
+FLUORESCENCE_GROUP = 'Fluorescence'
 
 
 def _get_datetime(time_stamp):
@@ -89,6 +90,7 @@ class BrillouinFile(object):
         if not self.file_version_string.startswith('H5BM'):
             raise BadFileException('File does not contain any Brillouin data')
         self.file_version = self.file_version_string[-5:]
+        self.Fluorescence_group = None
 
         if version.parse(self.file_version) >= version.parse("0.0.4"):
             """"
@@ -99,6 +101,9 @@ class BrillouinFile(object):
                 raise BadFileException(
                     'File does not contain any Brillouin data')
             self.Brillouin_group = self.file[BRILLOUIN_GROUP]
+
+            if FLUORESCENCE_GROUP in self.file:
+                self.Fluorescence_group = self.file[FLUORESCENCE_GROUP]
         else:
             """ Old Brillouin file format """
             self.Brillouin_group = self.file
