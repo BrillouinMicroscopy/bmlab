@@ -464,7 +464,11 @@ class EvaluationController(object):
 
         pool_size = mp.cpu_count() * 2
         pool = mp.Pool(processes=pool_size)
-
+        # Initialize the Rayleigh shift
+        # used for compensating drifts
+        rayleigh_peak_initial =\
+            np.nan * np.ones((len(rayleigh_regions)))
+        rayleigh_shift = 0
         # Loop over all measurement positions
         for idx, image_key in enumerate(image_keys):
             # Calculate the indices for the given key
@@ -485,15 +489,24 @@ class EvaluationController(object):
             evm.results['intensity'][ind_x, ind_y, ind_z, :, 0, 0] =\
                 intensities
 
+            # We shift the evaluated regions here
+            # to compensate for eventual drift
+            brillouin_regions_shifted = [
+                tuple([val + rayleigh_shift for val in region])
+                for region in brillouin_regions]
+            rayleigh_regions_shifted = [
+                tuple([val + rayleigh_shift for val in region])
+                for region in rayleigh_regions]
+
             # Pack the data for parallel processing
-            regions = brillouin_regions + rayleigh_regions
+            regions = brillouin_regions_shifted + rayleigh_regions_shifted
             packed_data = zip(irepeat(spectra), regions)
             # Process it
             results = pool.starmap(self.fit_spectra, packed_data)
 
             # Unpack the results
             for frame_num, spectrum in enumerate(spectra):
-                for region_key, region in enumerate(brillouin_regions):
+                for region_key, _ in enumerate(brillouin_regions):
                     ind = (ind_x, ind_y, ind_z,
                            frame_num, region_key, 0)
                     evm.results['brillouin_peak_position'][ind] =\
@@ -503,7 +516,7 @@ class EvaluationController(object):
                     evm.results['brillouin_peak_intensity'][ind] =\
                         results[region_key][frame_num][2]
 
-                for region_key, region \
+                for region_key, _ \
                         in enumerate(rayleigh_regions,
                                      start=len(brillouin_regions)):
                     ind = (ind_x, ind_y, ind_z, frame_num,
@@ -527,18 +540,20 @@ class EvaluationController(object):
                     evm.results['rayleigh_peak_position'][ind]
                 )
                 bounds = self.create_bounds(
-                    brillouin_regions,
+                    brillouin_regions_shifted,
                     times,
                     rayleigh_peaks
                 )
                 if bounds is not None:
                     packed_data_multi_peak =\
-                        zip(irepeat(spectra), brillouin_regions,
+                        zip(irepeat(spectra),
+                            brillouin_regions_shifted,
                             irepeat(nr_brillouin_peaks),
                             bounds)
                 else:
                     packed_data_multi_peak =\
-                        zip(irepeat(spectra), brillouin_regions,
+                        zip(irepeat(spectra),
+                            brillouin_regions_shifted,
                             irepeat(nr_brillouin_peaks),
                             irepeat(bounds))
                 # Process it
@@ -546,7 +561,7 @@ class EvaluationController(object):
                     self.fit_spectra, packed_data_multi_peak)
 
                 for frame_num, spectrum in enumerate(spectra):
-                    for region_key, region in enumerate(
+                    for region_key, _ in enumerate(
                             brillouin_regions):
                         ind = (ind_x, ind_y, ind_z,
                                frame_num, region_key,
@@ -563,6 +578,20 @@ class EvaluationController(object):
                             'brillouin_peak_intensity'][ind] = \
                             results_multi_peak[
                                 region_key][frame_num][2]
+
+            # Calculate the shift of the Rayleigh peaks,
+            # in order to follow the peaks in case of a drift
+            rayleigh_peak_current = np.nanmean(
+                evm.results['rayleigh_peak_position'][
+                    ind_x, ind_y, ind_z, :, :, 0], axis=0)
+            # If we haven't found a valid Rayleigh peak position,
+            # but the current one is valid, use it
+            if not np.isnan(rayleigh_peak_current).all()\
+                    and np.isnan(rayleigh_peak_initial).all():
+                rayleigh_peak_initial = rayleigh_peak_current
+            shift = np.nanmean(rayleigh_peak_current - rayleigh_peak_initial)
+            if not np.isnan(shift):
+                rayleigh_shift = round(shift)
 
             if count is not None:
                 count.value += 1
