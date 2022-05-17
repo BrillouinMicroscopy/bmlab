@@ -816,7 +816,8 @@ class EvaluationController(object):
     def get_indices_from_key(resolution, key):
         key = int(key)
         ind_z = floor(key / (resolution[0] * resolution[1]))
-        ind_y = floor((key - ind_z * (resolution[0] * resolution[1])) / resolution[0])
+        ind_y = floor(
+            (key - ind_z * (resolution[0] * resolution[1])) / resolution[0])
         ind_x = (key % (resolution[0] * resolution[1])) % resolution[0]
         # ind_y = (key - ind_x) % resolution[0]
         if ind_x >= resolution[0]\
