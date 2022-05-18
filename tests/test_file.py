@@ -167,6 +167,17 @@ def test_file_calibration_get_time():
     assert time == 36.802
 
 
+def test_file_repetition_count():
+    bf = BrillouinFile(data_file_path('Fluorescence.h5'))
+    mode = 'Fluorescence'
+
+    rep_keys = bf.repetition_keys(mode)
+    assert rep_keys == ['0', '1']
+
+    with pytest.raises(NotImplementedError):
+        bf.repetition_count('Raman')
+
+
 def test_file_get_fluorescence_images():
     bf = BrillouinFile(data_file_path('Fluorescence.h5'))
     mode = 'Fluorescence'

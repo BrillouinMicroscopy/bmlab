@@ -128,6 +128,13 @@ class BrillouinFile(object):
         except Exception:
             pass
 
+    @staticmethod
+    def checkMode(mode):
+        modes = [BRILLOUIN_GROUP, FLUORESCENCE_GROUP]
+        if mode not in modes:
+            raise NotImplementedError(
+                'The mode "{}" is not supported.'.format(mode))
+
     def repetition_count(self, mode=BRILLOUIN_GROUP):
         """
         Get the number of repetitions in the data file.
@@ -137,6 +144,7 @@ class BrillouinFile(object):
         out : int
             Number of repetitions in the data file
         """
+        self.checkMode(mode)
         return len(self.repetition_keys(mode))
 
     def repetition_keys(self, mode=BRILLOUIN_GROUP):
@@ -147,6 +155,7 @@ class BrillouinFile(object):
         -------
         out: list of str
         """
+        self.checkMode(mode)
         mode_group = self.Brillouin_group
         if mode == FLUORESCENCE_GROUP:
             mode_group = self.Fluorescence_group
@@ -175,6 +184,7 @@ class BrillouinFile(object):
         out : Repetition
             the repetition
         """
+        self.checkMode(mode)
         mode_group = self.Brillouin_group
         if mode == FLUORESCENCE_GROUP:
             mode_group = self.Fluorescence_group
