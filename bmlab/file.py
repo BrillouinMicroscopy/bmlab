@@ -233,6 +233,7 @@ class MeasurementData(object):
 
         """
         self.repetition = repetition
+        self.group = payload_group
         if payload_group is not None:
             self.data = payload_group.get('data')
         else:
@@ -392,6 +393,24 @@ class Payload(MeasurementData):
         except BaseException:
             self.resolution = None
             self.positions = None
+
+    def get_scale_calibration(self):
+        parameters = [
+            'micrometerToPixX', 'micrometerToPixY',
+            'pixToMicrometerX', 'pixToMicrometerY',
+            'positionScanner', 'positionStage', 'origin'
+        ]
+        try:
+            cal = self.group.get('scaleCalibration')
+            scaleCal = dict()
+            for attribute in parameters:
+                val = cal.get(attribute)
+                scaleCal[attribute] = \
+                    tuple(val.attrs.get(dim)[0] for dim in ['x', 'y'])
+
+            return scaleCal
+        except BaseException:
+            return None
 
 
 class Calibration(MeasurementData):

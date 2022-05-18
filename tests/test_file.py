@@ -210,3 +210,21 @@ def test_file_get_fluorescence_images():
 
     image = repetition.payload.get_image(image_keys[0])
     assert image.shape == (1, 700, 600)
+
+
+def test_file_get_scale_calibration():
+    bf = BrillouinFile(data_file_path('Fluorescence.h5'))
+    mode = 'Fluorescence'
+
+    repetition = bf.get_repetition('0', mode)
+    scale_calibration = repetition.payload.get_scale_calibration()
+
+    assert scale_calibration == dict({
+        'micrometerToPixX': (-7.95, 9.05),
+        'micrometerToPixY': (9.45, 8.65),
+        'pixToMicrometerX': (-0.05606325750210643, 0.05865577808023852),
+        'pixToMicrometerY': (0.0612482986583706, 0.05152634649037527),
+        'positionScanner': (0.0, 0.0),
+        'positionStage': (0.0, 0.0),
+        'origin': (0.0, 0.0)
+    })
