@@ -15,6 +15,7 @@ import h5py
 from packaging import version
 
 BRILLOUIN_GROUP = 'Brillouin'
+FLUORESCENCE_GROUP = 'Fluorescence'
 
 
 def _get_datetime(time_stamp):
@@ -89,6 +90,8 @@ class BrillouinFile(object):
         if not self.file_version_string.startswith('H5BM'):
             raise BadFileException('File does not contain any Brillouin data')
         self.file_version = self.file_version_string[-5:]
+        # Fluorescence group is optional
+        self.Fluorescence_group = None
 
         if version.parse(self.file_version) >= version.parse("0.0.4"):
             """"
@@ -99,10 +102,17 @@ class BrillouinFile(object):
                 raise BadFileException(
                     'File does not contain any Brillouin data')
             self.Brillouin_group = self.file[BRILLOUIN_GROUP]
+
+            if FLUORESCENCE_GROUP in self.file:
+                self.Fluorescence_group = self.file[FLUORESCENCE_GROUP]
         else:
             """ Old Brillouin file format """
             self.Brillouin_group = self.file
-        self.comment = self.file.attrs.get('comment')[0].decode('utf-8')
+        # Comments are optional,
+        # e.g. for files containing only fluorescence data
+        comment = self.file.attrs.get('comment')
+        if comment is not None:
+            self.comment = comment[0].decode('utf-8')
         self.date = _get_datetime(
             self.file.attrs.get('date')[0].decode('utf-8'))
 
@@ -118,7 +128,14 @@ class BrillouinFile(object):
         except Exception:
             pass
 
-    def repetition_count(self):
+    @staticmethod
+    def checkMode(mode):
+        modes = [BRILLOUIN_GROUP, FLUORESCENCE_GROUP]
+        if mode not in modes:
+            raise NotImplementedError(
+                'The mode "{}" is not supported.'.format(mode))
+
+    def repetition_count(self, mode=BRILLOUIN_GROUP):
         """
         Get the number of repetitions in the data file.
 
@@ -127,9 +144,10 @@ class BrillouinFile(object):
         out : int
             Number of repetitions in the data file
         """
-        return len(self.repetition_keys())
+        self.checkMode(mode)
+        return len(self.repetition_keys(mode))
 
-    def repetition_keys(self):
+    def repetition_keys(self, mode=BRILLOUIN_GROUP):
         """
         Returns list of keys for the various repetitions in the file.
 
@@ -137,12 +155,20 @@ class BrillouinFile(object):
         -------
         out: list of str
         """
+        self.checkMode(mode)
+        mode_group = self.Brillouin_group
+        if mode == FLUORESCENCE_GROUP:
+            mode_group = self.Fluorescence_group
+        if mode_group is None:
+            return []
         if version.parse(self.file_version) >= version.parse("0.0.4"):
-            return list(self.Brillouin_group.keys())
-        else:
+            return list(mode_group.keys())
+        elif mode == BRILLOUIN_GROUP:
             return list(['0'])
+        else:
+            return []
 
-    def get_repetition(self, repetition_key):
+    def get_repetition(self, repetition_key, mode=BRILLOUIN_GROUP):
         """
         Get a repetition from the data file based on given key.
 
@@ -150,14 +176,23 @@ class BrillouinFile(object):
         ----------
         repetition_key : str
             key to identify the repetition in the Brillouin group
+        mode: str
+            the mode to look at
 
         Returns
         -------
         out : Repetition
             the repetition
         """
+        self.checkMode(mode)
+        mode_group = self.Brillouin_group
+        if mode == FLUORESCENCE_GROUP:
+            mode_group = self.Fluorescence_group
+        # Check that we have a group for this mode
+        if mode_group is None:
+            return None
         if version.parse(self.file_version) >= version.parse("0.0.4"):
-            return Repetition(self.Brillouin_group.get(repetition_key), self)
+            return Repetition(mode_group.get(repetition_key), self)
         else:
             return Repetition(self.file, self)
 
@@ -178,7 +213,9 @@ class Repetition(object):
             repetition_group.attrs.get('date')[0].decode('utf-8'))
         self.payload = Payload(repetition_group.get('payload'), self)
         calibration_group = repetition_group.get('calibration')
-        self.calibration = Calibration(calibration_group, self)
+        # Having a calibration is optional for a repetition
+        if calibration_group is not None:
+            self.calibration = Calibration(calibration_group, self)
         self.file = file
 
 
@@ -196,7 +233,11 @@ class MeasurementData(object):
 
         """
         self.repetition = repetition
-        self.data = payload_group.get('data')
+        self.group = payload_group
+        if payload_group is not None:
+            self.data = payload_group.get('data')
+        else:
+            self.data = None
 
     def image_keys(self, sort_by_time=False):
         """
@@ -286,6 +327,45 @@ class MeasurementData(object):
             # For older files we return a default value
             return 0.5
 
+    def get_channel(self, image_key):
+        """"
+        Returns the channel of a payload image
+        with the given key
+        """
+        try:
+            return self.data.get(image_key).attrs\
+                .get('channel')[0].decode('utf-8')
+        except Exception:
+            return None
+
+    def get_ROI(self, image_key):
+        """
+        Returns the region of interest of a payload image
+        with the given key
+        Parameters
+        ----------
+        image_key
+
+        Returns
+        -------
+
+        """
+        # Older measurements didn't save this information,
+        # so we wrap it in a try/except
+        try:
+            attributes = ['left', 'right',
+                          'bottom', 'top',
+                          'width_physical', 'height_physical',
+                          'width_binned', 'height_binned']
+            roi = dict()
+            for attribute in attributes:
+                roi[attribute] =\
+                    self.data.get(image_key).attrs.get('ROI_' + attribute)[0]
+
+            return roi
+        except BaseException:
+            return None
+
 
 class Payload(MeasurementData):
 
@@ -301,13 +381,36 @@ class Payload(MeasurementData):
 
         """
         super(Payload, self).__init__(payload_group, repetition)
-        self.resolution = tuple(int(payload_group.attrs.get(
-            'resolution-%s' % axis)[0]) for axis in ['x', 'y', 'z'])
-        self.positions = {
-            'x': np.array(payload_group.get('positions-x')),
-            'y': np.array(payload_group.get('positions-y')),
-            'z': np.array(payload_group.get('positions-z')),
-        }
+        # Only Brillouin payloads have a resolution and positions
+        try:
+            self.resolution = tuple(int(payload_group.attrs.get(
+                'resolution-%s' % axis)[0]) for axis in ['x', 'y', 'z'])
+            self.positions = {
+                'x': np.array(payload_group.get('positions-x')),
+                'y': np.array(payload_group.get('positions-y')),
+                'z': np.array(payload_group.get('positions-z')),
+            }
+        except BaseException:
+            self.resolution = None
+            self.positions = None
+
+    def get_scale_calibration(self):
+        parameters = [
+            'micrometerToPixX', 'micrometerToPixY',
+            'pixToMicrometerX', 'pixToMicrometerY',
+            'positionScanner', 'positionStage', 'origin'
+        ]
+        try:
+            cal = self.group.get('scaleCalibration')
+            scaleCal = dict()
+            for attribute in parameters:
+                val = cal.get(attribute)
+                scaleCal[attribute] = \
+                    tuple(val.attrs.get(dim)[0] for dim in ['x', 'y'])
+
+            return scaleCal
+        except BaseException:
+            return None
 
 
 class Calibration(MeasurementData):
@@ -327,7 +430,7 @@ class Calibration(MeasurementData):
         For H5BM files < 0.0.4
         there was an inconsistency with the group naming
         """
-        if self.data is None:
+        if self.data is None and payload_group is not None:
             self.data = payload_group.get('calibrationData')
 
 
