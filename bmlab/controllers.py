@@ -13,6 +13,7 @@ from itertools import repeat as irepeat
 from bmlab import Session
 from bmlab.fits import fit_vipa, VIPA, fit_lorentz_region
 from bmlab.image import extract_lines_along_arc, find_max_in_radius
+from bmlab.export import FluorescenceExport
 
 import warnings
 
@@ -1033,3 +1034,13 @@ class Controller(object):
             evc.evaluate()
 
         return self.session
+
+
+class ExportController(object):
+
+    def __init__(self):
+        return
+
+    @staticmethod
+    def export():
+        FluorescenceExport().export()

@@ -39,6 +39,7 @@ setup(
     install_requires=["h5py>=2.10.0",
                       "numpy>=1.17.0",
                       "packaging>=20.8",
+                      "pillow",
                       "pytest",
                       "pytest_mock",
                       "scikit-image>=0.19.0",
