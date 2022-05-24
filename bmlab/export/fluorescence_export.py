@@ -1,5 +1,7 @@
-from PIL import Image
 import os
+import numpy as np
+from skimage import transform
+from PIL import Image
 
 from bmlab import Session
 
@@ -22,6 +24,18 @@ class FluorescenceExport(object):
                 fluorescence_repetition, self.mode)
             # Get the keys for all images in this repetition
             image_keys = repetition.payload.image_keys()
+            # Get the scale calibration
+            scale_calibration = repetition.payload.get_scale_calibration()
+            # Create the transform matrix for the affine transformation
+            n = np.linalg.norm(np.array(scale_calibration['micrometerToPixX']))
+            tmatrix = np.matrix([
+                [-1 * scale_calibration['micrometerToPixY'][1],
+                 -1 * scale_calibration['micrometerToPixY'][0], 0],
+                [-1 * scale_calibration['micrometerToPixX'][1],
+                 -1 * scale_calibration['micrometerToPixX'][0], 0],
+                [0, 0, n]
+            ]) / n
+
             # Loop over all images in this repetition
             for image_key in image_keys:
                 channel = repetition.payload.get_channel(image_key)
@@ -55,3 +69,60 @@ class FluorescenceExport(object):
                         image = Image.merge("RGB", (blank, blank, image))
 
                     image.save(filename)
+
+                    # Also export the image with axes parallel to the stage
+
+                    # Create translation matrix to move image back to ROI
+                    corners = [[0, image.size[0]-1, 0, image.size[0]-1],
+                               [0, 0, image.size[1]-1, image.size[1]-1],
+                               [1, 1, 1, 1]]
+                    corners_warped = tmatrix * corners
+
+                    # Necessary translation
+                    dx = corners_warped[0, :].min()
+                    dy = corners_warped[1, :].min()
+                    # New shape
+                    sx = corners_warped[0, :].max()\
+                        - corners_warped[0, :].min()
+                    sy = corners_warped[1, :].max()\
+                        - corners_warped[1, :].min()
+
+                    translate = np.matrix([
+                        [1, 0, -dx],
+                        [0, 1, -dy],
+                        [0, 0, 1]
+                    ])
+
+                    tform = transform.AffineTransform(
+                        matrix=np.linalg.inv(translate * tmatrix))
+                    shape = (int(np.ceil(sy)), int(np.ceil(sx)))
+
+                    image_data_warped = transform.warp(
+                        img_data[acq, :, :],
+                        tform, output_shape=shape, cval=np.nan)
+                    # Export image with proper alpha channel
+                    image_warped = Image.fromarray(
+                        (255 * image_data_warped).astype(np.ubyte))
+                    if channel.casefold() == 'red':
+                        blank = Image.new("L", image_warped.size)
+                        image_warped =\
+                            Image.merge("RGB", (image_warped, blank, blank))
+
+                    if channel.casefold() == 'green':
+                        blank = Image.new("L", image_warped.size)
+                        image_warped =\
+                            Image.merge("RGB", (blank, image_warped, blank))
+
+                    if channel.casefold() == 'blue':
+                        blank = Image.new("L", image_warped.size)
+                        image_warped =\
+                            Image.merge("RGB", (blank, blank, image_warped))
+                    image_alpha = Image.fromarray(
+                        (255 * np.logical_not(
+                            np.isnan(image_data_warped))).astype(np.ubyte))
+                    image_warped.putalpha(image_alpha)
+
+                    filename = f"{path}\\{self.file.path.stem}" \
+                               f"_FLrep{fluorescence_repetition}" \
+                               f"_channel{channel}_aligned{postfix}.png"
+                    image_warped.save(filename)
