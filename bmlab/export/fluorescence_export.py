@@ -41,6 +41,8 @@ class FluorescenceExport(object):
             for image_key in image_keys:
                 channel = repetition.payload.get_channel(image_key)
                 img_data = repetition.payload.get_image(image_key)
+                # Average all images acquired
+                img_data = np.nanmean(img_data, axis=0).astype(np.ubyte)
 
                 # Get the region of interest of the repetition
                 roi = repetition.payload.get_ROI(image_key)
@@ -62,137 +64,133 @@ class FluorescenceExport(object):
                     y_pix * scale_calibration['pixToMicrometerY'][1] +\
                     scale_calibration['positionStage'][1]
 
-                for acq in range(img_data.shape[0]):
-                    # Construct export path and create it if necessary
-                    if self.file.path.parent.name == 'RawData':
-                        path = self.file.path.parents[1] / 'Plots'
-                    else:
-                        path = self.file.path.parent
-                    if not os.path.exists(path):
-                        os.mkdir(path)
-                    postfix = ''
-                    if img_data.shape[0] > 1:
-                        postfix = f'_{acq}'
-                    filename = f"{path}\\{self.file.path.stem}" \
-                               f"_FLrep{fluorescence_repetition}" \
-                               f"_channel{channel}{postfix}.png"
-                    image = Image.fromarray(img_data[acq, :, :])
-                    if channel.casefold() == 'red':
-                        blank = Image.new("L", image.size)
-                        image = Image.merge("RGB", (image, blank, blank))
+                # Construct export path and create it if necessary
+                if self.file.path.parent.name == 'RawData':
+                    path = self.file.path.parents[1] / 'Plots'
+                else:
+                    path = self.file.path.parent
+                if not os.path.exists(path):
+                    os.mkdir(path)
+                filename = f"{path}\\{self.file.path.stem}" \
+                           f"_FLrep{fluorescence_repetition}" \
+                           f"_channel{channel}.png"
+                image = Image.fromarray(img_data)
+                if channel.casefold() == 'red':
+                    blank = Image.new("L", image.size)
+                    image = Image.merge("RGB", (image, blank, blank))
 
-                    if channel.casefold() == 'green':
-                        blank = Image.new("L", image.size)
-                        image = Image.merge("RGB", (blank, image, blank))
+                if channel.casefold() == 'green':
+                    blank = Image.new("L", image.size)
+                    image = Image.merge("RGB", (blank, image, blank))
 
-                    if channel.casefold() == 'blue':
-                        blank = Image.new("L", image.size)
-                        image = Image.merge("RGB", (blank, blank, image))
+                if channel.casefold() == 'blue':
+                    blank = Image.new("L", image.size)
+                    image = Image.merge("RGB", (blank, blank, image))
 
-                    image.save(filename)
+                image.save(filename)
 
-                    # Also export the image with axes parallel to the stage
+                # Also export the image with axes parallel to the stage
 
-                    # Create translation matrix to move image back to ROI
-                    corners = [[0, image.size[0]-1, 0, image.size[0]-1],
-                               [0, 0, image.size[1]-1, image.size[1]-1],
-                               [1, 1, 1, 1]]
-                    corners_warped = tmatrix * corners
+                # Create translation matrix to move image back to ROI
+                corners = [[0, image.size[0]-1, 0, image.size[0]-1],
+                           [0, 0, image.size[1]-1, image.size[1]-1],
+                           [1, 1, 1, 1]]
+                corners_warped = tmatrix * corners
 
-                    # Necessary translation
-                    dx = corners_warped[0, :].min()
-                    dy = corners_warped[1, :].min()
-                    # New shape
-                    sx = corners_warped[0, :].max()\
-                        - corners_warped[0, :].min()
-                    sy = corners_warped[1, :].max()\
-                        - corners_warped[1, :].min()
+                # Necessary translation
+                dx = corners_warped[0, :].min()
+                dy = corners_warped[1, :].min()
+                # New shape
+                sx = corners_warped[0, :].max()\
+                    - corners_warped[0, :].min()
+                sy = corners_warped[1, :].max()\
+                    - corners_warped[1, :].min()
 
-                    translate = np.matrix([
-                        [1, 0, -dx],
-                        [0, 1, -dy],
-                        [0, 0, 1]
-                    ])
+                translate = np.matrix([
+                    [1, 0, -dx],
+                    [0, 1, -dy],
+                    [0, 0, 1]
+                ])
 
-                    tform = transform.AffineTransform(
-                        matrix=np.linalg.inv(translate * tmatrix))
-                    shape = (int(np.ceil(sy)), int(np.ceil(sx)))
+                tform = transform.AffineTransform(
+                    matrix=np.linalg.inv(translate * tmatrix))
+                shape = (int(np.ceil(sy)), int(np.ceil(sx)))
 
-                    # Warp the images and positions to align with a
-                    # standard x-y coordinate system
-                    image_data_warped = transform.warp(
-                        img_data[acq, :, :],
-                        tform, output_shape=shape, cval=np.nan)
-                    x_mm_warped = transform.warp(
-                        x_mm,
-                        tform, output_shape=shape, cval=np.nan)
-                    y_mm_warped = transform.warp(
-                        y_mm,
-                        tform, output_shape=shape, cval=np.nan)
+                # Warp the images and positions to align with a
+                # standard x-y coordinate system
+                image_data_warped = transform.warp(
+                    img_data,
+                    tform, output_shape=shape, cval=np.nan)
+                x_mm_warped = transform.warp(
+                    x_mm,
+                    tform, output_shape=shape, cval=np.nan)
+                y_mm_warped = transform.warp(
+                    y_mm,
+                    tform, output_shape=shape, cval=np.nan)
 
-                    # Export image with proper alpha channel
-                    image_warped = Image.fromarray(
-                        (255 * image_data_warped).astype(np.ubyte))
-                    if channel.casefold() == 'red':
-                        blank = Image.new("L", image_warped.size)
-                        image_warped =\
-                            Image.merge("RGB", (image_warped, blank, blank))
+                # Export image with proper alpha channel
+                image_warped = Image.fromarray(
+                    (255 * image_data_warped).astype(np.ubyte))
+                if channel.casefold() == 'red':
+                    blank = Image.new("L", image_warped.size)
+                    image_warped =\
+                        Image.merge("RGB", (image_warped, blank, blank))
 
-                    if channel.casefold() == 'green':
-                        blank = Image.new("L", image_warped.size)
-                        image_warped =\
-                            Image.merge("RGB", (blank, image_warped, blank))
+                if channel.casefold() == 'green':
+                    blank = Image.new("L", image_warped.size)
+                    image_warped =\
+                        Image.merge("RGB", (blank, image_warped, blank))
 
-                    if channel.casefold() == 'blue':
-                        blank = Image.new("L", image_warped.size)
-                        image_warped =\
-                            Image.merge("RGB", (blank, blank, image_warped))
-                    image_alpha = Image.fromarray(
-                        (255 * np.logical_not(
-                            np.isnan(image_data_warped))).astype(np.ubyte))
-                    image_warped.putalpha(image_alpha)
+                if channel.casefold() == 'blue':
+                    blank = Image.new("L", image_warped.size)
+                    image_warped =\
+                        Image.merge("RGB", (blank, blank, image_warped))
+                image_alpha = Image.fromarray(
+                    (255 * np.logical_not(
+                        np.isnan(image_data_warped))).astype(np.ubyte))
+                image_warped.putalpha(image_alpha)
 
-                    filename = f"{path}\\{self.file.path.stem}" \
-                               f"_FLrep{fluorescence_repetition}" \
-                               f"_channel{channel}_aligned{postfix}.png"
-                    image_warped.save(filename)
+                filename = f"{path}\\{self.file.path.stem}" \
+                           f"_FLrep{fluorescence_repetition}" \
+                           f"_channel{channel}_aligned.png"
+                image_warped.save(filename)
 
-                    # Export the images with the ROI of the Brillouin
-                    # measurements
-                    for brillouin_repetition in brillouin_repetitions:
-                        # Get the repetition
-                        repetition_bm = self.file.get_repetition(
-                            brillouin_repetition)
-                        # Read the Brillouin positions
-                        positions = repetition_bm.payload.positions
-                        x_min = np.nanmin(positions['x'])
-                        x_max = np.nanmax(positions['x'])
-                        y_min = np.nanmin(positions['y'])
-                        y_max = np.nanmax(positions['y'])
+                # Export the images with the ROI of the Brillouin
+                # measurements
+                for brillouin_repetition in brillouin_repetitions:
+                    # Get the repetition
+                    repetition_bm = self.file.get_repetition(
+                        brillouin_repetition)
+                    # Read the Brillouin positions
+                    positions = repetition_bm.payload.positions
+                    x_min = np.nanmin(positions['x'])
+                    x_max = np.nanmax(positions['x'])
+                    y_min = np.nanmin(positions['y'])
+                    y_max = np.nanmax(positions['y'])
 
-                        # We are only interested in x-y-maps
-                        if not x_min < x_max or not y_min < y_max:
-                            continue
+                    # We are only interested in x-y-maps
+                    if not x_min < x_max or not y_min < y_max:
+                        continue
 
-                        # Find the indices delimiting the Brillouin ROI
-                        idx_mask = (x_mm_warped >= x_min) &\
-                                   (x_mm_warped <= x_max) &\
-                                   (y_mm_warped >= y_min) &\
-                                   (y_mm_warped <= y_max)
-                        idx = np.nonzero(idx_mask)
+                    # Find the indices delimiting the Brillouin ROI
+                    idx_mask = (x_mm_warped >= x_min) &\
+                               (x_mm_warped <= x_max) &\
+                               (y_mm_warped >= y_min) &\
+                               (y_mm_warped <= y_max)
+                    idx = np.nonzero(idx_mask)
 
-                        # Crop the Fluorescence image to the Brillouin ROI
-                        image_warped_bm = image_warped.crop(
-                            (
-                                np.min(idx[1]),
-                                np.min(idx[0]),
-                                np.max(idx[1]),
-                                np.max(idx[0])
-                            )
+                    # Crop the Fluorescence image to the Brillouin ROI
+                    image_warped_bm = image_warped.crop(
+                        (
+                            np.min(idx[1]),
+                            np.min(idx[0]),
+                            np.max(idx[1]),
+                            np.max(idx[0])
                         )
+                    )
 
-                        filename = f"{path}\\{self.file.path.stem}" \
-                                   f"_FLrep{fluorescence_repetition}" \
-                                   f"_channel{channel}" \
-                                   f"_BMrep{brillouin_repetition}{postfix}.png"
-                        image_warped_bm.save(filename)
+                    filename = f"{path}\\{self.file.path.stem}" \
+                               f"_FLrep{fluorescence_repetition}" \
+                               f"_channel{channel}" \
+                               f"_BMrep{brillouin_repetition}.png"
+                    image_warped_bm.save(filename)
