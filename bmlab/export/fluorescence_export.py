@@ -16,6 +16,7 @@ class FluorescenceExport(object):
 
     def export(self):
         fluorescence_repetitions = self.file.repetition_keys(self.mode)
+        brillouin_repetitions = self.file.repetition_keys()
 
         # Loop over all fluorescence repetitions
         for fluorescence_repetition in fluorescence_repetitions:
@@ -40,6 +41,26 @@ class FluorescenceExport(object):
             for image_key in image_keys:
                 channel = repetition.payload.get_channel(image_key)
                 img_data = repetition.payload.get_image(image_key)
+
+                # Get the region of interest of the repetition
+                roi = repetition.payload.get_ROI(image_key)
+
+                # Create an x-y grid for the image with positions in µm
+                x_pix, y_pix = np.meshgrid(
+                    np.arange(roi['width_physical']) + roi['left'],
+                    np.flip(np.arange(roi['height_physical']) + roi['bottom'])
+                )
+                x_pix = x_pix - scale_calibration['origin'][0]
+                y_pix = y_pix - scale_calibration['origin'][1]
+
+                x_mm =\
+                    x_pix * scale_calibration['pixToMicrometerX'][0] +\
+                    y_pix * scale_calibration['pixToMicrometerY'][0] +\
+                    scale_calibration['positionStage'][0]
+                y_mm =\
+                    x_pix * scale_calibration['pixToMicrometerX'][1] +\
+                    y_pix * scale_calibration['pixToMicrometerY'][1] +\
+                    scale_calibration['positionStage'][1]
 
                 for acq in range(img_data.shape[0]):
                     # Construct export path and create it if necessary
@@ -97,9 +118,18 @@ class FluorescenceExport(object):
                         matrix=np.linalg.inv(translate * tmatrix))
                     shape = (int(np.ceil(sy)), int(np.ceil(sx)))
 
+                    # Warp the images and positions to align with a
+                    # standard x-y coordinate system
                     image_data_warped = transform.warp(
                         img_data[acq, :, :],
                         tform, output_shape=shape, cval=np.nan)
+                    x_mm_warped = transform.warp(
+                        x_mm,
+                        tform, output_shape=shape, cval=np.nan)
+                    y_mm_warped = transform.warp(
+                        y_mm,
+                        tform, output_shape=shape, cval=np.nan)
+
                     # Export image with proper alpha channel
                     image_warped = Image.fromarray(
                         (255 * image_data_warped).astype(np.ubyte))
@@ -126,3 +156,43 @@ class FluorescenceExport(object):
                                f"_FLrep{fluorescence_repetition}" \
                                f"_channel{channel}_aligned{postfix}.png"
                     image_warped.save(filename)
+
+                    # Export the images with the ROI of the Brillouin
+                    # measurements
+                    for brillouin_repetition in brillouin_repetitions:
+                        # Get the repetition
+                        repetition_bm = self.file.get_repetition(
+                            brillouin_repetition)
+                        # Read the Brillouin positions
+                        positions = repetition_bm.payload.positions
+                        x_min = np.nanmin(positions['x'])
+                        x_max = np.nanmax(positions['x'])
+                        y_min = np.nanmin(positions['y'])
+                        y_max = np.nanmax(positions['y'])
+
+                        # We are only interested in x-y-maps
+                        if not x_min < x_max or not y_min < y_max:
+                            continue
+
+                        # Find the indices delimiting the Brillouin ROI
+                        idx_mask = (x_mm_warped >= x_min) &\
+                                   (x_mm_warped <= x_max) &\
+                                   (y_mm_warped >= y_min) &\
+                                   (y_mm_warped <= y_max)
+                        idx = np.nonzero(idx_mask)
+
+                        # Crop the Fluorescence image to the Brillouin ROI
+                        image_warped_bm = image_warped.crop(
+                            (
+                                np.min(idx[1]),
+                                np.min(idx[0]),
+                                np.max(idx[1]),
+                                np.max(idx[0])
+                            )
+                        )
+
+                        filename = f"{path}\\{self.file.path.stem}" \
+                                   f"_FLrep{fluorescence_repetition}" \
+                                   f"_channel{channel}" \
+                                   f"_BMrep{brillouin_repetition}{postfix}.png"
+                        image_warped_bm.save(filename)
