@@ -14,6 +14,7 @@ from bmlab import Session
 from bmlab.fits import fit_vipa, VIPA, fit_lorentz_region
 from bmlab.image import extract_lines_along_arc, find_max_in_radius
 from bmlab.export import FluorescenceExport
+from bmlab.export import FluorescenceCombinedExport
 
 import warnings
 
@@ -1044,3 +1045,4 @@ class ExportController(object):
     @staticmethod
     def export():
         FluorescenceExport().export()
+        FluorescenceCombinedExport().export()
