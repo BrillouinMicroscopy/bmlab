@@ -702,7 +702,7 @@ class EvaluationController(object):
 
         return w0_bounds
 
-    def extract_payload_spectra(self, image_key):
+    def extract_payload_spectra(self, image_key, frame_num=None):
         em = self.session.extraction_model()
         evm = self.session.evaluation_model()
         if not em:
@@ -713,6 +713,8 @@ class EvaluationController(object):
             return None, None, None
 
         imgs = self.session.get_payload_image(image_key)
+        if frame_num is not None:
+            imgs = imgs[frame_num:frame_num+1]
 
         # Extract values from *all* frames in the current payload
         spectra = []
@@ -729,7 +731,9 @@ class EvaluationController(object):
 
         intensities = np.nanmean(imgs, axis=(1, 2))
 
-        evm.set_spectra(image_key, spectra)
+        # We only set the spectra if we extracted all
+        if frame_num is None:
+            evm.set_spectra(image_key, spectra)
         return spectra, times, intensities
 
     def get_data(self, parameter_key, brillouin_peak_index=0):
