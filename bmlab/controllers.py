@@ -1043,12 +1043,31 @@ class ExportController(object):
         return
 
     @staticmethod
-    def export():
-        FluorescenceExport().export()
-        FluorescenceCombinedExport().export()
+    def get_configuration():
+        return {
+            'fluorescence': {
+                'export': True,
+            },
+            'fluorescenceCombined': {
+                'export': True,
+            },
+            'brillouin': {
+                'export': True,
+                'shift': {
+                    'cax': ('min', 'max'),
+                }
+            },
+        }
+
+    def export(self, configuration=None):
+        if not configuration:
+            configuration = self.get_configuration()
+
+        FluorescenceExport().export(configuration)
+        FluorescenceCombinedExport().export(configuration)
 
         # BrillouinExport needs the EvaluationController
         # to nicely get the data, so we provide it here.
         # Not really nice, but importing it in BrillouinExport
         # leads to a circular dependency.
-        BrillouinExport(EvaluationController()).export()
+        BrillouinExport(EvaluationController()).export(configuration)

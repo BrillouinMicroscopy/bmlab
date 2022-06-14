@@ -14,8 +14,12 @@ class FluorescenceExport(object):
         self.mode = 'Fluorescence'
         return
 
-    def export(self):
+    def export(self, configuration):
         if not self.file:
+            return
+
+        config = configuration['fluorescence']
+        if not config['export']:
             return
 
         fluorescence_repetitions = self.file.repetition_keys(self.mode)

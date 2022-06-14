@@ -3,6 +3,7 @@ import numpy as np
 from PIL import Image
 import matplotlib.pyplot as plt
 from matplotlib import cm
+from matplotlib.colors import Normalize
 
 from bmlab import Session
 
@@ -16,8 +17,12 @@ class BrillouinExport(object):
         self.evc = evc
         return
 
-    def export(self):
+    def export(self, configuration):
         if not self.file:
+            return
+
+        config = configuration['brillouin']
+        if not config['export']:
             return
 
         brillouin_repetitions = self.file.repetition_keys()
@@ -80,8 +85,19 @@ class BrillouinExport(object):
                 np.nanmin(positions[idx[1]][tuple(dslice)]),
                 np.nanmax(positions[idx[1]][tuple(dslice)])
             )
-            value_min = np.nanmin(image_map)
-            value_max = np.nanmax(image_map)
+
+            # Set the colormap limits to min/max
+            # or provided boundaries
+            lval = config['shift']['cax'][0]
+            if lval == 'min':
+                value_min = np.nanmin(image_map)
+            else:
+                value_min = lval
+            uval = config['shift']['cax'][1]
+            if uval == 'max':
+                value_max = np.nanmax(image_map)
+            else:
+                value_max = uval
             ims.set_clim(value_min, value_max)
 
             # Export plot
@@ -116,7 +132,10 @@ class BrillouinExport(object):
                 os.makedirs(path, exist_ok=True)
 
             # Convert indexed data into rgba map
-            rgba = cm.ScalarMappable(cmap=cm.viridis).to_rgba(image_map)
+            rgba = cm.ScalarMappable(
+                norm=Normalize(vmin=value_min, vmax=value_max),
+                cmap=cm.viridis
+            ).to_rgba(image_map)
 
             filename = f"{path}\\{self.file.path.stem}" \
                        f"_BMrep{brillouin_repetition}" \

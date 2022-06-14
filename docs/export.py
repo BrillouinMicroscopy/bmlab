@@ -17,4 +17,12 @@ session = Session.get_instance()
 # Load the file to be used
 session.set_file(file_path)
 
-ExportController().export()
+ec = ExportController()
+# Get the default configuration to adjust
+export_config = ec.get_configuration()
+# Disable exporting fluorescence data
+export_config['fluorescence']['export'] = False
+# Set caxis of Brillouin data
+export_config['brillouin']['shift']['cax'] = (5.0, 5.8)
+# Export the data
+ec.export(export_config)
