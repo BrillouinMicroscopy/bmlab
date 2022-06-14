@@ -121,3 +121,11 @@ class BrillouinExport(object):
                        ".png"
             image = Image.fromarray((255 * rgba).astype(np.ubyte))
             image.save(filename)
+
+            # Export as TIFF files
+            filename = f"{path}\\{self.file.path.stem}" \
+                       f"_BMrep{brillouin_repetition}" \
+                       f"_{parameter_key}" \
+                       ".tiff"
+            image = Image.fromarray(10000 * image_map)
+            image.save(filename)
