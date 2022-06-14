@@ -17,6 +17,9 @@ class BrillouinExport(object):
         return
 
     def export(self):
+        if not self.file:
+            return
+
         brillouin_repetitions = self.file.repetition_keys()
 
         for brillouin_repetition in brillouin_repetitions:

@@ -15,6 +15,9 @@ class FluorescenceExport(object):
         return
 
     def export(self):
+        if not self.file:
+            return
+
         fluorescence_repetitions = self.file.repetition_keys(self.mode)
         brillouin_repetitions = self.file.repetition_keys()
 
