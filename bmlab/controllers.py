@@ -13,8 +13,8 @@ from itertools import repeat as irepeat
 from bmlab import Session
 from bmlab.fits import fit_vipa, VIPA, fit_lorentz_region
 from bmlab.image import extract_lines_along_arc, find_max_in_radius
-from bmlab.export import FluorescenceExport
-from bmlab.export import FluorescenceCombinedExport
+from bmlab.export import FluorescenceExport,\
+    FluorescenceCombinedExport, BrillouinExport
 
 import warnings
 
@@ -1046,3 +1046,9 @@ class ExportController(object):
     def export():
         FluorescenceExport().export()
         FluorescenceCombinedExport().export()
+
+        # BrillouinExport needs the EvaluationController
+        # to nicely get the data, so we provide it here.
+        # Not really nice, but importing it in BrillouinExport
+        # leads to a circular dependency.
+        BrillouinExport(EvaluationController()).export()
