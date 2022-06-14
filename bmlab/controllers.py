@@ -13,6 +13,8 @@ from itertools import repeat as irepeat
 from bmlab import Session
 from bmlab.fits import fit_vipa, VIPA, fit_lorentz_region
 from bmlab.image import extract_lines_along_arc, find_max_in_radius
+from bmlab.export import FluorescenceExport,\
+    FluorescenceCombinedExport, BrillouinExport
 
 import warnings
 
@@ -1033,3 +1035,39 @@ class Controller(object):
             evc.evaluate()
 
         return self.session
+
+
+class ExportController(object):
+
+    def __init__(self):
+        return
+
+    @staticmethod
+    def get_configuration():
+        return {
+            'fluorescence': {
+                'export': True,
+            },
+            'fluorescenceCombined': {
+                'export': True,
+            },
+            'brillouin': {
+                'export': True,
+                'shift': {
+                    'cax': ('min', 'max'),
+                }
+            },
+        }
+
+    def export(self, configuration=None):
+        if not configuration:
+            configuration = self.get_configuration()
+
+        FluorescenceExport().export(configuration)
+        FluorescenceCombinedExport().export(configuration)
+
+        # BrillouinExport needs the EvaluationController
+        # to nicely get the data, so we provide it here.
+        # Not really nice, but importing it in BrillouinExport
+        # leads to a circular dependency.
+        BrillouinExport(EvaluationController()).export(configuration)
