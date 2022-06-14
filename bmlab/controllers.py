@@ -138,7 +138,7 @@ class CalibrationController(object):
 
     def find_peaks(self, calib_key, min_prominence=15,
                    num_brillouin_samples=2, min_height=15):
-        spectra = self.extract_calibration_spectra(calib_key)
+        spectra, _, _ = self.extract_calibration_spectra(calib_key)
         if spectra is None:
             return
         spectrum = np.mean(spectra, axis=0)
@@ -251,7 +251,7 @@ class CalibrationController(object):
                 max_count.value = -1
             return
 
-        spectra = self.extract_calibration_spectra(calib_key)
+        spectra, _, _ = self.extract_calibration_spectra(calib_key)
         time = self.session.get_calibration_time(calib_key)
 
         if spectra is None or len(spectra) == 0:
@@ -338,10 +338,11 @@ class CalibrationController(object):
         em = self.session.extraction_model()
         cm = self.session.calibration_model()
         if not em:
-            return
+            return None, None, None
+        time = self.session.get_calibration_time(calib_key)
         arc = em.get_arc_by_calib_key(calib_key)
         if arc.size == 0:
-            return
+            return None, None, None
 
         imgs = self.session.get_calibration_image(calib_key)
         if frame_num is not None:
@@ -355,10 +356,17 @@ class CalibrationController(object):
                 arc
             )
             spectra.append(values_by_img)
+
+        exposure = self.session.current_repetition()\
+            .calibration.get_exposure(calib_key)
+        times = exposure * np.arange(len(imgs)) + time
+
+        intensities = np.nanmean(imgs, axis=(1, 2))
+
         # We only set the spectra if we extracted all
         if frame_num is None:
             cm.set_spectra(calib_key, spectra)
-        return spectra
+        return spectra, times, intensities
 
     def expected_frequencies(self, calib_key=None, current_frame=None):
         cm = self.session.calibration_model()
