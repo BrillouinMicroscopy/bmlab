@@ -59,7 +59,7 @@ def session_file(tmp_dir):
         assert em.get_circle_fit(calib_key)
         assert cm.get_spectra(calib_key) is None
 
-        cc.extract_calibration_spectra(calib_key)
+        cc.extract_spectra(calib_key)
 
     session.save()
 
@@ -97,7 +97,7 @@ def test_serialize_session(tmp_dir):
         assert em.get_circle_fit(calib_key)
         assert cm.get_spectra(calib_key) is None
 
-        cc.extract_calibration_spectra(calib_key)
+        cc.extract_spectra(calib_key)
 
     session.save()
 
