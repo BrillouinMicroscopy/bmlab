@@ -130,15 +130,63 @@ class ExtractionController(object):
                / np.sqrt((line1[1] - line0[1])**2 + (line1[0] - line0[0])**2)
 
 
-class CalibrationController(object):
+class ImageController(object):
 
-    def __init__(self):
+    def __init__(self, model, get_image, get_time, get_exposure):
         self.session = Session.get_instance()
+        self.model = model
+        self.get_image = get_image
+        self.get_time = get_time
+        self.get_exposure = get_exposure
+
+    def extract_spectra(self, image_key, frame_num=None):
+        em = self.session.extraction_model()
+        if not em:
+            return None, None, None
+        time = self.get_time(image_key)
+        arc = em.get_arc_by_time(time)
+        if arc.size == 0:
+            return None, None, None
+
+        imgs = self.get_image(image_key)
+        if frame_num is not None:
+            imgs = imgs[frame_num:frame_num+1]
+
+        # Extract values from *all* frames in the current calibration
+        spectra = []
+        for img in imgs:
+            values_by_img = extract_lines_along_arc(
+                img,
+                arc
+            )
+            spectra.append(values_by_img)
+
+        exposure = self.get_exposure(image_key)
+        times = exposure * np.arange(len(imgs)) + time
+
+        intensities = np.nanmean(imgs, axis=(1, 2))
+
+        # We only set the spectra if we extracted all
+        if frame_num is None:
+            self.model().set_spectra(image_key, spectra)
+        return spectra, times, intensities
+
+
+class CalibrationController(ImageController):
+
+    def __init__(self, *args, **kwargs):
+        session = Session.get_instance()
+        super(CalibrationController, self).__init__(
+            model=session.calibration_model,
+            get_image=session.get_calibration_image,
+            get_time=session.get_calibration_time,
+            get_exposure=session.get_calibration_exposure
+        )
         return
 
     def find_peaks(self, calib_key, min_prominence=15,
                    num_brillouin_samples=2, min_height=15):
-        spectra = self.extract_calibration_spectra(calib_key)
+        spectra, _, _ = self.extract_spectra(calib_key)
         if spectra is None:
             return
         spectrum = np.mean(spectra, axis=0)
@@ -251,7 +299,7 @@ class CalibrationController(object):
                 max_count.value = -1
             return
 
-        spectra = self.extract_calibration_spectra(calib_key)
+        spectra, _, _ = self.extract_spectra(calib_key)
         time = self.session.get_calibration_time(calib_key)
 
         if spectra is None or len(spectra) == 0:
@@ -334,32 +382,6 @@ class CalibrationController(object):
                 cm.add_brillouin_fit(calib_key, region_key, frame_num,
                                      w0s, fwhms, intensities, offset)
 
-    def extract_calibration_spectra(self, calib_key, frame_num=None):
-        em = self.session.extraction_model()
-        cm = self.session.calibration_model()
-        if not em:
-            return
-        arc = em.get_arc_by_calib_key(calib_key)
-        if arc.size == 0:
-            return
-
-        imgs = self.session.get_calibration_image(calib_key)
-        if frame_num is not None:
-            imgs = imgs[frame_num:frame_num+1]
-
-        # Extract values from *all* frames in the current calibration
-        spectra = []
-        for img in imgs:
-            values_by_img = extract_lines_along_arc(
-                img,
-                arc
-            )
-            spectra.append(values_by_img)
-        # We only set the spectra if we extracted all
-        if frame_num is None:
-            cm.set_spectra(calib_key, spectra)
-        return spectra
-
     def expected_frequencies(self, calib_key=None, current_frame=None):
         cm = self.session.calibration_model()
 
@@ -399,10 +421,16 @@ class PeakSelectionController(object):
         psm.add_rayleigh_region(region_pix)
 
 
-class EvaluationController(object):
+class EvaluationController(ImageController):
 
-    def __init__(self):
-        self.session = Session.get_instance()
+    def __init__(self, *args, **kwargs):
+        session = Session.get_instance()
+        super(EvaluationController, self).__init__(
+            model=session.evaluation_model,
+            get_image=session.get_payload_image,
+            get_time=session.get_payload_time,
+            get_exposure=session.get_payload_exposure
+        )
         return
 
     def evaluate(self, abort=None, count=None, max_count=None):
@@ -441,7 +469,7 @@ class EvaluationController(object):
         resolution = self.session.get_payload_resolution()
 
         # Get first spectrum to find number of images
-        spectra, _, _ = self.extract_payload_spectra('0')
+        spectra, _, _ = self.extract_spectra('0')
 
         # We create a variable for this value here,
         # so changing nr_brillouin_peaks during evaluation
@@ -483,7 +511,7 @@ class EvaluationController(object):
                     max_count.value = -1
                 return
             spectra, times, intensities =\
-                self.extract_payload_spectra(image_key)
+                self.extract_spectra(image_key)
             if spectra is None:
                 continue
             evm.results['time'][ind_x, ind_y, ind_z, :, 0, 0] =\
@@ -701,36 +729,6 @@ class EvaluationController(object):
             w0_bounds.append(local_time)
 
         return w0_bounds
-
-    def extract_payload_spectra(self, image_key):
-        em = self.session.extraction_model()
-        evm = self.session.evaluation_model()
-        if not em:
-            return None, None, None
-        time = self.session.get_payload_time(image_key)
-        arc = em.get_arc_by_time(time)
-        if arc.size == 0:
-            return None, None, None
-
-        imgs = self.session.get_payload_image(image_key)
-
-        # Extract values from *all* frames in the current payload
-        spectra = []
-        for img in imgs:
-            values_by_img = extract_lines_along_arc(
-                img,
-                arc
-            )
-            spectra.append(values_by_img)
-
-        exposure = self.session.current_repetition()\
-            .payload.get_exposure(image_key)
-        times = exposure * np.arange(len(imgs)) + time
-
-        intensities = np.nanmean(imgs, axis=(1, 2))
-
-        evm.set_spectra(image_key, spectra)
-        return spectra, times, intensities
 
     def get_data(self, parameter_key, brillouin_peak_index=0):
         """
