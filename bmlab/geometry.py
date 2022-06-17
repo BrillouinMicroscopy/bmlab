@@ -122,7 +122,7 @@ class Rectangle(object):
 
 
 @debug_timer
-def discretize_arc(circle, img_shape, num_points=200):
+def discretize_arc(circle, img_shape, num_points):
     """
     Returns a list of equidistant (in polar angle) points along a circle
     intersecting an image.
@@ -141,6 +141,8 @@ def discretize_arc(circle, img_shape, num_points=200):
     phis: numpy.ndarray
         polar angles of the discrete points on circular arc
     """
+    if num_points is None:
+        num_points = 2*(sum(np.square(img_shape)))**0.5
     rect = Rectangle(img_shape)
     cut_edges = circle.intersection(rect)
     if not cut_edges:
