@@ -244,7 +244,7 @@ class CalibrationModel(Serializer):
             self.frequency_by_time_interpolator =\
                 lambda time, position: f(position)
         # Otherwise we can interpolate by time as well
-        elif len(calib_times_array) < 3:
+        else:
             f = interpolate.RegularGridInterpolator(
                 (calib_times_array, indices),
                 frequencies,
@@ -253,18 +253,6 @@ class CalibrationModel(Serializer):
             )
             self.frequency_by_time_interpolator = \
                 lambda time, position: f((time, position))
-        else:
-            # If we only have three entries we cannot use a
-            # third degree spline
-            degree = 3 if len(calib_times_array) > 3 else 2
-            f = interpolate.RectBivariateSpline(
-                calib_times_array,
-                indices,
-                frequencies,
-                kx=degree
-            )
-            self.frequency_by_time_interpolator = \
-                lambda time, position: f(time, position, grid=False)
 
     def get_frequencies_by_calib_key(self, calib_key):
         """
