@@ -1,4 +1,5 @@
 import numpy as np
+import math
 from shapely.geometry import Polygon, Point
 from bmlab.utils import debug_timer
 
@@ -105,11 +106,10 @@ class Circle(object):
         if not self.valid:
             return None
         delta = np.array(point) - self.center
-        if abs(delta[0]) < 1.E-9:
-            if delta[1] > 0:
-                return np.pi / 2.
-            return 3 * np.pi / 2.
-        return np.arctan(delta[1] / delta[0])
+        angle = math.atan2(delta[1], delta[0])
+        if angle < 0:
+            angle = angle + 2 * np.pi
+        return angle
 
     def e_r(self, phi):
         return np.array([np.cos(phi), np.sin(phi)], dtype=float)
@@ -122,7 +122,7 @@ class Rectangle(object):
 
 
 @debug_timer
-def discretize_arc(circle, img_shape, num_points=200):
+def discretize_arc(circle, img_shape, num_points):
     """
     Returns a list of equidistant (in polar angle) points along a circle
     intersecting an image.
@@ -141,11 +141,14 @@ def discretize_arc(circle, img_shape, num_points=200):
     phis: numpy.ndarray
         polar angles of the discrete points on circular arc
     """
+    if num_points is None:
+        num_points = 2*(sum(np.square(img_shape)))**0.5
     rect = Rectangle(img_shape)
     cut_edges = circle.intersection(rect)
+    cut_edges.sort(key=lambda edge: edge[0])
     if not cut_edges:
         return []
     phis_edges = [circle.angle(p) for p in cut_edges]
     if not phis_edges:
         return []
-    return np.linspace(max(phis_edges), min(phis_edges), num_points)
+    return np.linspace(phis_edges[0], phis_edges[-1], num_points)
