@@ -56,7 +56,7 @@ def session_file(tmp_dir):
         for p in points:
             ec.add_point(calib_key, p)
 
-        assert em.get_circle_fit(calib_key)
+        assert em.get_arc_by_calib_key(calib_key) != np.empty(0)
         assert cm.get_spectra(calib_key) is None
 
         cc.extract_spectra(calib_key)
@@ -94,7 +94,7 @@ def test_serialize_session(tmp_dir):
         for p in points:
             ec.add_point(calib_key, p)
 
-        assert em.get_circle_fit(calib_key)
+        assert em.get_arc_by_calib_key(calib_key) != np.empty(0)
         assert cm.get_spectra(calib_key) is None
 
         cc.extract_spectra(calib_key)
@@ -118,8 +118,8 @@ def test_deserialize_session_file(session_file):
     assert em
     assert em.calib_times['2'] == 62.542
     assert len(cm.spectra['1']) > 0
-    assert len(em.extraction_angles['2']) > 0
-    assert em.circle_fits_interpolation is not None
+    assert len(em.positions['2']) > 0
+    assert em.positions_interpolation is not None
 
     session.clear()
 

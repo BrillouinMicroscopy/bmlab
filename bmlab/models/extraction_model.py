@@ -13,25 +13,15 @@ class ExtractionModel(Serializer):
         self.arc_width = 2  # [pix] the width of the extraction arc
         self.points = {}
         self.calib_times = {}
-        self.circle_fits = {}
-        self.circle_fits_index = []
-        self.circle_fits_interpolation = None
-        self.extraction_angles = {}
-        self.extraction_angles_index = None
-        self.extraction_angles_interpolation = None
+        self.positions = {}
+        self.positions_interpolation = None
 
     def add_point(self, calib_key, time, xdata, ydata):
         if calib_key not in self.points:
             self.points[calib_key] = []
         self.points[calib_key].append((xdata, ydata))
-        if len(self.points[calib_key]) >= 3:
-            center, radius = fit_circle(self.points[calib_key])
-            # Check that we got a valid circle before continuing
-            if not Circle(center, radius).valid:
-                return
-            self.circle_fits[calib_key] = CircleFit(center, radius)
-            self.calib_times[calib_key] = time
-            self.refresh_circle_fits_interpolation()
+        self.calib_times[calib_key] = time
+        self.update_positions()
 
     def set_point(self, calib_key, index, time, xdata, ydata):
         if calib_key not in self.points:
@@ -40,11 +30,8 @@ class ExtractionModel(Serializer):
             self.points[calib_key][index] = (xdata, ydata)
         else:
             self.points[calib_key].append((xdata, ydata))
-        if len(self.points[calib_key]) >= 3:
-            center, radius = fit_circle(self.points[calib_key])
-            self.circle_fits[calib_key] = CircleFit(center, radius)
-            self.calib_times[calib_key] = time
-            self.refresh_circle_fits_interpolation()
+        self.calib_times[calib_key] = time
+        self.update_positions()
 
     def get_points(self, calib_key):
         if calib_key in self.points:
@@ -58,63 +45,89 @@ class ExtractionModel(Serializer):
 
     def clear_points(self, calib_key):
         self.points.pop(calib_key, None)
-        self.circle_fits.pop(calib_key, None)
         self.calib_times.pop(calib_key, None)
-        self.refresh_circle_fits_interpolation()
-
-    def get_circle_fit(self, calib_key):
-        circle_fit = self.circle_fits.get(calib_key)
-        if circle_fit:
-            return circle_fit.center, circle_fit.radius
-        else:
-            return None
-
-    def get_circle_fit_by_time(self, time):
-        if self.circle_fits_interpolation is None:
-            return None
-        fit = self.circle_fits_interpolation(self.circle_fits_index, time)
-        return (fit[0], fit[1]), fit[2]
+        self.update_positions()
 
     def post_deserialize(self):
-        self.refresh_extraction_angles_interpolation()
-        self.refresh_circle_fits_interpolation()
+        # Migrations from 0.1.10 to 0.2.0
+        # Check that correct attributes are present
+        # @since 0.2.0
+        attributes_to_remove = [
+            'circle_fits',
+            'circle_fits_index',
+            'circle_fits_interpolation',
+            'extraction_angles',
+            'extraction_angles_index',
+            'extraction_angles_interpolation'
+        ]
+        for attribute in attributes_to_remove:
+            if hasattr(self, attribute):
+                delattr(self, attribute)
+        if not hasattr(self, 'positions'):
+            self.positions = {}
+        if not hasattr(self, 'positions_interpolation'):
+            self.positions_interpolation = None
+        self.update_positions()
 
-    def refresh_circle_fits_interpolation(self):
+    def update_positions(self):
+        if not hasattr(self, 'image_shape') or self.image_shape is None:
+            return
+        for calib_key, points in self.points.items():
+            if len(points) >= 3:
+                center, radius = fit_circle(points)
+                # Check that we got a valid circle before continuing
+                circle = Circle(center, radius)
+                if not circle.valid:
+                    return
+
+                phis = discretize_arc(circle, self.image_shape, num_points=500)
+                arc = self.get_arc_from_circle_phis(circle, phis)
+                self.positions[calib_key] = arc
+            # If we don't have enough points but positions
+            # already present for this key, we have probably removed points
+            # and clear the positions then
+            elif calib_key in self.positions:
+                self.positions.pop(calib_key, None)
+
+        self.refresh_positions_interpolation()
+
+    def refresh_positions_interpolation(self):
         # If there are no entries, we reset the interpolation
         if not self.calib_times:
-            self.circle_fits_index = []
-            self.circle_fits_interpolation = None
+            self.positions_interpolation = None
             return
 
         # Sort calibration keys by time
         sorted_keys = sorted(self.calib_times,
                              key=self.calib_times.get)
+
         # Create arrays to interpolate
         calib_times_array = []
-        fits = []
-        for key in sorted_keys:
-            calib_times_array.append(self.calib_times[key])
-            fit = []
-            center, radius = self.get_circle_fit(key)
-            fit.extend(center)
-            fit.append(radius)
-            fits.append(fit)
-        circle_fits_array = np.array(fits)
+        positions = []
+        for calib_key in sorted_keys:
+            # We might not have positions for all present keys yet
+            if calib_key in self.positions:
+                calib_times_array.append(self.calib_times[calib_key])
+                positions.append(self.positions[calib_key])
+        positions_array = np.array(positions)
+        calib_times_array = np.array(calib_times_array)
 
-        self.circle_fits_index = np.arange(circle_fits_array.shape[1])
-
-        # If we only have one entry we always return the same value
-        if len(sorted_keys) < 2:
-            self.circle_fits_interpolation =\
-                lambda idx, time: circle_fits_array[0]
-        # Otherwise we can interpolate
+        # If we only have one entry we cannot interpolate
+        # and always return the same value
+        if len(calib_times_array) < 1:
+            self.positions_interpolation = None
+        elif len(calib_times_array) == 1:
+            self.positions_interpolation =\
+                lambda time: positions_array[0]
         else:
-            self.circle_fits_interpolation = interpolate.interp2d(
-                self.circle_fits_index,
-                calib_times_array,
-                circle_fits_array)
-
-        self.update_extraction_angles()
+            self.positions_interpolation =\
+                interpolate.interp1d(
+                    calib_times_array,
+                    positions_array,
+                    axis=0,
+                    bounds_error=False,
+                    fill_value=(positions_array[0], positions_array[-1])
+                )
 
     def get_arc_by_calib_key(self, calib_key):
         """
@@ -131,11 +144,7 @@ class ExtractionModel(Serializer):
         """
         arc = np.empty(0)
         try:
-            center, radius = self.get_circle_fit(calib_key)
-            circle = Circle(center, radius)
-            phis = self.get_extraction_angles(calib_key)
-
-            arc = self.get_arc_from_circle_phis(circle, phis)
+            arc = self.positions.get(calib_key)
         finally:
             return arc
 
@@ -154,11 +163,7 @@ class ExtractionModel(Serializer):
         """
         arc = np.empty(0)
         try:
-            center, radius = self.get_circle_fit_by_time(time)
-            circle = Circle(center, radius)
-            phis = self.get_extraction_angles_by_time(time)
-
-            arc = self.get_arc_from_circle_phis(circle, phis)
+            arc = self.positions_interpolation(time)
         finally:
             return arc
 
@@ -182,62 +187,11 @@ class ExtractionModel(Serializer):
     def set_image_shape(self, shape):
         if not hasattr(self, 'image_shape') or self.image_shape != shape:
             self.image_shape = shape
-            self.update_extraction_angles()
-
-    def update_extraction_angles(self):
-        if not hasattr(self, 'image_shape') or self.image_shape is None:
-            return
-        for calib_key, circle_fit in self.circle_fits.items():
-            circle = Circle(circle_fit.center, circle_fit.radius)
-
-            phis = discretize_arc(circle, self.image_shape, num_points=500)
-            self.extraction_angles[calib_key] = phis
-        self.refresh_extraction_angles_interpolation()
-
-    def get_extraction_angles(self, calib_key):
-        if calib_key in self.extraction_angles:
-            return self.extraction_angles[calib_key]
-        return []
-
-    def get_extraction_angles_by_time(self, time):
-        return self.extraction_angles_interpolation(
-            self.extraction_angles_index, time)
-
-    def refresh_extraction_angles_interpolation(self):
-        # If there are no entries, we reset the interpolation
-        if not self.calib_times:
-            self.extraction_angles_index = []
-            self.extraction_angles_interpolation = None
-            return
-
-        # Sort calibration keys by time
-        sorted_keys = sorted(self.calib_times,
-                             key=self.calib_times.get)
-
-        # Create arrays to interpolate
-        calib_times_array = []
-        angles = []
-        for key in sorted_keys:
-            calib_times_array.append(self.calib_times[key])
-            angles.append(self.extraction_angles[key])
-        extraction_angles_array = np.array(angles)
-
-        self.extraction_angles_index = \
-            np.arange(extraction_angles_array.shape[1])
-
-        # If we only have one entry we always return the same value
-        if len(sorted_keys) < 2:
-            self.extraction_angles_interpolation =\
-                lambda idx, time: extraction_angles_array[0]
-        # Otherwise we can interpolate
-        else:
-            self.extraction_angles_interpolation = interpolate.interp2d(
-                self.extraction_angles_index,
-                calib_times_array,
-                extraction_angles_array)
+            self.update_positions()
 
     def set_arc_width(self, width):
         self.arc_width = width
+        self.update_positions()
 
 
 class CircleFit(Serializer):
