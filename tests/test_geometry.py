@@ -57,9 +57,25 @@ def test_circle_point():
 
 
 def test_discretize_arc():
-    circle = Circle((0, 0), 100)
+    circle = Circle((0, 0), 50)
     img_shape = (100, 100)
     num_points = 100
     expected = np.linspace(np.pi/2., 0, num_points)
+    actual = discretize_arc(circle, img_shape, num_points)
+    np.testing.assert_array_equal(actual, expected)
+
+    circle = Circle((0, 0), 70)
+    img_shape = (100, 100)
+    num_points = 2
+    expected = np.linspace(np.pi/2., 0, num_points)
+    actual = discretize_arc(circle, img_shape, num_points)
+    np.testing.assert_array_equal(actual, expected)
+
+    r = 70
+    shift = (r**2 / 2)**0.5
+    circle = Circle((shift, 0), r)
+    img_shape = (200, 200)
+    num_points = 2
+    expected = np.linspace(np.pi / 2. + np.pi / 4., 0, num_points)
     actual = discretize_arc(circle, img_shape, num_points)
     np.testing.assert_array_equal(actual, expected)
