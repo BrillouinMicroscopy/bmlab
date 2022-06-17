@@ -22,15 +22,28 @@ def test_intersect_circle_rectangle():
 
 def test_circle_angle():
     circle = Circle((0, 0), 1)
-    sq2 = np.sqrt(2.)
-    actual = circle.angle((sq2, sq2))
+
+    actual = circle.angle((1, 0))
+    np.testing.assert_almost_equal(actual, 0.0)
+
+    actual = circle.angle((1, 1))
     np.testing.assert_almost_equal(actual, np.pi / 4.)
 
     actual = circle.angle((0, 1))
     np.testing.assert_almost_equal(actual, np.pi / 2.)
 
+    actual = circle.angle((-1, 0))
+    np.testing.assert_almost_equal(actual, np.pi)
+
     actual = circle.angle((0, -1))
     np.testing.assert_almost_equal(actual, 3 * np.pi / 2.)
+
+    actual = circle.angle((1, -1))
+    np.testing.assert_almost_equal(actual, 3 * np.pi / 2. + np.pi/4)
+
+    circle = Circle((1, 0), 1)
+    actual = circle.angle((1, 1))
+    np.testing.assert_almost_equal(actual, np.pi / 2)
 
 
 def test_circle_point():

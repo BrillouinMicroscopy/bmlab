@@ -1,4 +1,5 @@
 import numpy as np
+import math
 from shapely.geometry import Polygon, Point
 from bmlab.utils import debug_timer
 
@@ -105,11 +106,10 @@ class Circle(object):
         if not self.valid:
             return None
         delta = np.array(point) - self.center
-        if abs(delta[0]) < 1.E-9:
-            if delta[1] > 0:
-                return np.pi / 2.
-            return 3 * np.pi / 2.
-        return np.arctan(delta[1] / delta[0])
+        angle = math.atan2(delta[1], delta[0])
+        if angle < 0:
+            angle = angle + 2 * np.pi
+        return angle
 
     def e_r(self, phi):
         return np.array([np.cos(phi), np.sin(phi)], dtype=float)
