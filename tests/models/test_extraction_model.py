@@ -138,3 +138,17 @@ def test_get_arc_by_time():
     expected_arc_start = [0.0, 10.5]
     np.testing.assert_allclose(arc[0, 2, :], expected_arc_start,
                                rtol=0.05, atol=0.000001)
+
+
+def test_get_arc_from_circle_phis():
+    circle = Circle((0, 0), 100)
+    phis = [0, np.pi/2]
+    arc_width = 2
+
+    arc_expected = np.array([
+        [[98.0, 0.0], [99, 0.0], [100.0, 0.0], [101.0, 0.0], [102.0, 0.0]],
+        [[0.0, 98.0], [0.0, 99.0], [0.0, 100.0], [0.0, 101.0], [0.0, 102.0]]
+    ])
+
+    arc = ExtractionModel().get_arc_from_circle_phis(circle, phis, arc_width)
+    np.testing.assert_allclose(arc, arc_expected, atol=1e-12)

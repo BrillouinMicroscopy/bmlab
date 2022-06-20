@@ -81,7 +81,8 @@ class ExtractionModel(Serializer):
                     return
 
                 phis = discretize_arc(circle, self.image_shape, num_points=500)
-                arc = self.get_arc_from_circle_phis(circle, phis)
+                arc = self.get_arc_from_circle_phis(
+                    circle, phis, self.arc_width)
                 self.positions[calib_key] = arc
             # If we don't have enough points but positions
             # already present for this key, we have probably removed points
@@ -167,7 +168,8 @@ class ExtractionModel(Serializer):
         finally:
             return arc
 
-    def get_arc_from_circle_phis(self, circle, phis):
+    @staticmethod
+    def get_arc_from_circle_phis(circle, phis, arc_width):
         # ToDo refactor this, append to a list is slow
         arc = []
         for phi in phis:
@@ -176,7 +178,7 @@ class ExtractionModel(Serializer):
             points = [
                 mid_point + e_r *
                 k for k in np.arange(
-                    -self.arc_width, self.arc_width + 1
+                    -arc_width, arc_width + 1
                 )
             ]
             arc.append(np.array(points))
