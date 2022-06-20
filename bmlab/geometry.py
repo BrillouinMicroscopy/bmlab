@@ -60,13 +60,13 @@ class Circle(object):
         """
         if not self.valid:
             return None
-        e_r = np.array([np.cos(phi), np.sin(phi)])
+        e_r = self.e_r(phi)
         pt = self.center + self.radius * e_r
         if integer:
             pt[0] = round(pt[0])
             pt[1] = round(pt[1])
             return np.array(pt, dtype=np.int)
-        return pt
+        return pt, e_r
 
     def intersection(self, rect):
         """
@@ -111,7 +111,8 @@ class Circle(object):
             angle = angle + 2 * np.pi
         return angle
 
-    def e_r(self, phi):
+    @staticmethod
+    def e_r(phi):
         return np.array([np.cos(phi), np.sin(phi)], dtype=float)
 
 

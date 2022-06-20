@@ -81,7 +81,8 @@ class ExtractionModel(Serializer):
                     return
 
                 phis = discretize_arc(circle, self.image_shape, num_points=500)
-                arc = self.get_arc_from_circle_phis(circle, phis)
+                arc = self.get_arc_from_circle_phis(
+                    circle, phis, self.arc_width)
                 self.positions[calib_key] = arc
             # If we don't have enough points but positions
             # already present for this key, we have probably removed points
@@ -167,20 +168,14 @@ class ExtractionModel(Serializer):
         finally:
             return arc
 
-    def get_arc_from_circle_phis(self, circle, phis):
-        # ToDo refactor this, append to a list is slow
-        arc = []
-        for phi in phis:
-            e_r = circle.e_r(phi)
-            mid_point = circle.point(phi)
-            points = [
-                mid_point + e_r *
-                k for k in np.arange(
-                    -self.arc_width, self.arc_width + 1
-                )
-            ]
-            arc.append(np.array(points))
-        return np.array(arc)
+    @staticmethod
+    def get_arc_from_circle_phis(circle, phis, arc_width):
+        pos_e_r = np.arange(-arc_width, arc_width + 1)[..., None]
+        arc = np.ndarray((len(phis), len(pos_e_r), 2))
+        for i, phi in enumerate(phis):
+            mid_point, e_r = circle.point(phi)
+            arc[i, :, :] = mid_point + e_r * pos_e_r
+        return arc
 
     # TODO: This needs to be called automatically
     #  on file load or when the image orientation is changed
