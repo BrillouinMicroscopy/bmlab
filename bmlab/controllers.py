@@ -76,6 +76,14 @@ class ExtractionController(object):
         if time is None:
             return
 
+        # Account for binning for default values
+        disc_size = 10
+        binning = self.session.get_calibration_binning_factor(calib_key)
+        if binning:
+            max_distance = max_distance / binning
+            disc_size = disc_size / binning
+            min_area = min_area / (binning**2)
+
         img = medfilt2d(img)
         # This is the background level
         threshold = np.median(img)
@@ -87,7 +95,7 @@ class ExtractionController(object):
         img_peaks = img[img > threshold + min_height]
         # Calculate the signal dependent peak threshold
         height = (np.nanmean(img_peaks) + threshold) / 2
-        img_closed = closing(img > height, disk(10))
+        img_closed = closing(img > height, disk(disc_size))
 
         # Find all peaks higher than the min_height
         image_label, num = label(img_closed, return_num=True)

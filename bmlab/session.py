@@ -5,6 +5,7 @@ from pathlib import Path
 
 import h5py
 from numpy import transpose
+import math
 
 from bmlab import __version__ as version
 from bmlab.file import BrillouinFile, is_source_file, is_session_file
@@ -167,6 +168,22 @@ class Session(Serializer):
             img = self.orientation.apply(imgs[0, ...])
             self.extraction_models.get(repetition).set_image_shape(img.shape)
 
+    def set_arc_width(self):
+        """
+        We set the arc_width for arc extraction on file load.
+        """
+        if self.file is None:
+            return
+
+        repetitions = self.file.repetition_keys()
+        for repetition in repetitions:
+            binning_factor = self.file.get_repetition(repetition)\
+                .payload.get_binning_factor('0')
+
+            em = self.extraction_models.get(repetition)
+            arc_width = math.ceil(em.arc_width / binning_factor)
+            em.set_arc_width(arc_width)
+
     @staticmethod
     def get_instance():
         """
@@ -223,9 +240,11 @@ class Session(Serializer):
                 for key in self.file.repetition_keys()
             }
             self.set_image_shape()
+            self.set_arc_width()
 
         try:
             self.load(file_name)
+            self.set_arc_width()
         except Exception as e:
             raise e
         else:
