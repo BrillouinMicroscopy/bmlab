@@ -111,7 +111,8 @@ class Circle(object):
             angle = angle + 2 * np.pi
         return angle
 
-    def e_r(self, phi):
+    @staticmethod
+    def e_r(phi):
         return np.array([np.cos(phi), np.sin(phi)], dtype=float)
 
 
