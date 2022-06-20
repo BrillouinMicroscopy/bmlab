@@ -339,6 +339,18 @@ class MeasurementData(object):
             # For older files we return a default value
             return '1x1'
 
+    def get_binning_factor(self, image_key):
+        binning = self.get_binning(image_key)
+        # We only check the values possible
+        # with BrillouinAcquisition
+        if binning == '2x2':
+            return 2
+        elif binning == '4x4':
+            return 4
+        elif binning == '8x8':
+            return 8
+        return 1
+
     def get_channel(self, image_key):
         """"
         Returns the channel of a payload image
