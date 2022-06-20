@@ -178,6 +178,9 @@ def test_file_calibration_get_binning():
     assert bf.get_repetition('0').calibration.get_binning('1') == '8x8'
     assert bf.get_repetition('0').payload.get_binning('0') == '8x8'
 
+    assert bf.get_repetition('0')\
+        .payload.get_binning_factor('0') == 8
+
 
 def test_file_repetition_count():
     bf = BrillouinFile(data_file_path('Fluorescence.h5'))
