@@ -322,10 +322,22 @@ class MeasurementData(object):
         """
         try:
             return self.data.get(image_key).attrs\
-                .get('exposure')[0].decode('utf-8')
+                .get('exposure')[0]
         except Exception:
             # For older files we return a default value
             return 0.5
+
+    def get_binning(self, image_key):
+        """"
+        Returns the binning of a payload image
+        with the given key
+        """
+        try:
+            return self.data.get(image_key).attrs\
+                .get('binning')[0].decode('utf-8')
+        except Exception:
+            # For older files we return a default value
+            return '1x1'
 
     def get_channel(self, image_key):
         """"
