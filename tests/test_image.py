@@ -78,8 +78,7 @@ def test_extract_lines_along_arc():
     arc = []
     num_points = 3
     for phi in phis:
-        e_r = circle.e_r(phi)
-        mid_point = circle.point(phi)
+        mid_point, e_r = circle.point(phi)
         points = [mid_point + e_r *
                   k for k in np.arange(-num_points, num_points + 1)]
         arc.append(np.array(points))

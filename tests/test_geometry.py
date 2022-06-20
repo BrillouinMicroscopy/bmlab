@@ -55,7 +55,7 @@ def test_circle_er():
 
 def test_circle_point():
     circle = Circle((0, 0), 1)
-    actual = circle.point(np.pi / 4.)
+    actual, _ = circle.point(np.pi / 4.)
     sq2 = np.sqrt(2.)
     np.testing.assert_array_almost_equal(actual, (sq2/2., sq2/2.))
 

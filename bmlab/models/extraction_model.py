@@ -173,8 +173,7 @@ class ExtractionModel(Serializer):
         # ToDo refactor this, append to a list is slow
         arc = []
         for phi in phis:
-            e_r = circle.e_r(phi)
-            mid_point = circle.point(phi)
+            mid_point, e_r = circle.point(phi)
             points = [
                 mid_point + e_r *
                 k for k in np.arange(

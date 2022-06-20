@@ -77,7 +77,7 @@ def test_get_arc_by_calib_key():
 
         phis = [0, np.pi/4, np.pi/2]
         for phi in phis:
-            (xdata, ydata) = circle.point(phi)
+            (xdata, ydata), _ = circle.point(phi)
             em.add_point(calib_key, times[i], xdata, ydata)
 
         # Get the arc
@@ -111,7 +111,7 @@ def test_get_arc_by_time():
 
         phis = [0, np.pi/4, np.pi/2]
         for phi in phis:
-            (xdata, ydata) = circle.point(phi)
+            (xdata, ydata), _ = circle.point(phi)
             em.add_point(calib_key, times[i], xdata, ydata)
 
     # the exact time point of a calibration should yield
