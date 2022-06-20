@@ -267,7 +267,8 @@ class Session(Serializer):
     def get_calibration_binning_factor(self, calib_key):
         if self.current_repetition() is None:
             return None
-        return self.current_repetition().calibration.get_binning_factor(calib_key)
+        return self.current_repetition()\
+            .calibration.get_binning_factor(calib_key)
 
     def get_image_keys(self, sort_by_time=False):
         if self.current_repetition() is None:
@@ -304,7 +305,8 @@ class Session(Serializer):
     def get_payload_binning_factor(self, image_key):
         if self.current_repetition() is None:
             return None
-        return self.current_repetition().payload.get_binning_factor(image_key)
+        return self.current_repetition()\
+            .payload.get_binning_factor(image_key)
 
     def get_payload_resolution(self):
         if self.current_repetition() is None:
