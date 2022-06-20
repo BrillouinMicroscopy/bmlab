@@ -60,7 +60,7 @@ class Circle(object):
         """
         if not self.valid:
             return None
-        e_r = np.array([np.cos(phi), np.sin(phi)])
+        e_r = self.e_r(phi)
         pt = self.center + self.radius * e_r
         if integer:
             pt[0] = round(pt[0])
