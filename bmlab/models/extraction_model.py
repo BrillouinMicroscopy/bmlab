@@ -170,17 +170,12 @@ class ExtractionModel(Serializer):
 
     @staticmethod
     def get_arc_from_circle_phis(circle, phis, arc_width):
-        # ToDo refactor this, append to a list is slow
-        arc = []
-        pos_e_r = np.arange(-arc_width, arc_width + 1)
-        for phi in phis:
+        pos_e_r = np.arange(-arc_width, arc_width + 1)[..., None]
+        arc = np.ndarray((len(phis), len(pos_e_r), 2))
+        for i, phi in enumerate(phis):
             mid_point, e_r = circle.point(phi)
-            points = [
-                mid_point + e_r *
-                k for k in pos_e_r
-            ]
-            arc.append(np.array(points))
-        return np.array(arc)
+            arc[i, :, :] = mid_point + e_r * pos_e_r
+        return arc
 
     # TODO: This needs to be called automatically
     #  on file load or when the image orientation is changed
