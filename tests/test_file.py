@@ -167,6 +167,18 @@ def test_file_calibration_get_time():
     assert time == 36.802
 
 
+def test_file_calibration_get_exposure():
+    bf = BrillouinFile(data_file_path('Binning.h5'))
+    assert bf.get_repetition('0').calibration.get_exposure('1') == 0.8
+    assert bf.get_repetition('0').payload.get_exposure('0') == 0.2
+
+
+def test_file_calibration_get_binning():
+    bf = BrillouinFile(data_file_path('Binning.h5'))
+    assert bf.get_repetition('0').calibration.get_binning('1') == '8x8'
+    assert bf.get_repetition('0').payload.get_binning('0') == '8x8'
+
+
 def test_file_repetition_count():
     bf = BrillouinFile(data_file_path('Fluorescence.h5'))
     mode = 'Fluorescence'
