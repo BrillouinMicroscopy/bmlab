@@ -172,13 +172,12 @@ class ExtractionModel(Serializer):
     def get_arc_from_circle_phis(circle, phis, arc_width):
         # ToDo refactor this, append to a list is slow
         arc = []
+        pos_e_r = np.arange(-arc_width, arc_width + 1)
         for phi in phis:
             mid_point, e_r = circle.point(phi)
             points = [
                 mid_point + e_r *
-                k for k in np.arange(
-                    -arc_width, arc_width + 1
-                )
+                k for k in pos_e_r
             ]
             arc.append(np.array(points))
         return np.array(arc)
