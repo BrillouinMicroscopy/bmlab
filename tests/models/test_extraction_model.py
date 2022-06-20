@@ -142,12 +142,13 @@ def test_get_arc_by_time():
 
 def test_get_arc_from_circle_phis():
     circle = Circle((0, 0), 100)
-    phis = [0, np.pi/2]
+    phis = [0, np.pi/2, np.pi]
     arc_width = 2
 
     arc_expected = np.array([
         [[98.0, 0.0], [99, 0.0], [100.0, 0.0], [101.0, 0.0], [102.0, 0.0]],
-        [[0.0, 98.0], [0.0, 99.0], [0.0, 100.0], [0.0, 101.0], [0.0, 102.0]]
+        [[0.0, 98.0], [0.0, 99.0], [0.0, 100.0], [0.0, 101.0], [0.0, 102.0]],
+        [[-98.0, 0.0], [-99, 0.0], [-100.0, 0.0], [-101.0, 0.0], [-102.0, 0.0]]
     ])
 
     arc = ExtractionModel().get_arc_from_circle_phis(circle, phis, arc_width)
