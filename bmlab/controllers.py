@@ -61,7 +61,12 @@ class ExtractionController(object):
                 calib_key, time, new_point[0], new_point[1])
 
     def find_points_all(self):
-        for calib_key in self.session.get_calib_keys():
+        calib_keys = self.session.get_calib_keys()
+
+        if not calib_keys:
+            return
+
+        for calib_key in calib_keys:
             self.find_points(calib_key)
 
     def find_points(self, calib_key, min_height=10,
