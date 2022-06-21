@@ -21,7 +21,7 @@ class ExtractionModel(Serializer):
             self.points[calib_key] = []
         self.points[calib_key].append((xdata, ydata))
         self.calib_times[calib_key] = time
-        self.update_positions()
+        self.update_positions(calib_key)
 
     def set_point(self, calib_key, index, time, xdata, ydata):
         if calib_key not in self.points:
@@ -31,12 +31,12 @@ class ExtractionModel(Serializer):
         else:
             self.points[calib_key].append((xdata, ydata))
         self.calib_times[calib_key] = time
-        self.update_positions()
+        self.update_positions(calib_key)
 
     def set_points(self, calib_key, time, points):
         self.calib_times[calib_key] = time
         self.points[calib_key] = points
-        self.update_positions()
+        self.update_positions(calib_key)
 
     def get_points(self, calib_key):
         if calib_key in self.points:
@@ -51,7 +51,7 @@ class ExtractionModel(Serializer):
     def clear_points(self, calib_key):
         self.points.pop(calib_key, None)
         self.calib_times.pop(calib_key, None)
-        self.update_positions()
+        self.update_positions(calib_key)
 
     def post_deserialize(self):
         # Migrations from 0.1.10 to 0.2.0
@@ -74,10 +74,17 @@ class ExtractionModel(Serializer):
             self.positions_interpolation = None
         self.update_positions()
 
-    def update_positions(self):
+    def update_positions(self, key=None):
         if not hasattr(self, 'image_shape') or self.image_shape is None:
             return
-        for calib_key, points in self.points.items():
+        if not key:
+            points = self.points.items()
+        elif key in self.points:
+            points = [(key, self.points[key])]
+        else:
+            points = []
+
+        for calib_key, points in points:
             if len(points) >= 3:
                 center, radius = fit_circle(points)
                 # Check that we got a valid circle before continuing
