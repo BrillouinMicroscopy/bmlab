@@ -33,6 +33,11 @@ class ExtractionModel(Serializer):
         self.calib_times[calib_key] = time
         self.update_positions()
 
+    def set_points(self, calib_key, time, points):
+        self.calib_times[calib_key] = time
+        self.points[calib_key] = points
+        self.update_positions()
+
     def get_points(self, calib_key):
         if calib_key in self.points:
             return self.points[calib_key]
