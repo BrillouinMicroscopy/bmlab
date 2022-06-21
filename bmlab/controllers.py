@@ -129,12 +129,7 @@ class ExtractionController(object):
             all_peaks)
 
         # Add found peaks to model
-        em.clear_points(calib_key)
-
-        for p in peaks:
-            # Warning: x-axis in imshow is 1-axis in img, y-axis is 0-axis
-            em.add_point(
-                calib_key, time, p[0], p[1])
+        em.set_points(calib_key, time, list(peaks))
 
     def distance_point_to_line(self, point, line0, line1):
         return abs(
