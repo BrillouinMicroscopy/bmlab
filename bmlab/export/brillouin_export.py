@@ -1,5 +1,6 @@
 import os
 import numpy as np
+import csv
 from PIL import Image
 import matplotlib.pyplot as plt
 from matplotlib import cm
@@ -151,3 +152,22 @@ class BrillouinExport(object):
                        ".tiff"
             image = Image.fromarray(10000 * image_map)
             image.save(filename)
+
+            # Export data as CSV file
+            if self.file.path.parent.name == 'RawData':
+                csv_path = self.file.path.parents[1] / 'Export'
+            else:
+                csv_path = self.file.path.parent
+            if not os.path.exists(csv_path):
+                os.makedirs(csv_path, exist_ok=True)
+            csv_filename = f"{csv_path}\\{self.file.path.stem}" \
+                           f"_BMrep{brillouin_repetition}" \
+                           f"_{parameter_key}" \
+                           ".csv"
+            with open(csv_filename, 'w', newline='') as csvfile:
+                csv_writer = csv.writer(
+                    csvfile, delimiter=',',
+                    quotechar='|', quoting=csv.QUOTE_MINIMAL)
+                csv_writer.writerow(['Brillouin shift [GHz]'])
+                csv_writer.writerow([])
+                csv_writer.writerows(data[tuple(dslice)])
