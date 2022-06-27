@@ -479,6 +479,11 @@ class EvaluationController(ImageController):
         # Get first spectrum to find number of images
         spectra, _, _ = self.extract_spectra('0')
 
+        if not spectra:
+            if max_count is not None:
+                max_count.value = -1
+            return
+
         # We create a variable for this value here,
         # so changing nr_brillouin_peaks during evaluation
         # does not create issues
