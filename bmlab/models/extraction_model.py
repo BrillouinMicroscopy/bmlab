@@ -157,7 +157,8 @@ class ExtractionModel(Serializer):
         """
         arc = np.empty(0)
         try:
-            arc = self.positions.get(calib_key)
+            if calib_key in self.positions:
+                arc = self.positions.get(calib_key)
         finally:
             return arc
 
