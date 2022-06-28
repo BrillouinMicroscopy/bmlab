@@ -1,3 +1,31 @@
+## 0.2.1 - 2022-06-28
+
+Re-release to trigger PyPi upload. No changes to 0.2.0.
+
+## 0.2.0 - 2022-06-27
+
+### Added
+- Implement exporting Brillouin and fluorescence maps as images #116
+- Implement exporting Brillouin data as CSV file #131
+- Implement retrieving fluorescence images #115
+- Compensate drift by shifting evaluate regions #114
+- Allow to get image binning #123 and binning factor #124
+
+### Changed
+- Evaluate in the temporal order of acquisition #113
+- Reduce code duplication #112
+- Optimize calculation of get_arc_from_circle_phis #125
+- Account for binning when extracting #127
+- Allow to set all points at once when extracting #129
+- Only update the positions for the given key #130
+
+### Fixed
+- Improve the spectra extraction #120 #132
+- Ensure discretize_arc returns arc within image #121
+- Only use linear frequency interpolation #122
+- Don't crash finding all points on empty calibrations #128
+- Don't crash evaluation when no spectra is returned #133
+
 ## 0.1.10 - 2022-05-12
 
 ### Changed
