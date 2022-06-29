@@ -1,3 +1,8 @@
+## 0.2.2 - 2022-06-29
+
+### Fixed
+- Explicitly import pdfpages to solve pyinstaller issue #134
+
 ## 0.2.1 - 2022-06-28
 
 Re-release to trigger PyPi upload. No changes to 0.2.0.
