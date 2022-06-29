@@ -5,6 +5,7 @@ from PIL import Image
 import matplotlib.pyplot as plt
 from matplotlib import cm
 from matplotlib.colors import Normalize
+from matplotlib.backends.backend_pdf import PdfPages
 
 from bmlab import Session
 
@@ -110,12 +111,13 @@ class BrillouinExport(object):
                 os.makedirs(path, exist_ok=True)
 
             # Export as PDF
-            plt.savefig(
-                f"{path}\\{self.file.path.stem}"
-                f"_BMrep{brillouin_repetition}"
-                f"_{parameter_key}"
-                ".pdf"
-            )
+            with PdfPages(
+                    f"{path}\\{self.file.path.stem}"
+                    f"_BMrep{brillouin_repetition}"
+                    f"_{parameter_key}"
+                    ".pdf") as pdf:
+                pdf.savefig()
+
             # Export as PNG
             plt.savefig(
                 f"{path}\\{self.file.path.stem}"
