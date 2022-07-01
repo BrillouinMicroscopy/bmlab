@@ -1,3 +1,10 @@
+## 0.2.3 - 2022-07-01
+
+### Fixed
+- Fix exporting on macOS #135
+- Resolve paths to ensure proper folder handling #137
+- Minor cleanup of test_serializer.py #136
+
 ## 0.2.2 - 2022-06-29
 
 ### Fixed
