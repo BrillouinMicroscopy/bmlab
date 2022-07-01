@@ -154,9 +154,9 @@ class FluorescenceCombinedExport(object):
                     path = self.file.path.parent
                 if not os.path.exists(path):
                     os.makedirs(path, exist_ok=True)
-                filename = f"{path}\\{self.file.path.stem}" \
-                           f"_FLrep{fluorescence_repetition}" \
-                           f"_fluorescenceCombined_{combination}.png"
+                filename = path / f"{self.file.path.stem}" \
+                                  f"_FLrep{fluorescence_repetition}" \
+                                  f"_fluorescenceCombined_{combination}.png"
 
                 image = Image.fromarray(rgb_data.astype(np.ubyte))
                 # Drop channels not desired
@@ -212,9 +212,10 @@ class FluorescenceCombinedExport(object):
                             image_data_warped, axis=2)))).astype(np.ubyte))
                 image_warped.putalpha(image_alpha)
 
-                filename = f"{path}\\{self.file.path.stem}" \
-                           f"_FLrep{fluorescence_repetition}" \
-                           f"_fluorescenceCombined_{combination}_aligned.png"
+                filename = path / f"{self.file.path.stem}" \
+                                  f"_FLrep{fluorescence_repetition}" \
+                                  f"_fluorescenceCombined_{combination}" \
+                                  "_aligned.png"
                 image_warped.save(filename)
 
                 # Export the images with the ROI of the Brillouin
@@ -251,8 +252,8 @@ class FluorescenceCombinedExport(object):
                         )
                     )
 
-                    filename = f"{path}\\{self.file.path.stem}" \
-                               f"_FLrep{fluorescence_repetition}" \
-                               f"_fluorescenceCombined_{combination}" \
-                               f"_BMrep{brillouin_repetition}.png"
+                    filename = path / f"{self.file.path.stem}" \
+                                      f"_FLrep{fluorescence_repetition}" \
+                                      f"_fluorescenceCombined_{combination}" \
+                                      f"_BMrep{brillouin_repetition}.png"
                     image_warped_bm.save(filename)

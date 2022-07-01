@@ -78,9 +78,9 @@ class FluorescenceExport(object):
                     path = self.file.path.parent
                 if not os.path.exists(path):
                     os.mkdir(path)
-                filename = f"{path}\\{self.file.path.stem}" \
-                           f"_FLrep{fluorescence_repetition}" \
-                           f"_channel{channel}.png"
+                filename = path / f"{self.file.path.stem}" \
+                                  f"_FLrep{fluorescence_repetition}" \
+                                  f"_channel{channel}.png"
                 image = Image.fromarray(img_data)
                 if channel.casefold() == 'red':
                     blank = Image.new("L", image.size)
@@ -157,9 +157,9 @@ class FluorescenceExport(object):
                         np.isnan(image_data_warped))).astype(np.ubyte))
                 image_warped.putalpha(image_alpha)
 
-                filename = f"{path}\\{self.file.path.stem}" \
-                           f"_FLrep{fluorescence_repetition}" \
-                           f"_channel{channel}_aligned.png"
+                filename = path / f"{self.file.path.stem}" \
+                                  f"_FLrep{fluorescence_repetition}" \
+                                  f"_channel{channel}_aligned.png"
                 image_warped.save(filename)
 
                 # Export the images with the ROI of the Brillouin
@@ -196,8 +196,8 @@ class FluorescenceExport(object):
                         )
                     )
 
-                    filename = f"{path}\\{self.file.path.stem}" \
-                               f"_FLrep{fluorescence_repetition}" \
-                               f"_channel{channel}" \
-                               f"_BMrep{brillouin_repetition}.png"
+                    filename = path / f"{self.file.path.stem}" \
+                                      f"_FLrep{fluorescence_repetition}" \
+                                      f"_channel{channel}" \
+                                      f"_BMrep{brillouin_repetition}.png"
                     image_warped_bm.save(filename)
