@@ -1,4 +1,4 @@
-import pathlib
+from pathlib import Path
 
 import numpy as np
 
@@ -142,7 +142,7 @@ def test_find_points_real_data():
     session = Session.get_instance()
 
     # Load data file
-    session.set_file(pathlib.Path(__file__).parent / 'data' / 'Water.h5')
+    session.set_file(Path(__file__).parent / 'data' / 'Water.h5')
 
     # Select repetition
     session.set_current_repetition('0')

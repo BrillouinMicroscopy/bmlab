@@ -11,6 +11,7 @@ import datetime
 
 import numpy as np
 import h5py
+from pathlib import Path
 
 from packaging import version
 
@@ -48,6 +49,7 @@ def is_source_file(path):
 
 def is_session_file(path):
     try:
+        path = Path(path)
         with h5py.File(path, "r") as h5:
             file_format = h5.attrs.get('version')
             if file_format is not None:
@@ -82,7 +84,7 @@ class BrillouinFile(object):
         OSError
             when trying to open non-existing or bad file
         """
-        self.path = path
+        self.path = Path(path).resolve()
         self.file = None
         self.file = h5py.File(self.path, 'r')
         self.file_version_string = self.file.attrs.get('version')[
