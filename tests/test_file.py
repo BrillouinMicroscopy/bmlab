@@ -44,7 +44,7 @@ def test_file_has_one_repetition():
 
 def test_non_existing_file_raises_exception():
     with pytest.raises(OSError):
-        BrillouinFile('non_existing_file.h5')
+        BrillouinFile(data_file_path('non_existing_file.h5'))
 
 
 def test_file_has_comment():

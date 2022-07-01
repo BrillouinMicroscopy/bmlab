@@ -21,7 +21,7 @@ def get_session_file_path(source_file, create_folder=False):
     # If the raw data file is located in a 'RawData' folder,
     # we put the eval data file in an 'EvalData' folder and
     # don't append the 'session' string.
-    file = Path(source_file)
+    file = Path(source_file).resolve()
     if file.parent.name == 'RawData':
         eval_folder = file.parents[1] / 'EvalData'
         # Create the evaluation folder if necessary
@@ -35,7 +35,7 @@ def get_session_file_path(source_file, create_folder=False):
 def get_source_file_path(session_file):
     # If the session file is located in a 'EvalData' folder,
     # we find the source file in an 'RawData' folder
-    file = Path(session_file)
+    file = Path(session_file).resolve()
     if file.parent.name == 'EvalData':
         raw_folder = file.parents[1] / 'RawData'
         return Path(str(raw_folder / (str(file.name)[:-3] + '.h5')))
@@ -44,13 +44,14 @@ def get_source_file_path(session_file):
 
 
 def get_valid_source(path):
+    path = Path(path)
     # Check whether this file exists at all
     if not os.path.exists(path):
         raise FileNotFoundError(
             errno.ENOENT,
             "The file '{}' does not exist."
-            .format(Path(path)),
-            Path(path)
+            .format(path),
+            path
         )
 
     # If this is a session file, we need to check whether
@@ -64,7 +65,7 @@ def get_valid_source(path):
                 errno.ENOENT,
                 "Could not find the corresponding source"
                 " data file '{}' for session file '{}'."
-                .format(source_file_path, Path(path))
+                .format(source_file_path, path)
                 + " Please ensure the source data file exists.",
                 source_file_path
             )
@@ -82,17 +83,17 @@ def get_valid_source(path):
 
     # If this is a source file, just return its path
     if is_source_file(path):
-        return Path(path)
+        return path
 
     # If we end up here,
     # the file provided was neither a bmlab session file
     # nor a raw data file from BrillouinAcquisition.
     raise BmlabInvalidFileError(
         errno.ENOENT,
-        "Could not open file '{}'.".format(Path(path))
+        "Could not open file '{}'.".format(path)
         + " The provided file is neither a valid"
           " BrillouinAcquisition nor bmlab file.",
-        Path(path)
+        path
     )
 
 
@@ -205,7 +206,7 @@ class Session(Serializer):
 
         Parameters
         ----------
-        file_name : str
+        file_name : Path
             The file name.
 
         """
