@@ -111,20 +111,19 @@ class BrillouinExport(object):
                 os.makedirs(path, exist_ok=True)
 
             # Export as PDF
-            with PdfPages(
-                    f"{path}\\{self.file.path.stem}"
-                    f"_BMrep{brillouin_repetition}"
-                    f"_{parameter_key}"
-                    ".pdf") as pdf:
+            pdf_path = path / f"{self.file.path.stem}" \
+                              f"_BMrep{brillouin_repetition}" \
+                              f"_{parameter_key}" \
+                              ".pdf"
+            with PdfPages(pdf_path) as pdf:
                 pdf.savefig()
 
             # Export as PNG
-            plt.savefig(
-                f"{path}\\{self.file.path.stem}"
-                f"_BMrep{brillouin_repetition}"
-                f"_{parameter_key}"
-                ".png"
-            )
+            png_path = path / f"{self.file.path.stem}" \
+                              f"_BMrep{brillouin_repetition}" \
+                              f"_{parameter_key}" \
+                              ".png"
+            plt.savefig(png_path)
 
             # Export as bare image without axes
             if self.file.path.parent.name == 'RawData':
@@ -140,18 +139,18 @@ class BrillouinExport(object):
                 cmap=cm.viridis
             ).to_rgba(image_map)
 
-            filename = f"{path}\\{self.file.path.stem}" \
-                       f"_BMrep{brillouin_repetition}" \
-                       f"_{parameter_key}" \
-                       ".png"
+            filename = path / f"{self.file.path.stem}" \
+                              f"_BMrep{brillouin_repetition}" \
+                              f"_{parameter_key}" \
+                              ".png"
             image = Image.fromarray((255 * rgba).astype(np.ubyte))
             image.save(filename)
 
             # Export as TIFF files
-            filename = f"{path}\\{self.file.path.stem}" \
-                       f"_BMrep{brillouin_repetition}" \
-                       f"_{parameter_key}" \
-                       ".tiff"
+            filename = path / f"{self.file.path.stem}" \
+                              f"_BMrep{brillouin_repetition}" \
+                              f"_{parameter_key}" \
+                              ".tiff"
             image = Image.fromarray(10000 * image_map)
             image.save(filename)
 
@@ -162,10 +161,10 @@ class BrillouinExport(object):
                 csv_path = self.file.path.parent
             if not os.path.exists(csv_path):
                 os.makedirs(csv_path, exist_ok=True)
-            csv_filename = f"{csv_path}\\{self.file.path.stem}" \
-                           f"_BMrep{brillouin_repetition}" \
-                           f"_{parameter_key}" \
-                           ".csv"
+            csv_filename = csv_path / f"{self.file.path.stem}" \
+                                      f"_BMrep{brillouin_repetition}" \
+                                      f"_{parameter_key}" \
+                                      ".csv"
             with open(csv_filename, 'w', newline='') as csvfile:
                 csv_writer = csv.writer(
                     csvfile, delimiter=',',
