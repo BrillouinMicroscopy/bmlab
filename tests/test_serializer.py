@@ -1,4 +1,3 @@
-import pathlib
 from pathlib import Path
 import os
 import shutil
@@ -69,7 +68,7 @@ def session_file(tmp_dir):
 
 
 def data_file_path(file_name):
-    return pathlib.Path(__file__).parent / 'data' / file_name
+    return Path(__file__).parent / 'data' / file_name
 
 
 def test_serialize_session(tmp_dir):
