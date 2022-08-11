@@ -29,8 +29,8 @@ def test_fit_lorentz():
 
 
 def test_fit_lorentz_real_image_data():
-    """ The data for this test case has been extracted manually from the running
-        BMicro application.
+    """ The data for this test case has been extracted manually
+        from the running BMicro application.
     """
 
     data_dir = pathlib.Path(__file__).parent / 'data'
@@ -154,7 +154,7 @@ def test_circle_fit():
     actual_c_2, actual_r_2 = fit_circle(test_points_2)
 
     np.testing.assert_allclose(actual_c_2, (0, 0), rtol=0.001, atol=0.0001)
-    assert(actual_r_2 > 0)
+    assert (actual_r_2 > 0)
     np.testing.assert_allclose(actual_r_2, np.sqrt(2),
                                rtol=0.0001, atol=0.000001)
 
@@ -166,7 +166,7 @@ def test_circle_fit():
     actual_c_3, actual_r_3 = fit_circle(test_points_3)
 
     np.testing.assert_allclose(actual_c_3, (0, 0), rtol=0.001, atol=0.0001)
-    assert(actual_r_3 > 0)
+    assert (actual_r_3 > 0)
     np.testing.assert_allclose(actual_r_3, 10, rtol=0.0001, atol=0.000001)
 
 
