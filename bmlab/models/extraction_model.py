@@ -90,9 +90,11 @@ class ExtractionModel(Serializer):
                 # Check that we got a valid circle before continuing
                 circle = Circle(center, radius)
                 if not circle.valid:
-                    return
+                    continue
 
                 phis = discretize_arc(circle, self.image_shape, num_points=500)
+                if phis is None:
+                    continue
                 arc = self.get_arc_from_circle_phis(
                     circle, phis, self.arc_width)
                 self.positions[calib_key] = arc
