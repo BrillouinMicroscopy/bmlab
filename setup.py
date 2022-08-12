@@ -44,7 +44,7 @@ setup(
                       "pytest",
                       "pytest_mock",
                       "scikit-image>=0.19.0",
-                      "scipy>=0.14.0",
+                      "scipy<1.9.0",
                       "shapely>=1.8.2"
                       ],
     # not to be confused with definitions in pyproject.toml [build-system]
