@@ -35,140 +35,142 @@ class BrillouinExport(object):
             # Get a list of all parameters available
             parameters = self.session.evaluation_model().get_parameter_keys()
 
-            # Get the data to plot
-            # We select the Brillouin shift in GHz here
-            parameter_key = 'brillouin_shift_f'
-            data, positions, dimensionality, labels =\
-                self.evc.get_data(parameter_key)
+            for parameter_key in config['parameters']:
 
-            # Subtract the mean value of the positions,
-            # so they are centered around zero
-            for position in positions:
-                position -= np.nanmean(position)
+                if parameter_key not in parameters:
+                    continue
 
-            # This only works for two-dim data!
-            if dimensionality != 2:
-                continue
+                # Get the data to plot
+                data, positions, dimensionality, labels =\
+                    self.evc.get_data(parameter_key)
 
-            # Create data necessary to correctly slice the data
-            dslice = [slice(None) if dim > 1 else 0 for dim in data.shape]
-            idx = [idx for idx, dim in enumerate(data.shape) if dim > 1]
+                # Subtract the mean value of the positions,
+                # so they are centered around zero
+                for position in positions:
+                    position -= np.nanmean(position)
 
-            # We rotate the array, so the x axis is shown as the
-            # horizontal axis
-            image_map = data[tuple(dslice)]
-            image_map = np.rot90(image_map)
-            extent = np.nanmin(positions[idx[0]][tuple(dslice)]), \
-                np.nanmax(positions[idx[0]][tuple(dslice)]), \
-                np.nanmin(positions[idx[1]][tuple(dslice)]), \
-                np.nanmax(positions[idx[1]][tuple(dslice)])
+                # This only works for two-dim data!
+                if dimensionality != 2:
+                    continue
 
-            # Actually plot the data
-            fig = plt.figure()
+                # Create data necessary to correctly slice the data
+                dslice = [slice(None) if dim > 1 else 0 for dim in data.shape]
+                idx = [idx for idx, dim in enumerate(data.shape) if dim > 1]
 
-            plot = fig.add_subplot(111)
+                # We rotate the array, so the x axis is shown as the
+                # horizontal axis
+                image_map = data[tuple(dslice)]
+                image_map = np.rot90(image_map)
+                extent = np.nanmin(positions[idx[0]][tuple(dslice)]), \
+                    np.nanmax(positions[idx[0]][tuple(dslice)]), \
+                    np.nanmin(positions[idx[1]][tuple(dslice)]), \
+                    np.nanmax(positions[idx[1]][tuple(dslice)])
 
-            ims = plt.imshow(
-                image_map, interpolation='nearest',
-                extent=extent
-            )
-            plot.set_xlabel(labels[idx[0]])
-            plot.set_ylabel(labels[idx[1]])
-            cb_label = parameters[parameter_key]['symbol'] + \
-                ' [' + parameters[parameter_key]['unit'] + ']'
-            colorbar = fig.colorbar(ims)
-            colorbar.ax.set_title(cb_label)
-            plot.axis('scaled')
-            plot.set_xlim(
-                np.nanmin(positions[idx[0]][tuple(dslice)]),
-                np.nanmax(positions[idx[0]][tuple(dslice)])
-            )
-            plot.set_ylim(
-                np.nanmin(positions[idx[1]][tuple(dslice)]),
-                np.nanmax(positions[idx[1]][tuple(dslice)])
-            )
+                # Actually plot the data
+                fig = plt.figure()
 
-            # Set the colormap limits to min/max
-            # or provided boundaries
-            lval = config[parameter_key]['cax'][0]
-            if lval == 'min':
-                value_min = np.nanmin(image_map)
-            else:
-                value_min = lval
-            uval = config[parameter_key]['cax'][1]
-            if uval == 'max':
-                value_max = np.nanmax(image_map)
-            else:
-                value_max = uval
-            ims.set_clim(value_min, value_max)
+                plot = fig.add_subplot(111)
 
-            # Export plot
-            if self.file.path.parent.name == 'RawData':
-                path = self.file.path.parents[1] / 'Plots' / 'WithAxis'
-            else:
-                path = self.file.path.parent
-            if not os.path.exists(path):
-                os.makedirs(path, exist_ok=True)
+                ims = plt.imshow(
+                    image_map, interpolation='nearest',
+                    extent=extent
+                )
+                plot.set_xlabel(labels[idx[0]])
+                plot.set_ylabel(labels[idx[1]])
+                cb_label = parameters[parameter_key]['symbol'] + \
+                    ' [' + parameters[parameter_key]['unit'] + ']'
+                colorbar = fig.colorbar(ims)
+                colorbar.ax.set_title(cb_label)
+                plot.axis('scaled')
+                plot.set_xlim(
+                    np.nanmin(positions[idx[0]][tuple(dslice)]),
+                    np.nanmax(positions[idx[0]][tuple(dslice)])
+                )
+                plot.set_ylim(
+                    np.nanmin(positions[idx[1]][tuple(dslice)]),
+                    np.nanmax(positions[idx[1]][tuple(dslice)])
+                )
 
-            # Export as PDF
-            pdf_path = path / f"{self.file.path.stem}" \
-                              f"_BMrep{brillouin_repetition}" \
-                              f"_{parameter_key}" \
-                              ".pdf"
-            with PdfPages(pdf_path) as pdf:
-                pdf.savefig()
+                # Set the colormap limits to min/max
+                # or provided boundaries
+                # Minimum limit
+                try:
+                    value_min = float(config[parameter_key]['cax'][0])
+                except BaseException:
+                    value_min = np.nanmin(image_map)
+                try:
+                    value_max = float(config[parameter_key]['cax'][1])
+                except BaseException:
+                    value_max = np.nanmax(image_map)
+                ims.set_clim(value_min, value_max)
 
-            # Export as PNG
-            png_path = path / f"{self.file.path.stem}" \
-                              f"_BMrep{brillouin_repetition}" \
-                              f"_{parameter_key}" \
-                              ".png"
-            plt.savefig(png_path)
+                # Export plot
+                if self.file.path.parent.name == 'RawData':
+                    path = self.file.path.parents[1] / 'Plots' / 'WithAxis'
+                else:
+                    path = self.file.path.parent
+                if not os.path.exists(path):
+                    os.makedirs(path, exist_ok=True)
 
-            # Export as bare image without axes
-            if self.file.path.parent.name == 'RawData':
-                path = self.file.path.parents[1] / 'Plots' / 'Bare'
-            else:
-                path = self.file.path.parent
-            if not os.path.exists(path):
-                os.makedirs(path, exist_ok=True)
+                # Export as PDF
+                pdf_path = path / f"{self.file.path.stem}" \
+                                  f"_BMrep{brillouin_repetition}" \
+                                  f"_{parameter_key}" \
+                                  ".pdf"
+                with PdfPages(pdf_path) as pdf:
+                    pdf.savefig()
 
-            # Convert indexed data into rgba map
-            rgba = cm.ScalarMappable(
-                norm=Normalize(vmin=value_min, vmax=value_max),
-                cmap=cm.viridis
-            ).to_rgba(image_map)
+                # Export as PNG
+                png_path = path / f"{self.file.path.stem}" \
+                                  f"_BMrep{brillouin_repetition}" \
+                                  f"_{parameter_key}" \
+                                  ".png"
+                plt.savefig(png_path)
 
-            filename = path / f"{self.file.path.stem}" \
-                              f"_BMrep{brillouin_repetition}" \
-                              f"_{parameter_key}" \
-                              ".png"
-            image = Image.fromarray((255 * rgba).astype(np.ubyte))
-            image.save(filename)
+                # Export as bare image without axes
+                if self.file.path.parent.name == 'RawData':
+                    path = self.file.path.parents[1] / 'Plots' / 'Bare'
+                else:
+                    path = self.file.path.parent
+                if not os.path.exists(path):
+                    os.makedirs(path, exist_ok=True)
 
-            # Export as TIFF files
-            filename = path / f"{self.file.path.stem}" \
-                              f"_BMrep{brillouin_repetition}" \
-                              f"_{parameter_key}" \
-                              ".tiff"
-            image = Image.fromarray(10000 * image_map)
-            image.save(filename)
+                # Convert indexed data into rgba map
+                rgba = cm.ScalarMappable(
+                    norm=Normalize(vmin=value_min, vmax=value_max),
+                    cmap=cm.viridis
+                ).to_rgba(image_map)
 
-            # Export data as CSV file
-            if self.file.path.parent.name == 'RawData':
-                csv_path = self.file.path.parents[1] / 'Export'
-            else:
-                csv_path = self.file.path.parent
-            if not os.path.exists(csv_path):
-                os.makedirs(csv_path, exist_ok=True)
-            csv_filename = csv_path / f"{self.file.path.stem}" \
-                                      f"_BMrep{brillouin_repetition}" \
-                                      f"_{parameter_key}" \
-                                      ".csv"
-            with open(csv_filename, 'w', newline='') as csvfile:
-                csv_writer = csv.writer(
-                    csvfile, delimiter=',',
-                    quotechar='|', quoting=csv.QUOTE_MINIMAL)
-                csv_writer.writerow(['Brillouin shift [GHz]'])
-                csv_writer.writerow([])
-                csv_writer.writerows(data[tuple(dslice)])
+                filename = path / f"{self.file.path.stem}" \
+                                  f"_BMrep{brillouin_repetition}" \
+                                  f"_{parameter_key}" \
+                                  ".png"
+                image = Image.fromarray((255 * rgba).astype(np.ubyte))
+                image.save(filename)
+
+                # Export as TIFF files
+                filename = path / f"{self.file.path.stem}" \
+                                  f"_BMrep{brillouin_repetition}" \
+                                  f"_{parameter_key}" \
+                                  ".tiff"
+                image = Image.fromarray(10000 * image_map)
+                image.save(filename)
+
+                # Export data as CSV file
+                if self.file.path.parent.name == 'RawData':
+                    csv_path = self.file.path.parents[1] / 'Export'
+                else:
+                    csv_path = self.file.path.parent
+                if not os.path.exists(csv_path):
+                    os.makedirs(csv_path, exist_ok=True)
+                csv_filename = csv_path / f"{self.file.path.stem}" \
+                                          f"_BMrep{brillouin_repetition}" \
+                                          f"_{parameter_key}" \
+                                          ".csv"
+                with open(csv_filename, 'w', newline='') as csvfile:
+                    csv_writer = csv.writer(
+                        csvfile, delimiter=',',
+                        quotechar='|', quoting=csv.QUOTE_MINIMAL)
+                    csv_writer.writerow(['Brillouin shift [GHz]'])
+                    csv_writer.writerow([])
+                    csv_writer.writerows(data[tuple(dslice)])

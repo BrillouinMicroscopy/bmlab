@@ -128,6 +128,8 @@ def test_export_brillouin(tmp_dir):
     config = ec.get_configuration()
     config['fluorescence']['export'] = False
     config['fluorescenceCombined']['export'] = False
+    config['brillouin']['parameters'] =\
+        ['brillouin_shift_f', 'brillouin_shift']
     ec.export(config)
 
     session.clear()
@@ -136,6 +138,8 @@ def test_export_brillouin(tmp_dir):
     images = [
         '2D-xy_BMrep0_brillouin_shift_f.png',
         '2D-xy_BMrep0_brillouin_shift_f.tiff',
+        '2D-xy_BMrep0_brillouin_shift.png',
+        '2D-xy_BMrep0_brillouin_shift.tiff',
     ]
     for image in images:
         assert os.path.exists(plots_dir / image)
@@ -144,9 +148,16 @@ def test_export_brillouin(tmp_dir):
     images = [
         '2D-xy_BMrep0_brillouin_shift_f.pdf',
         '2D-xy_BMrep0_brillouin_shift_f.png',
+        '2D-xy_BMrep0_brillouin_shift.pdf',
+        '2D-xy_BMrep0_brillouin_shift.png',
     ]
     for image in images:
         assert os.path.exists(plots_dir / image)
 
-    assert os.path.exists(
-        tmp_dir.parent / 'Export' / '2D-xy_BMrep0_brillouin_shift_f.csv')
+    csvs = [
+        '2D-xy_BMrep0_brillouin_shift_f.csv',
+        '2D-xy_BMrep0_brillouin_shift.csv',
+    ]
+    for csv in csvs:
+        assert os.path.exists(
+            tmp_dir.parent / 'Export' / csv)
