@@ -23,6 +23,6 @@ export_config = ec.get_configuration()
 # Disable exporting fluorescence data
 export_config['fluorescence']['export'] = False
 # Set caxis of Brillouin data
-export_config['brillouin']['shift']['cax'] = (5.0, 5.8)
+export_config['brillouin']['brillouin_shift_f']['cax'] = (5.0, 5.8)
 # Export the data
 ec.export(export_config)

@@ -1064,7 +1064,7 @@ class ExportController(object):
             },
             'brillouin': {
                 'export': True,
-                'shift': {
+                'brillouin_shift_f': {
                     'cax': ('min', 'max'),
                 }
             },

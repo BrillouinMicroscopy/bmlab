@@ -90,12 +90,12 @@ class BrillouinExport(object):
 
             # Set the colormap limits to min/max
             # or provided boundaries
-            lval = config['shift']['cax'][0]
+            lval = config[parameter_key]['cax'][0]
             if lval == 'min':
                 value_min = np.nanmin(image_map)
             else:
                 value_min = lval
-            uval = config['shift']['cax'][1]
+            uval = config[parameter_key]['cax'][1]
             if uval == 'max':
                 value_max = np.nanmax(image_map)
             else:
