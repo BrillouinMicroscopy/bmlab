@@ -127,6 +127,8 @@ class BrillouinExport(object):
                                   ".png"
                 plt.savefig(png_path)
 
+                plt.close(fig)
+
                 # Export as bare image without axes
                 if self.file.path.parent.name == 'RawData':
                     path = self.file.path.parents[1] / 'Plots' / 'Bare'
