@@ -1,3 +1,17 @@
+## 0.3.0 - 2022-08-17
+
+### Added
+- Allow to export all Brillouin parameters acquired #141
+
+### Fixed
+- Align export parameter names with rest of library #140
+
+## 0.2.4 - 2022-08-12
+
+### Fixed
+- Don't fail on empty arc #138
+- Fix issues with flake8 v5, lock scipy version #139
+
 ## 0.2.3 - 2022-07-01
 
 ### Fixed
