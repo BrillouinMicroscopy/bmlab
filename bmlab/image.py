@@ -5,7 +5,7 @@ Module to perform common image operations.
 import logging
 
 import numpy as np
-from scipy.interpolate import interpolate
+from scipy import interpolate
 import warnings
 
 
