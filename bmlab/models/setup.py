@@ -1,5 +1,8 @@
 import numpy as np
 
+from math import cos
+from scipy import interpolate
+
 import bmlab.constants as constants
 from bmlab.serializer import Serializer
 
@@ -7,7 +10,7 @@ from bmlab.serializer import Serializer
 class Setup(Serializer):
 
     def __init__(self, key, name, pixel_size, focal_length,
-                 vipa, calibration):
+                 vipa, calibration, temperature):
         """
 
         Parameters
@@ -34,6 +37,13 @@ class Setup(Serializer):
         self.vipa = vipa
         self.calibration = calibration
         self.VIPA_PARAMS = self.init_vipa_params()
+        # Default calibration temperature [°C]
+        self.temperature = temperature
+
+    def post_deserialize(self):
+        # Migrations from 0.3.0 to 0.4.0
+        if not hasattr(self, 'temperature'):
+            self.temperature = 295.15
 
     def init_vipa_params(self):
         p1 = (2 * np.pi * self.vipa.n * self.vipa.d *
@@ -46,6 +56,43 @@ class Setup(Serializer):
             (self.focal_length ** 2)
 
         return p1, p2, p3
+
+    def set_temperature(self, temperature):
+        # Convert temperature from [°C] to [K]
+        temperature = temperature + 273.15
+        self.temperature = temperature
+        # taken from
+        # https://www.engineeringtoolbox.com/sound-speed-water-d_598.html
+        # temperature water [K]
+        water_t = [273.15, 278.15, 283.15, 293.15, 303.15, 313.15,
+                   323.15, 333.15, 343.15, 353.15, 363.15, 373.15]
+        # sound velocity water [m/s]
+        water_vs = [1403, 1427, 1447, 1481, 1507, 1526,
+                    1541, 1552, 1555, 1555, 1550, 1543]
+        # Refractive index water [1]
+        water_n = 1.3298
+        water_f = interpolate.interp1d(water_t, water_vs)
+
+        # taken from https://pubs.acs.org/doi/pdf/10.1021/je00054a002
+        # temperature methanol [K]
+        methanol_t = [274.74, 283.17, 293.15, 303.15, 313.11, 323.05, 332.95]
+        # sound velocity methanol [m/s]
+        methanol_vs = [1183.4, 1154.1, 1121.0, 1087.1, 1054.6, 1022.3, 990.3]
+        # Refractive index methanol [1]
+        methanol_n = 1.3234
+        methanol_f = interpolate.interp1d(methanol_t, methanol_vs)
+
+        water_shift = self.brillouin_shift(
+            water_f(temperature), water_n)
+        methanol_shift = self.brillouin_shift(
+            methanol_f(temperature), methanol_n)
+
+        self.calibration.shift_methanol = methanol_shift
+        self.calibration.shift_water = water_shift
+        self.calibration.update_calibration()
+
+    def brillouin_shift(self, v, n):
+        return 2 * cos(self.vipa.theta / 2) * n * v / self.vipa.lambda0
 
 
 class VIPA(Serializer):
@@ -130,7 +177,8 @@ AVAILABLE_SETUPS = [
                     lambda0=780.24e-9),
           calibration=Calibration(num_brillouin_samples=2,
                                   shift_methanol=3.78e9,
-                                  shift_water=5.066e9)),
+                                  shift_water=5.066e9),
+          temperature=295.15),
     Setup(key='S1',
           name='780 nm @ Biotec R340 old',
           pixel_size=6.5e-6,
@@ -141,7 +189,8 @@ AVAILABLE_SETUPS = [
                     order=0,
                     lambda0=780.24e-9),
           calibration=Calibration(num_brillouin_samples=1,
-                                  shift_methanol=3.78e9)),
+                                  shift_methanol=3.78e9),
+          temperature=295.15),
     Setup(key='S2',
           name='532 nm @ Biotec R314',
           pixel_size=6.5e-6,
@@ -153,5 +202,6 @@ AVAILABLE_SETUPS = [
                     lambda0=532e-9),
           calibration=Calibration(num_brillouin_samples=2,
                                   shift_methanol=5.54e9,
-                                  shift_water=7.43e9))
+                                  shift_water=7.43e9),
+          temperature=295.15)
 ]
