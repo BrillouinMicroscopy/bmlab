@@ -16,6 +16,8 @@ def test_get_key_from_indices():
     assert EvaluationController\
         .get_key_from_indices(resolution, 0, 0, 0) == '0'
     assert EvaluationController\
+        .get_key_from_indices(resolution, 0.0, 0.0, 0.0) == '0'
+    assert EvaluationController\
         .get_key_from_indices(resolution, 6, 0, 0) == '6'
     assert EvaluationController\
         .get_key_from_indices(resolution, 0, 1, 0) == '7'

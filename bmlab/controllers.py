@@ -842,8 +842,8 @@ class EvaluationController(ImageController):
             raise IndexError('y index out of range')
         if ind_z >= resolution[2]:
             raise IndexError('z index out of range')
-        return str(ind_z * (resolution[0] * resolution[1])
-                   + ind_y * resolution[0] + ind_x)
+        return str(int(ind_z * (resolution[0] * resolution[1])
+                   + ind_y * resolution[0] + ind_x))
 
     @staticmethod
     def get_indices_from_key(resolution, key):
