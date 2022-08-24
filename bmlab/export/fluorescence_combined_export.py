@@ -52,44 +52,49 @@ class FluorescenceCombinedExport(object):
             image_keys = repetition.payload.image_keys()
             if not image_keys:
                 continue
-            # Get the scale calibration
-            scale_calibration = repetition.payload.get_scale_calibration()
-            # Create the transform matrix for the affine transformation
-            n = np.linalg.norm(np.array(scale_calibration['micrometerToPixX']))
-            tmatrix = np.matrix([
-                [-1 * scale_calibration['micrometerToPixY'][1],
-                 -1 * scale_calibration['micrometerToPixY'][0], 0],
-                [-1 * scale_calibration['micrometerToPixX'][1],
-                 -1 * scale_calibration['micrometerToPixX'][0], 0],
-                [0, 0, n]
-            ]) / n
 
             # Read first image of repetition,
             # so we can create an array to store the RGB data
             img_data = repetition.payload.get_image(image_keys[0])
             rgb_data = np.zeros((img_data.shape[1], img_data.shape[2], 3))
 
-            # With BrillouinAcquisition all images in a repetition
-            # share the same ROI. So it's enough to do this once.
-            # Get the region of interest of the repetition
-            roi = repetition.payload.get_ROI(image_keys[0])
+            # Get the scale calibration
+            scale_calibration = repetition.payload.get_scale_calibration()
+            if scale_calibration is None:
+                tmatrix = None
+            else:
+                # Create the transform matrix for the affine transformation
+                n = np.linalg.norm(
+                    np.array(scale_calibration['micrometerToPixX']))
+                tmatrix = np.matrix([
+                    [-1 * scale_calibration['micrometerToPixY'][1],
+                     -1 * scale_calibration['micrometerToPixY'][0], 0],
+                    [-1 * scale_calibration['micrometerToPixX'][1],
+                     -1 * scale_calibration['micrometerToPixX'][0], 0],
+                    [0, 0, n]
+                ]) / n
 
-            # Create an x-y grid for the image with positions in µm
-            x_pix, y_pix = np.meshgrid(
-                np.arange(roi['width_physical']) + roi['left'],
-                np.flip(np.arange(roi['height_physical']) + roi['bottom'])
-            )
-            x_pix = x_pix - scale_calibration['origin'][0]
-            y_pix = y_pix - scale_calibration['origin'][1]
+                # With BrillouinAcquisition all images in a repetition
+                # share the same ROI. So it's enough to do this once.
+                # Get the region of interest of the repetition
+                roi = repetition.payload.get_ROI(image_keys[0])
 
-            x_mm =\
-                x_pix * scale_calibration['pixToMicrometerX'][0] +\
-                y_pix * scale_calibration['pixToMicrometerY'][0] +\
-                scale_calibration['positionStage'][0]
-            y_mm =\
-                x_pix * scale_calibration['pixToMicrometerX'][1] +\
-                y_pix * scale_calibration['pixToMicrometerY'][1] +\
-                scale_calibration['positionStage'][1]
+                # Create an x-y grid for the image with positions in µm
+                x_pix, y_pix = np.meshgrid(
+                    np.arange(roi['width_physical']) + roi['left'],
+                    np.flip(np.arange(roi['height_physical']) + roi['bottom'])
+                )
+                x_pix = x_pix - scale_calibration['origin'][0]
+                y_pix = y_pix - scale_calibration['origin'][1]
+
+                x_mm =\
+                    x_pix * scale_calibration['pixToMicrometerX'][0] +\
+                    y_pix * scale_calibration['pixToMicrometerY'][0] +\
+                    scale_calibration['positionStage'][0]
+                y_mm =\
+                    x_pix * scale_calibration['pixToMicrometerX'][1] +\
+                    y_pix * scale_calibration['pixToMicrometerY'][1] +\
+                    scale_calibration['positionStage'][1]
 
             channels_available = []
             # Loop over all images in this repetition and
@@ -164,6 +169,8 @@ class FluorescenceCombinedExport(object):
                 im.save(filename)
 
                 # Also export the image with axes parallel to the stage
+                if tmatrix is None:
+                    continue
 
                 # Create translation matrix to move image back to ROI
                 corners = [[0, image.size[0]-1, 0, image.size[0]-1],
