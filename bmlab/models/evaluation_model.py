@@ -200,8 +200,14 @@ class EvaluationModel(Serializer):
     def setNrBrillouinPeaks(self, nr_brillouin_peaks):
         self.nr_brillouin_peaks = nr_brillouin_peaks
 
+        self.set_bounds()
+
+    def set_bounds(self, bounds=None):
+        self.bounds = bounds
+
         # Initialize the bounds if necessary
-        if nr_brillouin_peaks > 1 and\
+        if self.nr_brillouin_peaks > 1 and\
                 (self.bounds is None or
-                 len(self.bounds) is not nr_brillouin_peaks):
-            self.bounds = [['min', 'max'] for _ in range(nr_brillouin_peaks)]
+                 len(self.bounds) is not self.nr_brillouin_peaks):
+            self.bounds = [['min', 'max'] for _ in
+                           range(self.nr_brillouin_peaks)]

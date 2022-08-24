@@ -441,6 +441,18 @@ class EvaluationController(ImageController):
         )
         return
 
+    def set_nr_brillouin_peaks(self, nr_brillouin_peaks):
+        evm = self.session.evaluation_model()
+        if not evm:
+            return
+        evm.setNrBrillouinPeaks(nr_brillouin_peaks)
+
+    def set_bounds(self, bounds):
+        evm = self.session.evaluation_model()
+        if not evm:
+            return
+        evm.bounds = bounds
+
     def evaluate(self, abort=None, count=None, max_count=None):
         em = self.session.extraction_model()
         if not em:
@@ -1006,7 +1018,9 @@ class Controller(object):
         return
 
     def evaluate(self, filepath, setup, orientation,
-                 brillouin_regions, rayleigh_regions, repetitions=None):
+                 brillouin_regions, rayleigh_regions,
+                 repetitions=None, nr_brillouin_peaks=1,
+                 multi_peak_bounds=None):
         # Load data file
         self.session.set_file(filepath)
 
@@ -1042,6 +1056,9 @@ class Controller(object):
 
             for region in rayleigh_regions:
                 psc.add_rayleigh_region_frequency(region)
+
+            evc.set_nr_brillouin_peaks(nr_brillouin_peaks)
+            evc.set_bounds(multi_peak_bounds)
 
             evc.evaluate()
 
