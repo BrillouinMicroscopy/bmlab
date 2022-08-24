@@ -34,15 +34,19 @@ class FluorescenceExport(object):
             image_keys = repetition.payload.image_keys()
             # Get the scale calibration
             scale_calibration = repetition.payload.get_scale_calibration()
-            # Create the transform matrix for the affine transformation
-            n = np.linalg.norm(np.array(scale_calibration['micrometerToPixX']))
-            tmatrix = np.matrix([
-                [-1 * scale_calibration['micrometerToPixY'][1],
-                 -1 * scale_calibration['micrometerToPixY'][0], 0],
-                [-1 * scale_calibration['micrometerToPixX'][1],
-                 -1 * scale_calibration['micrometerToPixX'][0], 0],
-                [0, 0, n]
-            ]) / n
+            if scale_calibration is None:
+                tmatrix = None
+            else:
+                # Create the transform matrix for the affine transformation
+                n = np.linalg.norm(
+                    np.array(scale_calibration['micrometerToPixX']))
+                tmatrix = np.matrix([
+                    [-1 * scale_calibration['micrometerToPixY'][1],
+                     -1 * scale_calibration['micrometerToPixY'][0], 0],
+                    [-1 * scale_calibration['micrometerToPixX'][1],
+                     -1 * scale_calibration['micrometerToPixX'][0], 0],
+                    [0, 0, n]
+                ]) / n
 
             # Loop over all images in this repetition
             for image_key in image_keys:
@@ -50,26 +54,6 @@ class FluorescenceExport(object):
                 img_data = repetition.payload.get_image(image_key)
                 # Average all images acquired
                 img_data = np.nanmean(img_data, axis=0).astype(np.ubyte)
-
-                # Get the region of interest of the repetition
-                roi = repetition.payload.get_ROI(image_key)
-
-                # Create an x-y grid for the image with positions in µm
-                x_pix, y_pix = np.meshgrid(
-                    np.arange(roi['width_physical']) + roi['left'],
-                    np.flip(np.arange(roi['height_physical']) + roi['bottom'])
-                )
-                x_pix = x_pix - scale_calibration['origin'][0]
-                y_pix = y_pix - scale_calibration['origin'][1]
-
-                x_mm =\
-                    x_pix * scale_calibration['pixToMicrometerX'][0] +\
-                    y_pix * scale_calibration['pixToMicrometerY'][0] +\
-                    scale_calibration['positionStage'][0]
-                y_mm =\
-                    x_pix * scale_calibration['pixToMicrometerX'][1] +\
-                    y_pix * scale_calibration['pixToMicrometerY'][1] +\
-                    scale_calibration['positionStage'][1]
 
                 # Construct export path and create it if necessary
                 if self.file.path.parent.name == 'RawData':
@@ -97,6 +81,31 @@ class FluorescenceExport(object):
                 image.save(filename)
 
                 # Also export the image with axes parallel to the stage
+                if tmatrix is None:
+                    continue
+
+                # Get the region of interest of the repetition
+                roi = repetition.payload.get_ROI(image_key)
+
+                if roi is None:
+                    continue
+
+                # Create an x-y grid for the image with positions in µm
+                x_pix, y_pix = np.meshgrid(
+                    np.arange(roi['width_physical']) + roi['left'],
+                    np.flip(np.arange(roi['height_physical']) + roi['bottom'])
+                )
+                x_pix = x_pix - scale_calibration['origin'][0]
+                y_pix = y_pix - scale_calibration['origin'][1]
+
+                x_mm =\
+                    x_pix * scale_calibration['pixToMicrometerX'][0] +\
+                    y_pix * scale_calibration['pixToMicrometerY'][0] +\
+                    scale_calibration['positionStage'][0]
+                y_mm =\
+                    x_pix * scale_calibration['pixToMicrometerX'][1] +\
+                    y_pix * scale_calibration['pixToMicrometerY'][1] +\
+                    scale_calibration['positionStage'][1]
 
                 # Create translation matrix to move image back to ROI
                 corners = [[0, image.size[0]-1, 0, image.size[0]-1],
