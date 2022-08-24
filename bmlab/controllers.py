@@ -758,7 +758,7 @@ class EvaluationController(ImageController):
             0: the single-peak fit
             1:nr_brillouin_peaks: the multi-peak fits
             nr_brillouin_peaks+1: all multi-peak fits average
-            nr_brillouin_peaks+1: all multi-peak fits weighted average
+            nr_brillouin_peaks+2: all multi-peak fits weighted average
 
         Returns
         -------
