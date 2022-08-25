@@ -200,10 +200,18 @@ class EvaluationModel(Serializer):
     def setNrBrillouinPeaks(self, nr_brillouin_peaks):
         self.nr_brillouin_peaks = nr_brillouin_peaks
 
-        self.set_bounds()
+        self.check_bounds()
 
-    def set_bounds(self, bounds=None):
+    def set_bounds(self, bounds):
         self.bounds = bounds
+
+        self.check_bounds()
+
+    def check_bounds(self):
+        # Check the bounds array for consistency
+        # We don't need any bounds for a single-peak fit
+        if self.nr_brillouin_peaks == 1:
+            self.bounds = None
 
         # Initialize the bounds if necessary
         if self.nr_brillouin_peaks > 1 and\
