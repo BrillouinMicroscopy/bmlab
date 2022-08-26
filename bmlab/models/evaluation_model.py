@@ -35,6 +35,19 @@ class EvaluationModel(Serializer):
         # @since 0.1.8
         if not hasattr(self, 'bounds'):
             self.bounds = None
+        # Migrations from 0.3.0 to 0.4.0
+        # Check that the results array also stores the peak offset
+        # @since 0.4.0
+        if 'brillouin_peak_offset' not in self.results:
+            self.results['brillouin_peak_offset'] = np.empty(
+                self.results['brillouin_peak_intensity'].shape
+            )
+            self.results['brillouin_peak_offset'][:] = np.nan
+        if 'rayleigh_peak_offset' not in self.results:
+            self.results['rayleigh_peak_offset'] = np.empty(
+                self.results['rayleigh_peak_intensity'].shape
+            )
+            self.results['rayleigh_peak_offset'][:] = np.nan
 
     @staticmethod
     def get_default_parameters():
@@ -75,6 +88,12 @@ class EvaluationModel(Serializer):
                 'label': 'Brillouin peak intensity',
                 'scaling': 1,
             },
+            'brillouin_peak_offset': {   # [a.u.] Brillouin peak offset
+                'unit': 'a.u.',
+                'symbol': r'$I_{0,\mathrm{B}}$',
+                'label': 'Brillouin peak offset',
+                'scaling': 1,
+            },
             'rayleigh_peak_fwhm_f': {       # [GHz] Rayleigh peak FWHM
                 'unit': 'GHz',
                 'symbol': r'$\Delta_\mathrm{R}$',
@@ -97,6 +116,12 @@ class EvaluationModel(Serializer):
                 'unit': 'a.u.',
                 'symbol': r'$I_\mathrm{R}$',
                 'label': 'Rayleigh peak intensity',
+                'scaling': 1,
+            },
+            'rayleigh_peak_offset': {   # [a.u.] Rayleigh peak offset
+                'unit': 'a.u.',
+                'symbol': r'$I_{0,\mathrm{R}}$',
+                'label': 'Rayleigh peak offset',
                 'scaling': 1,
             },
             'intensity': {                  # [a.u.] Overall intensity of image
@@ -154,6 +179,9 @@ class EvaluationModel(Serializer):
         self.results['brillouin_peak_intensity'] = np.empty(shape_brillouin)
         self.results['brillouin_peak_intensity'][:] = np.nan
 
+        self.results['brillouin_peak_offset'] = np.empty(shape_brillouin)
+        self.results['brillouin_peak_offset'][:] = np.nan
+
         self.results['brillouin_shift'] = np.empty(shape_brillouin)
         self.results['brillouin_shift'][:] = np.nan
 
@@ -181,6 +209,9 @@ class EvaluationModel(Serializer):
 
         self.results['rayleigh_peak_intensity'] = np.empty(shape_rayleigh)
         self.results['rayleigh_peak_intensity'][:] = np.nan
+
+        self.results['rayleigh_peak_offset'] = np.empty(shape_rayleigh)
+        self.results['rayleigh_peak_offset'][:] = np.nan
 
         self.results['rayleigh_peak_fwhm_f'] = np.empty(shape_rayleigh)
         self.results['rayleigh_peak_fwhm_f'][:] = np.nan
