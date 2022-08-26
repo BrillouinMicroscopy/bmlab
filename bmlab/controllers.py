@@ -570,6 +570,8 @@ class EvaluationController(ImageController):
                         results[region_key][frame_num][1]
                     evm.results['brillouin_peak_intensity'][ind] =\
                         results[region_key][frame_num][2]
+                    evm.results['brillouin_peak_offset'][ind] =\
+                        results[region_key][frame_num][3]
 
                 for region_key, _ \
                         in enumerate(rayleigh_regions,
@@ -582,6 +584,8 @@ class EvaluationController(ImageController):
                         results[region_key][frame_num][1]
                     evm.results['rayleigh_peak_intensity'][ind] =\
                         results[region_key][frame_num][2]
+                    evm.results['rayleigh_peak_offset'][ind] =\
+                        results[region_key][frame_num][3]
 
             # We can only do a multi-peak fit after the single-peak
             # Rayleigh fit is done, because we have to know the
