@@ -409,24 +409,24 @@ class PeakSelectionController(object):
         return
 
     def add_brillouin_region_frequency(self, region_frequency):
-        cm = self.session.calibration_model()
-        # We use the first measurement image here
-        time = self.session.get_payload_time('0')
-        region_pix = tuple(
-            cm.get_position_by_time(time, list(region_frequency)))
-
-        psm = self.session.peak_selection_model()
-        psm.add_brillouin_region(region_pix)
+        self.add_region_frequency(region_frequency, 'Brillouin')
 
     def add_rayleigh_region_frequency(self, region_frequency):
+        self.add_region_frequency(region_frequency, 'Rayleigh')
+
+    def add_region_frequency(self, region_frequency, peak_type):
         cm = self.session.calibration_model()
         # We use the first measurement image here
         time = self.session.get_payload_time('0')
-        region_pix = tuple(
-            cm.get_position_by_time(time, list(region_frequency)))
+        region_pix = cm.get_position_by_time(time, list(region_frequency))
+        if region_pix is None:
+            return
 
         psm = self.session.peak_selection_model()
-        psm.add_rayleigh_region(region_pix)
+        if peak_type == 'Brillouin':
+            psm.add_brillouin_region(tuple(region_pix))
+        if peak_type == 'Rayleigh':
+            psm.add_rayleigh_region(tuple(region_pix))
 
 
 class EvaluationController(ImageController):

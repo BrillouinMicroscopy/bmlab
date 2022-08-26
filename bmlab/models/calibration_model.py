@@ -350,6 +350,8 @@ class CalibrationModel(Serializer):
 
         """
         spectrum = self.get_frequencies_by_time(time)
+        if spectrum is None:
+            return None
         f = interpolate.interp1d(spectrum, range(len(spectrum)))
         return f(frequencies)
 
