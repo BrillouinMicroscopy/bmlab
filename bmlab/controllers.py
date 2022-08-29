@@ -637,6 +637,10 @@ class EvaluationController(ImageController):
                             'brillouin_peak_intensity'][ind] = \
                             results_multi_peak[
                                 region_key][frame_num][2]
+                        evm.results[
+                            'brillouin_peak_offset'][ind] = \
+                            results_multi_peak[
+                                region_key][frame_num][3]
 
             # Calculate the shift of the Rayleigh peaks,
             # in order to follow the peaks in case of a drift
