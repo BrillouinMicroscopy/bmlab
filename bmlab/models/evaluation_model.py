@@ -225,6 +225,24 @@ class EvaluationModel(Serializer):
             return spectra
         return None
 
+    def get_fits(self, ind_x, ind_y, ind_z):
+        return (self.results['brillouin_peak_position'][
+               ind_x, ind_y, ind_z, :, :, :],
+               self.results['brillouin_peak_fwhm'][
+               ind_x, ind_y, ind_z, :, :, :],
+               self.results['brillouin_peak_intensity'][
+               ind_x, ind_y, ind_z, :, :, :],
+               self.results['brillouin_peak_offset'][
+               ind_x, ind_y, ind_z, :, :, :]), \
+               (self.results['rayleigh_peak_position'][
+                ind_x, ind_y, ind_z, :, :, :],
+                self.results['rayleigh_peak_fwhm'][
+                ind_x, ind_y, ind_z, :, :, :],
+                self.results['rayleigh_peak_intensity'][
+                ind_x, ind_y, ind_z, :, :, :],
+                self.results['rayleigh_peak_offset'][
+                ind_x, ind_y, ind_z, :, :, :])
+
     def get_parameter_keys(self):
         return self.parameters
 
