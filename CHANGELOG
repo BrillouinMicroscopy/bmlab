@@ -1,3 +1,20 @@
+## 0.4.0 - 2022-08-29
+
+### Added
+- Allow to specify calibration temperature #143
+- Export all peaks from multi-peak fits #146
+- Also store peak fit offsets #150 #151
+- Allow to get fits #152
+
+### Changed
+- Update scipy #142
+
+### Fixed
+- Handle indices as int when getting key #144
+- Fix exporting fluorescence w/o scale calibration #145
+- Don't overwrite bounds when setting peak number #148
+- Don't fail to set regions w/o calibration #149
+
 ## 0.3.0 - 2022-08-17
 
 ### Added
