@@ -852,6 +852,15 @@ class EvaluationController(ImageController):
 
         return data, positions, dimensionality, labels
 
+    def get_fits(self, image_key):
+        resolution = self.session.get_payload_resolution()
+        indices = self.get_indices_from_key(resolution, image_key)
+
+        evm = self.session.evaluation_model()
+        if not evm:
+            return
+        return evm.get_fits(*indices)
+
     @staticmethod
     def get_key_from_indices(resolution, ind_x, ind_y, ind_z):
         if len(resolution) != 3:
