@@ -522,7 +522,7 @@ class EvaluationController(ImageController):
         # Initialize the Rayleigh shift
         # used for compensating drifts
         rayleigh_peak_initial =\
-            np.nan * np.ones((len(rayleigh_regions)))
+            np.nan * np.ones((len(spectra), len(rayleigh_regions), 1))
         rayleigh_shift = 0
         # Loop over all measurement positions
         for idx, image_key in enumerate(image_keys):
@@ -644,17 +644,17 @@ class EvaluationController(ImageController):
 
             # Calculate the shift of the Rayleigh peaks,
             # in order to follow the peaks in case of a drift
-            rayleigh_peak_current = np.nanmean(
-                evm.results['rayleigh_peak_position'][
-                    ind_x, ind_y, ind_z, :, :, 0], axis=0)
+            rayleigh_peak_current = evm.results['rayleigh_peak_position'][
+                    ind_x, ind_y, ind_z, :, :, :]
             # If we haven't found a valid Rayleigh peak position,
             # but the current one is valid, use it
             if not np.isnan(rayleigh_peak_current).all()\
                     and np.isnan(rayleigh_peak_initial).all():
                 rayleigh_peak_initial = rayleigh_peak_current
-            shift = np.nanmean(rayleigh_peak_current - rayleigh_peak_initial)
-            if not np.isnan(shift):
-                rayleigh_shift = round(shift)
+            shift = rayleigh_peak_current - rayleigh_peak_initial
+            evm.results['rayleigh_shift'][ind_x, ind_y, ind_z, :, :, :] = shift
+            if not np.isnan(shift).all():
+                rayleigh_shift = round(np.nanmean(shift))
 
             if count is not None:
                 count.value += 1
