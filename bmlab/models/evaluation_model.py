@@ -48,6 +48,14 @@ class EvaluationModel(Serializer):
                 self.results['rayleigh_peak_intensity'].shape
             )
             self.results['rayleigh_peak_offset'][:] = np.nan
+        # Migrations from 0.4.0 to 0.5.0
+        # @since 0.5.0
+        if 'rayleigh_shift' not in self.results:
+            # Stores how much the Rayleigh peak moved
+            # Used for shifting the regions evaluated
+            self.results['rayleigh_shift'] = np.empty(
+                self.results['rayleigh_peak_intensity'].shape
+            )
 
     @staticmethod
     def get_default_parameters():
@@ -215,6 +223,9 @@ class EvaluationModel(Serializer):
 
         self.results['rayleigh_peak_fwhm_f'] = np.empty(shape_rayleigh)
         self.results['rayleigh_peak_fwhm_f'][:] = np.nan
+
+        self.results['rayleigh_shift'] = np.empty(shape_rayleigh)
+        self.results['rayleigh_shift'][:] = np.nan
 
     def set_spectra(self, image_key, spectra):
         self.spectra[image_key] = spectra
