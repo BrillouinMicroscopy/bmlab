@@ -1,3 +1,9 @@
+## 0.5.0 - 2022-09-02
+
+### Added
+- Also store Rayleigh peak shift #153
+- Write scale bar to Brillouin Tiff file #154 #155
+
 ## 0.4.0 - 2022-08-29
 
 ### Added
