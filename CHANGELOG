@@ -1,3 +1,8 @@
+## 0.5.1 - 2022-09-02
+
+### Fixed
+- Correctly initialize setup on new file load #156
+
 ## 0.5.0 - 2022-09-02
 
 ### Added
