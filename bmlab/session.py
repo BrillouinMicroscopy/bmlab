@@ -11,6 +11,7 @@ from bmlab import __version__ as version
 from bmlab.file import BrillouinFile, is_source_file, is_session_file
 from bmlab.models.extraction_model import ExtractionModel
 from bmlab.models.orientation import Orientation
+from bmlab.models.setup import AVAILABLE_SETUPS
 from bmlab.models.calibration_model import CalibrationModel
 from bmlab.models.peak_selection_model import PeakSelectionModel
 from bmlab.models.evaluation_model import EvaluationModel
@@ -242,6 +243,8 @@ class Session(Serializer):
             }
             self.set_image_shape()
             self.set_arc_width()
+            # Initialize current setup
+            session.setup = AVAILABLE_SETUPS[0]
 
         try:
             self.load(file_name)
