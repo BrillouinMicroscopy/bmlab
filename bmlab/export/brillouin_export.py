@@ -165,10 +165,10 @@ class BrillouinExport(object):
                     image = Image.fromarray((255 * rgba).astype(np.ubyte))
                     image.save(filename)
 
-                    x_res = 1e3 * (positions[idx[0]].shape[idx[0]] - 1) / abs(
+                    x_res = (positions[idx[0]].shape[idx[0]] - 1) / abs(
                         np.nanmax(positions[idx[0]][tuple(dslice)]) -
                         np.nanmin(positions[idx[0]][tuple(dslice)]))
-                    y_res = 1e3 * (positions[idx[1]].shape[idx[1]] - 1) / abs(
+                    y_res = (positions[idx[1]].shape[idx[1]] - 1) / abs(
                         np.nanmax(positions[idx[1]][tuple(dslice)]) -
                         np.nanmin(positions[idx[1]][tuple(dslice)]))
 
@@ -176,6 +176,7 @@ class BrillouinExport(object):
                     filename = path / f"{filename_base}.tiff"
                     image = Image.fromarray(10000 * image_map)
                     tiffinfo = dict({
+                        270: "ImageJ=1.53f\nunit=micron",
                         282: x_res,  # XResolution [pixel/cm]
                         283: y_res,  # YResolution [pixel/cm]
                         296: 3  # Resolution unit [cm]
