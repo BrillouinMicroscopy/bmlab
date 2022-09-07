@@ -28,7 +28,7 @@ def fit_lorentz(x, y):
     # (it might fail if the peak is not symmetric and its maximum is the
     # first value higher than offset_guess + intensity_guess/2)
     if fwhm_guess <= 0.0:
-        fwhm_guess = 1.0
+        fwhm_guess = 10 * (x[-1] - x[0]) / x.shape[0]
 
     def error(params, xdata, ydata):
         return (ydata
@@ -52,7 +52,7 @@ def fit_lorentz(x, y):
 def fit_double_lorentz(x, y, bounds_w0=None):
     offset_guess = (y[0] + y[-1]) / 2.
     # gam_guess = (w0_guess ** 2 * (np.max(y) - offset_guess)) ** -0.5
-    fwhm_guess = 4
+    fwhm_guess = 10 * (x[-1] - x[0]) / x.shape[0]
     intensity_guess = np.max(y) - offset_guess
 
     # We run peak finding to get a good guess of the peak positions
@@ -83,11 +83,13 @@ def fit_double_lorentz(x, y, bounds_w0=None):
         bounds_lower[0] = bounds_w0[0][0]
         # full-width-half-maximum
         # The VIPA spectrometer has an instrument width of
-        # approx. 750 MHz, which translates to around
-        # 7 px minimum peak width (FOB setup)
-        # and 180 MHz and 4 px (780 nm setup).
-        # We limit the minimal fit width to 3 px here.
-        bounds_lower[1] = 3
+        # approx. 750 MHz for the FOB setup
+        # and 180 MHz for the 780 nm setup.
+        # This is far higher than the step size,
+        # so we limit it to this.
+        fwhm_lower_bound = (x[-1] - x[0]) / x.shape[0]
+
+        bounds_lower[1] = fwhm_lower_bound
         # intensity
         bounds_lower[2] = 0
 
@@ -95,7 +97,7 @@ def fit_double_lorentz(x, y, bounds_w0=None):
         # central position
         bounds_lower[3] = bounds_w0[1][0]
         # full-width-half-maximum
-        bounds_lower[4] = 3
+        bounds_lower[4] = fwhm_lower_bound
         # intensity
         bounds_lower[5] = 0
 
@@ -218,13 +220,17 @@ def fit_lorentz_region(region, xdata, ydata, nr_peaks=1, bounds_w0=None):
     center, full-width-half-maximum, intensity and offset
     """
     try:
+        idx_l = np.nanargmin(np.abs(xdata - region[0]))
+        idx_r = np.nanargmin(np.abs(xdata - region[1]))
+        x = xdata[idx_l:idx_r]
+        y = ydata[idx_l:idx_r]
         if nr_peaks == 2:
             w0s, fwhms, intensities, offset = fit_double_lorentz(
-                xdata[range(*region)], ydata[range(*region)],
+                x, y,
                 bounds_w0=bounds_w0)
         elif nr_peaks == 1:
             w0s, fwhms, intensities, offset = fit_lorentz(
-                xdata[range(*region)], ydata[range(*region)])
+                x, y)
         else:
             return
     except Exception:

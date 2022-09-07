@@ -409,24 +409,12 @@ class PeakSelectionController(object):
         return
 
     def add_brillouin_region_frequency(self, region_frequency):
-        self.add_region_frequency(region_frequency, 'Brillouin')
+        psm = self.session.peak_selection_model()
+        psm.add_brillouin_region(region_frequency)
 
     def add_rayleigh_region_frequency(self, region_frequency):
-        self.add_region_frequency(region_frequency, 'Rayleigh')
-
-    def add_region_frequency(self, region_frequency, peak_type):
-        cm = self.session.calibration_model()
-        # We use the first measurement image here
-        time = self.session.get_payload_time('0')
-        region_pix = cm.get_position_by_time(time, list(region_frequency))
-        if region_pix is None:
-            return
-
         psm = self.session.peak_selection_model()
-        if peak_type == 'Brillouin':
-            psm.add_brillouin_region(tuple(region_pix))
-        if peak_type == 'Rayleigh':
-            psm.add_rayleigh_region(tuple(region_pix))
+        psm.add_rayleigh_region(region_frequency)
 
 
 class EvaluationController(ImageController):
@@ -523,7 +511,6 @@ class EvaluationController(ImageController):
         # used for compensating drifts
         rayleigh_peak_initial =\
             np.nan * np.ones((len(spectra), len(rayleigh_regions), 1))
-        rayleigh_shift = 0
         # Loop over all measurement positions
         for idx, image_key in enumerate(image_keys):
             # Calculate the indices for the given key
@@ -544,18 +531,15 @@ class EvaluationController(ImageController):
             evm.results['intensity'][ind_x, ind_y, ind_z, :, 0, 0] =\
                 intensities
 
-            # We shift the evaluated regions here
-            # to compensate for eventual drift
-            brillouin_regions_shifted = [
-                tuple([val + rayleigh_shift for val in region])
-                for region in brillouin_regions]
-            rayleigh_regions_shifted = [
-                tuple([val + rayleigh_shift for val in region])
-                for region in rayleigh_regions]
+            frequencies = cm.get_frequencies_by_time(times)
+            # If we don't have frequency axis, we cannot evaluate on it
+            if frequencies is None:
+                continue
+            frequencies = list(frequencies)
 
             # Pack the data for parallel processing
-            regions = brillouin_regions_shifted + rayleigh_regions_shifted
-            packed_data = zip(irepeat(spectra), regions)
+            regions = brillouin_regions + rayleigh_regions
+            packed_data = zip(irepeat(spectra), irepeat(frequencies), regions)
             # Process it
             results = pool.starmap(self.fit_spectra, packed_data)
 
@@ -564,9 +548,9 @@ class EvaluationController(ImageController):
                 for region_key, _ in enumerate(brillouin_regions):
                     ind = (ind_x, ind_y, ind_z,
                            frame_num, region_key, 0)
-                    evm.results['brillouin_peak_position'][ind] =\
+                    evm.results['brillouin_peak_position_f'][ind] =\
                         results[region_key][frame_num][0]
-                    evm.results['brillouin_peak_fwhm'][ind] =\
+                    evm.results['brillouin_peak_fwhm_f'][ind] =\
                         results[region_key][frame_num][1]
                     evm.results['brillouin_peak_intensity'][ind] =\
                         results[region_key][frame_num][2]
@@ -578,9 +562,9 @@ class EvaluationController(ImageController):
                                      start=len(brillouin_regions)):
                     ind = (ind_x, ind_y, ind_z, frame_num,
                            region_key - len(brillouin_regions))
-                    evm.results['rayleigh_peak_position'][ind] =\
+                    evm.results['rayleigh_peak_position_f'][ind] =\
                         results[region_key][frame_num][0]
-                    evm.results['rayleigh_peak_fwhm'][ind] =\
+                    evm.results['rayleigh_peak_fwhm_f'][ind] =\
                         results[region_key][frame_num][1]
                     evm.results['rayleigh_peak_intensity'][ind] =\
                         results[region_key][frame_num][2]
@@ -596,23 +580,24 @@ class EvaluationController(ImageController):
                 ind =\
                     (ind_x, ind_y, ind_z, slice(None), slice(None), 0)
                 rayleigh_peaks = np.transpose(
-                    evm.results['rayleigh_peak_position'][ind]
+                    evm.results['rayleigh_peak_position_f'][ind]
                 )
                 bounds = self.create_bounds(
-                    brillouin_regions_shifted,
-                    times,
+                    brillouin_regions,
                     rayleigh_peaks
                 )
                 if bounds is not None:
                     packed_data_multi_peak =\
                         zip(irepeat(spectra),
-                            brillouin_regions_shifted,
+                            irepeat(frequencies),
+                            brillouin_regions,
                             irepeat(nr_brillouin_peaks),
                             bounds)
                 else:
                     packed_data_multi_peak =\
                         zip(irepeat(spectra),
-                            brillouin_regions_shifted,
+                            irepeat(frequencies),
+                            brillouin_regions,
                             irepeat(nr_brillouin_peaks),
                             irepeat(bounds))
                 # Process it
@@ -626,11 +611,11 @@ class EvaluationController(ImageController):
                                frame_num, region_key,
                                slice(1, nr_brillouin_peaks+1))
                         evm.results[
-                            'brillouin_peak_position'][ind] = \
+                            'brillouin_peak_position_f'][ind] = \
                             results_multi_peak[
                                 region_key][frame_num][0]
                         evm.results[
-                            'brillouin_peak_fwhm'][ind] = \
+                            'brillouin_peak_fwhm_f'][ind] = \
                             results_multi_peak[
                                 region_key][frame_num][1]
                         evm.results[
@@ -644,7 +629,7 @@ class EvaluationController(ImageController):
 
             # Calculate the shift of the Rayleigh peaks,
             # in order to follow the peaks in case of a drift
-            rayleigh_peak_current = evm.results['rayleigh_peak_position'][
+            rayleigh_peak_current = evm.results['rayleigh_peak_position_f'][
                     ind_x, ind_y, ind_z, :, :, :]
             # If we haven't found a valid Rayleigh peak position,
             # but the current one is valid, use it
@@ -653,8 +638,6 @@ class EvaluationController(ImageController):
                 rayleigh_peak_initial = rayleigh_peak_current
             shift = rayleigh_peak_current - rayleigh_peak_initial
             evm.results['rayleigh_shift'][ind_x, ind_y, ind_z, :, :, :] = shift
-            if not np.isnan(shift).all():
-                rayleigh_shift = round(np.nanmean(shift))
 
             if count is not None:
                 count.value += 1
@@ -670,20 +653,28 @@ class EvaluationController(ImageController):
         return
 
     @staticmethod
-    def fit_spectra(spectra, region, nr_peaks=1, bounds_w0=None):
+    def fit_spectra(spectra, frequencies, region, nr_peaks=1, bounds_w0=None):
         fits = []
         for frame_num, spectrum in enumerate(spectra):
-            xdata = np.arange(len(spectrum))
             if bounds_w0 is None:
-                fit = fit_lorentz_region(region, xdata, spectrum,
-                                         nr_peaks)
+                fit = fit_lorentz_region(
+                    region,
+                    frequencies[frame_num],
+                    spectrum,
+                    nr_peaks
+                )
             else:
-                fit = fit_lorentz_region(region, xdata, spectrum,
-                                         nr_peaks, bounds_w0[frame_num])
+                fit = fit_lorentz_region(
+                    region,
+                    frequencies[frame_num],
+                    spectrum,
+                    nr_peaks,
+                    bounds_w0[frame_num]
+                )
             fits.append(fit)
         return fits
 
-    def create_bounds(self, brillouin_regions, times, rayleigh_peaks):
+    def create_bounds(self, brillouin_regions, rayleigh_peaks):
         """
         This function converts the bounds settings into
         a bounds object for the fitting function
@@ -696,47 +687,42 @@ class EvaluationController(ImageController):
         Parameters
         ----------
         brillouin_regions
-        times
         rayleigh_peaks
 
         Returns
         -------
 
         """
-        cm = self.session.calibration_model()
         evm = self.session.evaluation_model()
         bounds = evm.bounds
         if bounds is None:
             return None
 
         # We need a Rayleigh peak position for
-        # every combination of brillouin_region and time
-        if rayleigh_peaks.shape != (len(brillouin_regions), len(times)):
+        # every brillouin_region
+        if rayleigh_peaks.shape[0] != (len(brillouin_regions)):
             return None
 
         w0_bounds = []
         # We have to create a separate bound for every region
         for region_idx, region in enumerate(brillouin_regions):
             local_time = []
-            for time_idx, time in enumerate(times):
+            for f_rayleigh in rayleigh_peaks[region_idx, :]:
                 # In case this is an Anti-Stokes peak, we find the peak
                 # with the higher frequency on the left hand side and
                 # have to flip the bounds
                 is_anti_stokes = np.mean(region) <\
-                                 rayleigh_peaks[region_idx][time_idx]
-                f_rayleigh = cm.get_frequency_by_time(
-                    time,
-                    rayleigh_peaks[region_idx][time_idx]
-                )[0]
+                                 f_rayleigh
 
                 local_bound = []
                 for bound in bounds:
                     local_limit = []
                     for limit in bound:
                         if limit.lower() == 'min':
-                            val = region[is_anti_stokes]
+                            val = region[int(is_anti_stokes)]
+                            # print(val)
                         elif limit.lower() == 'max':
-                            val = region[not is_anti_stokes]
+                            val = region[int(not is_anti_stokes)]
                         elif limit.lower() == '-inf':
                             val = -((-1) ** is_anti_stokes)\
                                           * np.Inf
@@ -747,12 +733,11 @@ class EvaluationController(ImageController):
                             # Try to convert the value in GHz into
                             # a value in pixel depending on the time
                             try:
-                                f = ((-1) ** is_anti_stokes)\
+                                val = ((-1) ** is_anti_stokes)\
                                           * 1e9 * float(limit) + f_rayleigh
-                                val = cm.get_position_by_time(time, f)[()]
                             except BaseException:
                                 val = np.Inf
-
+                        # print(val)
                         local_limit.append(val)
                     # Check that the bounds are sorted ascendingly
                     # (for anti-stokes, they might not).
@@ -826,10 +811,19 @@ class EvaluationController(ImageController):
                     weight =\
                         evm.results[
                             'brillouin_peak_intensity'][:, :, :, :, :, 1:]\
-                        * evm.results['brillouin_peak_fwhm'][:, :, :, :, :, 1:]
-                    sliced = \
-                        np.nansum(data[:, :, :, :, :, 1:] * weight, axis=5)\
-                        / np.nansum(weight, axis=5)
+                        * evm.results['brillouin_peak_fwhm_f'][
+                          :, :, :, :, :, 1:]
+                    # Nansum returns 0 if all entries are NaN, dividing by this
+                    # hence gives an invalid value error
+                    with warnings.catch_warnings():
+                        warnings.filterwarnings(
+                            action='ignore',
+                            message='invalid value encountered in divide'
+                        )
+                        sliced = \
+                            np.nansum(data[:, :, :, :, :, 1:] *
+                                      weight, axis=5)\
+                            / np.nansum(weight, axis=5)
             else:
                 sliced = data[:, :, :, :, :, 0]
         else:
@@ -892,10 +886,7 @@ class EvaluationController(ImageController):
 def calculate_derived_values():
     """
     We calculate the derived parameters here:
-    - Brillouin shift [pix]
     - Brillouin shift [GHz]
-    - Brillouin peak width [GHz]
-    - Rayleigh peak width [GHz]
     """
     session = Session.get_instance()
     evm = session.evaluation_model()
@@ -905,27 +896,17 @@ def calculate_derived_values():
     if len(evm.results['time']) == 0:
         return
 
-    time = evm.results['time']
-    shape_brillouin = evm.results['brillouin_peak_position'].shape
-    shape_rayleigh = evm.results['rayleigh_peak_position'].shape
+    shape_brillouin = evm.results['brillouin_peak_position_f'].shape
+    shape_rayleigh = evm.results['rayleigh_peak_position_f'].shape
     # If we have the same number of Rayleigh and Brillouin regions,
     # we can simply subtract the two arrays (regions are always
     # sorted by center in the peak selection model, so corresponding
     # regions should be at the same array index)
     if shape_brillouin[4] == shape_rayleigh[4]:
-        evm.results['brillouin_shift'] = abs(
-            evm.results['brillouin_peak_position'] -
-            evm.results['rayleigh_peak_position']
+        evm.results['brillouin_shift_f'] = abs(
+            evm.results['brillouin_peak_position_f'] -
+            evm.results['rayleigh_peak_position_f']
         )
-
-        # Calculate shift in GHz
-        shift = calculate_shift_f(
-            time,
-            evm.results['brillouin_peak_position'],
-            evm.results['rayleigh_peak_position']
-        )
-        if shift is not None:
-            evm.results['brillouin_shift_f'] = shift
 
     # Having a different number of Rayleigh and Brillouin regions
     # doesn't really make sense. But in case I am missing something
@@ -947,85 +928,12 @@ def calculate_derived_values():
                 )
             )
             idx_r = d.index(min(d))
-            evm.results['brillouin_shift'][:, :, :, :, idx, :] = abs(
+            evm.results['brillouin_shift_f'][:, :, :, :, idx, :] = abs(
                 evm.results[
-                    'brillouin_peak_position'][:, :, :, :, idx, :] -
+                    'brillouin_peak_position_f'][:, :, :, :, idx, :] -
                 evm.results[
-                    'rayleigh_peak_position'][:, :, :, :, idx_r, :]
+                    'rayleigh_peak_position_f'][:, :, :, :, idx_r, :]
             )
-
-            # Calculate shift in GHz
-            shift = calculate_shift_f(
-                time[:, :, :, :, 0, :],
-                evm.results['brillouin_peak_position'][:, :, :, :, idx, :],
-                evm.results['rayleigh_peak_position'][:, :, :, :, idx_r, :]
-            )
-            if shift is not None:
-                evm.results['brillouin_shift_f'][:, :, :, :, idx, :] =\
-                    shift
-
-    # Calculate FWHM in GHz
-    fwhm_brillouin = calculate_fwhm_f(
-        time,
-        evm.results['brillouin_peak_position'],
-        evm.results['brillouin_peak_fwhm']
-    )
-    if fwhm_brillouin is not None:
-        evm.results['brillouin_peak_fwhm_f'] = fwhm_brillouin
-
-    fwhm_rayleigh = calculate_fwhm_f(
-        time,
-        evm.results['rayleigh_peak_position'],
-        evm.results['rayleigh_peak_fwhm']
-    )
-    if fwhm_brillouin is not None:
-        evm.results['rayleigh_peak_fwhm_f'] = fwhm_rayleigh
-
-
-def calculate_shift_f(time, brillouin_position, rayleigh_position):
-    session = Session.get_instance()
-    cm = session.calibration_model()
-    if not cm:
-        return np.full(np.shape(brillouin_position), np.nan)
-    brillouin_peak_f = cm.get_frequency_by_time(
-        time,
-        brillouin_position
-    )
-    rayleigh_peak_f = cm.get_frequency_by_time(
-        time,
-        rayleigh_position
-    )
-
-    if (brillouin_peak_f is not None) and \
-            (rayleigh_peak_f is not None):
-        return abs(
-            brillouin_peak_f -
-            rayleigh_peak_f
-        )
-    return np.full(np.shape(brillouin_position), np.nan)
-
-
-def calculate_fwhm_f(time, peak_position, peak_fwhm):
-    session = Session.get_instance()
-    cm = session.calibration_model()
-    if not cm:
-        return np.full(np.shape(peak_position), np.nan)
-    brillouin_peak_right_slope_f = cm.get_frequency_by_time(
-        time,
-        peak_position + peak_fwhm/2
-    )
-    brillouin_peak_left_slope_f = cm.get_frequency_by_time(
-        time,
-        peak_position - peak_fwhm/2
-    )
-
-    if (brillouin_peak_right_slope_f is not None) and \
-            (brillouin_peak_left_slope_f is not None):
-        return abs(
-            brillouin_peak_right_slope_f -
-            brillouin_peak_left_slope_f
-        )
-    return np.full(np.shape(peak_position), np.nan)
 
 
 class Controller(object):
