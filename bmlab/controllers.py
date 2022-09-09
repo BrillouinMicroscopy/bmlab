@@ -727,7 +727,7 @@ class EvaluationController(ImageController):
                 f_rayleigh = cm.get_frequency_by_time(
                     time,
                     rayleigh_peaks[region_idx][time_idx]
-                )[()]
+                )[0]
 
                 local_bound = []
                 for bound in bounds:

@@ -317,20 +317,32 @@ class CalibrationModel(Serializer):
         -------
         The corresponding frequency in Hz
         """
-        # Cannot execute if ndims are unequal
-        if np.ndim(time) is not np.ndim(position):
-            return None
+        # Convert time and position to array just in case it's not
+        time = np.array(time, ndmin=1)
+        position = np.array(position, ndmin=1)
 
-        shape_time = np.shape(time)
-        shape_position = np.shape(position)
+        # Cannot execute if ndims are unequal
+        # and we have more than one time value
+        if np.ndim(time) is not np.ndim(position):
+            if time.size == 1:
+                time = time[0] * np.ones(np.shape(position))
+            else:
+                return None
+
+        shape_time = np.array(np.shape(time))
+        shape_position = np.array(np.shape(position))
 
         # In case the arrays don't have the same shape,
         # we repeat the time array
-        if shape_time is not shape_position:
-            time = np.tile(
-                time,
-                (np.array(shape_position) - np.array(shape_time)) + 1
-            )
+        if (shape_time != shape_position).any():
+            # Only works if the respective time array dimension has size 1
+            if (shape_time[shape_time != shape_position] != 1).any():
+                return None
+            else:
+                time = np.tile(
+                    time,
+                    (np.array(shape_position) - np.array(shape_time)) + 1
+                )
 
         if self.frequency_by_time_interpolator is not None:
             return self.frequency_by_time_interpolator(time, position)

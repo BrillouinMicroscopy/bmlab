@@ -230,6 +230,19 @@ def test_get_frequency_by_time():
     expected[:, :, :, 1, :, :] = 60
     np.testing.assert_allclose(frequencies, expected, atol=1.E-8)
 
+    # Test that times array gets repeated properly, if shapes don't match
+    times = 10 * np.ones((5, 5, 5, 2, 2, 1))
+    frequencies = cm.get_frequency_by_time(times, positions)
+    np.testing.assert_allclose(frequencies, expected, atol=1.E-8)
+
+    times = 10 * np.ones((5, 5, 5, 2, 1, 1))
+    frequencies = cm.get_frequency_by_time(times, positions)
+    np.testing.assert_allclose(frequencies, expected, atol=1.E-8)
+
+    times = 10 * np.ones((5, 5, 5, 2, 3, 1))
+    frequencies = cm.get_frequency_by_time(times, positions)
+    assert frequencies is None
+
     # Test that three calibrations work
     cm.set_frequencies('2', 30, list(np.arange(100).reshape(1, -1) + 30))
 
@@ -256,6 +269,28 @@ def test_get_frequency_by_time():
     expected[:, :, :, 0, :, 1] = 20
     expected[:, :, :, 1, :, 0] = 60
     expected[:, :, :, 1, :, 1] = 70
+    np.testing.assert_allclose(frequencies, expected, atol=1.E-8)
+
+    # Test that in case of a single time point,
+    # it is used for all positions
+    frequencies = cm.get_frequency_by_time(10, positions)
+    expected = 10 * np.ones((5, 5, 5, 2, 2, 2))
+    expected[:, :, :, 1, :, :] = 60
+    np.testing.assert_allclose(frequencies, expected, atol=1.E-8)
+
+    # Test that if we have more than one time point and
+    # the shape does not match the shape of positions,
+    # we get None
+    frequencies = cm.get_frequency_by_time([10, 20], positions)
+    assert frequencies is None
+
+    # Test that it also accepts tuples
+    frequencies = cm.get_frequency_by_time(10, (0, 0, 50, 50))
+    expected = np.array([10, 10, 60, 60])
+    np.testing.assert_allclose(frequencies, expected, atol=1.E-8)
+
+    frequencies = cm.get_frequency_by_time((10, 20, 10, 20), (0, 0, 50, 50))
+    expected = np.array([10, 20, 60, 70])
     np.testing.assert_allclose(frequencies, expected, atol=1.E-8)
 
 
