@@ -216,7 +216,12 @@ class CalibrationModel(Serializer):
             frequencies = np.squeeze(frequencies)
 
             self.frequencies_by_time_interpolator =\
-                interpolate.interp1d(calib_times_array, frequencies, axis=0)
+                interpolate.interp1d(
+                    calib_times_array,
+                    frequencies,
+                    bounds_error=False,
+                    fill_value=(frequencies[0], frequencies[-1]),
+                    axis=0)
 
         """
         Create the interpolator for getting a frequency by position and time

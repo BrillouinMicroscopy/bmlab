@@ -163,9 +163,14 @@ def test_get_frequencies_by_time():
     frequencies = cm.get_frequencies_by_time(0)
     np.testing.assert_allclose(frequencies, frequencies0, atol=1.E-8)
 
+    # Test that extrapolation works
     frequencies = cm.get_frequencies_by_time(10)
     np.testing.assert_allclose(frequencies, frequencies0, atol=1.E-8)
 
+    frequencies = cm.get_frequencies_by_time(-10)
+    np.testing.assert_allclose(frequencies, frequencies0, atol=1.E-8)
+
+    # Test that two calibrations work
     frequencies1 = np.arange(100) + 10
     cm.set_frequencies('1', 10, list(frequencies1.reshape(1, -1)))
 
@@ -173,6 +178,13 @@ def test_get_frequencies_by_time():
     np.testing.assert_allclose(frequencies, frequencies0, atol=1.E-8)
 
     frequencies = cm.get_frequencies_by_time(10)
+    np.testing.assert_allclose(frequencies, frequencies1, atol=1.E-8)
+
+    # Test that extrapolation works
+    frequencies = cm.get_frequencies_by_time(-10)
+    np.testing.assert_allclose(frequencies, frequencies0, atol=1.E-8)
+
+    frequencies = cm.get_frequencies_by_time(20)
     np.testing.assert_allclose(frequencies, frequencies1, atol=1.E-8)
 
 
