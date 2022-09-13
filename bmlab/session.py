@@ -2,6 +2,7 @@ import os
 import errno
 
 from pathlib import Path
+from functools import reduce
 
 import h5py
 from numpy import transpose
@@ -413,3 +414,46 @@ class Session(Serializer):
             session = Session.get_instance()
             for var_name, var_value in new_session.__dict__.items():
                 session.__dict__[var_name] = var_value
+
+        self.run_migrations()
+
+    def run_migrations(self):
+        """
+        This functions runs migrations
+        that cannot be done in the respective models only,
+        as they might require access to other models.
+
+        """
+        session = Session.get_instance()
+        repetitions = self.file.repetition_keys()
+        for repetition in repetitions:
+            session.set_current_repetition(repetition)
+            # Migrations from 0.5.1 to 0.6.0
+            # Convert evaluation regions from pix to GHz
+            # @since 0.6.0
+            psm = session.peak_selection_model()
+            cm = session.calibration_model()
+            # We use the first measurement image here
+            time = session.get_payload_time('0')
+
+            def region_to_region_f(regions, region):
+                region_f = cm.get_frequency_by_time(time, region)
+                if region_f is not None:
+                    regions.append(region_f)
+                return regions
+
+            if not hasattr(psm, 'brillouin_regions_f'):
+                psm.brillouin_regions_f = reduce(
+                    region_to_region_f,
+                    psm.brillouin_regions,
+                    []
+                )
+                delattr(psm, 'brillouin_regions')
+
+            if not hasattr(psm, 'rayleigh_regions_f'):
+                psm.rayleigh_regions_f = reduce(
+                    region_to_region_f,
+                    psm.rayleigh_regions,
+                    []
+                )
+                delattr(psm, 'rayleigh_regions')

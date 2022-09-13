@@ -15,8 +15,8 @@ def test_initialize_results_arrays():
     })
 
     assert evm.results['intensity'].shape == (5, 5, 5, 2, 1, 1)
-    assert evm.results['brillouin_peak_position'].shape == (5, 5, 5, 2, 1, 1)
-    assert evm.results['rayleigh_peak_position'].shape == (5, 5, 5, 2, 1, 1)
+    assert evm.results['brillouin_peak_position_f'].shape == (5, 5, 5, 2, 1, 1)
+    assert evm.results['rayleigh_peak_position_f'].shape == (5, 5, 5, 2, 1, 1)
 
     # Initialize results array
     evm.initialize_results_arrays({
@@ -30,8 +30,8 @@ def test_initialize_results_arrays():
     })
 
     assert evm.results['intensity'].shape == (5, 5, 5, 2, 1, 1)
-    assert evm.results['brillouin_peak_position'].shape == (5, 5, 5, 2, 2, 1)
-    assert evm.results['rayleigh_peak_position'].shape == (5, 5, 5, 2, 2, 1)
+    assert evm.results['brillouin_peak_position_f'].shape == (5, 5, 5, 2, 2, 1)
+    assert evm.results['rayleigh_peak_position_f'].shape == (5, 5, 5, 2, 2, 1)
 
     # Initialize results array
     evm.initialize_results_arrays({
@@ -48,5 +48,5 @@ def test_initialize_results_arrays():
     # If we have more than one Brillouin peak,
     # we store the result of a single peak fit
     # and the result of a multi peak fit, adding up to nr_brillouin_peaks + 1
-    assert evm.results['brillouin_peak_position'].shape == (5, 5, 5, 2, 2, 3)
-    assert evm.results['rayleigh_peak_position'].shape == (5, 5, 5, 2, 2, 1)
+    assert evm.results['brillouin_peak_position_f'].shape == (5, 5, 5, 2, 2, 3)
+    assert evm.results['rayleigh_peak_position_f'].shape == (5, 5, 5, 2, 2, 1)
