@@ -1,3 +1,14 @@
+## 0.6.0 - 2022-09-14
+
+### Added
+- Implement exporting 3D data #162
+
+### Changed
+- Fit Brillouin spectrum on frequency axis #158
+
+### Fixed
+- Fix parameter label in csv files #163
+
 ## 0.5.1 - 2022-09-02
 
 ### Fixed
