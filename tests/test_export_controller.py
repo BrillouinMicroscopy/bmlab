@@ -117,7 +117,7 @@ def test_export_fluorescence_combined(tmp_dir):
         assert os.path.exists(plots_dir / image)
 
 
-def test_export_brillouin(tmp_dir):
+def test_export_brillouin_2D(tmp_dir):
     shutil.copy(
         data_file_path('2D-xy.h5'), Path.cwd() / '2D-xy.h5')
 
@@ -161,3 +161,58 @@ def test_export_brillouin(tmp_dir):
     for csv in csvs:
         assert os.path.exists(
             tmp_dir.parent / 'Export' / csv)
+
+
+def test_export_brillouin_3D(tmp_dir):
+    shutil.copy(
+        data_file_path('3D.h5'), Path.cwd() / '3D.h5')
+
+    session = Session.get_instance()
+    session.set_file(Path('3D.h5'))
+
+    ec = ExportController()
+    config = ec.get_configuration()
+    config['fluorescence']['export'] = False
+    config['fluorescenceCombined']['export'] = False
+    config['brillouin']['parameters'] =\
+        ['brillouin_shift_f', 'brillouin_peak_intensity']
+    ec.export(config)
+
+    session.clear()
+
+    slice_count = 3
+
+    plots_dir = tmp_dir.parent / 'Plots' / 'Bare'
+    images = [
+        '3D_BMrep0_brillouin_shift_f',
+        '3D_BMrep0_brillouin_peak_intensity',
+    ]
+    for image in images:
+        # Check that slices are exported as separate PNGs
+        for slice_number in range(slice_count):
+            assert os.path.exists(
+                plots_dir / f'{image}_slice-{slice_number}.png')
+        # Check that slices are exported as single stacked TIFF
+        assert os.path.exists(
+            plots_dir / f'{image}.tiff')
+
+    plots_dir = tmp_dir.parent / 'Plots' / 'WithAxis'
+    images = [
+        '3D_BMrep0_brillouin_shift_f',
+        '3D_BMrep0_brillouin_peak_intensity',
+    ]
+    file_types = ['pdf', 'png']
+    for image in images:
+        for file_type in file_types:
+            for slice_number in range(slice_count):
+                assert os.path.exists(
+                    plots_dir / f'{image}_slice-{slice_number}.{file_type}')
+
+    csvs = [
+        '3D_BMrep0_brillouin_shift_f',
+        '3D_BMrep0_brillouin_peak_intensity',
+    ]
+    for csv in csvs:
+        for slice_number in range(slice_count):
+            assert os.path.exists(
+                tmp_dir.parent / 'Export' / f'{csv}_slice-{slice_number}.csv')
