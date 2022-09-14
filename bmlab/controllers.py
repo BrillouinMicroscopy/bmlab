@@ -340,7 +340,9 @@ class CalibrationController(ImageController):
         cm.set_vipa_params(calib_key, vipa_params)
         cm.set_frequencies(calib_key, time, frequencies)
 
-        calculate_derived_values()
+        evm = self.session.evaluation_model()
+        if evm is not None:
+            evm.invalidate_results()
 
     def clear_calibration(self, calib_key):
         cm = self.session.calibration_model()
@@ -352,7 +354,9 @@ class CalibrationController(ImageController):
         cm.clear_frequencies(calib_key)
         cm.clear_vipa_params(calib_key)
 
-        calculate_derived_values()
+        evm = self.session.evaluation_model()
+        if evm is not None:
+            evm.invalidate_results()
 
     def fit_rayleigh_regions(self, calib_key):
         cm = self.session.calibration_model()
