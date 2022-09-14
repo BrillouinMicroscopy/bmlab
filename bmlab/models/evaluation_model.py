@@ -79,6 +79,10 @@ class EvaluationModel(Serializer):
             if key in self.results:
                 del self.results[key]
 
+    def invalidate_results(self):
+        for key in self.parameters:
+            self.results[key][:] = np.nan
+
     @staticmethod
     def get_default_parameters():
         return OrderedDict({

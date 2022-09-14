@@ -433,6 +433,9 @@ class Session(Serializer):
             # @since 0.6.0
             psm = session.peak_selection_model()
             cm = session.calibration_model()
+            evm = session.evaluation_model()
+            if not hasattr(psm, 'brillouin_regions_f'):
+                evm.invalidate_results()
             # We use the first measurement image here
             time = session.get_payload_time('0')
 
