@@ -201,7 +201,9 @@ class BrillouinExport(object):
                             csv_writer = csv.writer(
                                 csvfile, delimiter=',',
                                 quotechar='|', quoting=csv.QUOTE_MINIMAL)
-                            csv_writer.writerow(['Brillouin shift [GHz]'])
+                            label = f"{parameters[parameter_key]['label']}" \
+                                    f" [{parameters[parameter_key]['unit']}]"
+                            csv_writer.writerow([label])
                             csv_writer.writerow([])
                             csv_writer.writerows(data[tuple(dslice)])
 
