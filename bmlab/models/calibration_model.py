@@ -181,7 +181,7 @@ class CalibrationModel(Serializer):
 
         sorted_keys = sorted(self.calib_times,
                              key=self.calib_times.get)
-        # Don't do anything if there are not calibrations
+        # Don't do anything if there are no calibrations
         if len(sorted_keys) < 1:
             return
 
@@ -204,7 +204,10 @@ class CalibrationModel(Serializer):
         """
         if len(sorted_keys) < 2:
             self.frequencies_by_time_interpolator = \
-                lambda time: np.nanmean(self.frequencies[sorted_keys[0]], 0)
+                lambda time: np.tile(
+                    np.nanmean(self.frequencies[sorted_keys[0]], 0),
+                    (time.shape[0], 1)
+                )
         else:
             calib_times_array = []
             frequencies = []
@@ -305,7 +308,8 @@ class CalibrationModel(Serializer):
         The frequency axis in Hz
         """
         if self.frequencies_by_time_interpolator is not None:
-            return self.frequencies_by_time_interpolator(time)
+            return self.frequencies_by_time_interpolator(
+                np.array(time, ndmin=1))
 
     def get_frequency_by_time(self, time, position):
         """
@@ -369,7 +373,7 @@ class CalibrationModel(Serializer):
         spectrum = self.get_frequencies_by_time(time)
         if spectrum is None:
             return None
-        f = interpolate.interp1d(spectrum, range(len(spectrum)))
+        f = interpolate.interp1d(spectrum[0], range(len(spectrum[0])))
         return f(frequencies)
 
 

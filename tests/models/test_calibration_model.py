@@ -154,38 +154,63 @@ def test_get_frequencies_by_time():
     cm = CalibrationModel()
 
     """
-    Fill calibration model with values for calibrations
+    Fill calibration model with a single calibration
     """
-    # Test that one calibration works
-    frequencies0 = np.arange(100)
-    cm.set_frequencies('0', 0, list(frequencies0.reshape(1, -1)))
+    frequencies0 = np.arange(100).reshape(1, -1)
+    cm.set_frequencies('0', 0, list(frequencies0))
 
-    frequencies = cm.get_frequencies_by_time(0)
+    # Test that it returns the exact frequency axis
+    frequencies = cm.get_frequencies_by_time([0])
     np.testing.assert_allclose(frequencies, frequencies0, atol=1.E-8)
 
     # Test that extrapolation works
-    frequencies = cm.get_frequencies_by_time(10)
+    frequencies = cm.get_frequencies_by_time([10])
     np.testing.assert_allclose(frequencies, frequencies0, atol=1.E-8)
 
-    frequencies = cm.get_frequencies_by_time(-10)
+    frequencies = cm.get_frequencies_by_time([-10])
     np.testing.assert_allclose(frequencies, frequencies0, atol=1.E-8)
 
-    # Test that two calibrations work
-    frequencies1 = np.arange(100) + 10
-    cm.set_frequencies('1', 10, list(frequencies1.reshape(1, -1)))
+    # Test that it accepts a list of times
+    frequencies = cm.get_frequencies_by_time([0, 10, -10])
+    np.testing.assert_allclose(
+        frequencies, np.tile(frequencies0, (3, 1)), atol=1.E-8)
 
+    # Test that it accepts an integer as single time point
     frequencies = cm.get_frequencies_by_time(0)
     np.testing.assert_allclose(frequencies, frequencies0, atol=1.E-8)
 
-    frequencies = cm.get_frequencies_by_time(10)
+    """
+    Fill calibration model with a second calibration
+    """
+    frequencies1 = np.arange(100).reshape(1, -1) + 10
+    cm.set_frequencies('1', 10, list(frequencies1))
+
+    # Test that it returns the exact frequency axis
+    frequencies = cm.get_frequencies_by_time([0])
+    np.testing.assert_allclose(frequencies, frequencies0, atol=1.E-8)
+
+    frequencies = cm.get_frequencies_by_time([10])
     np.testing.assert_allclose(frequencies, frequencies1, atol=1.E-8)
 
     # Test that extrapolation works
-    frequencies = cm.get_frequencies_by_time(-10)
+    frequencies = cm.get_frequencies_by_time([-10])
     np.testing.assert_allclose(frequencies, frequencies0, atol=1.E-8)
 
-    frequencies = cm.get_frequencies_by_time(20)
+    frequencies = cm.get_frequencies_by_time([20])
     np.testing.assert_allclose(frequencies, frequencies1, atol=1.E-8)
+
+    # Test that it accepts a list of times
+    frequencies = cm.get_frequencies_by_time([0, 10, -10, 20])
+    frequencies_expected = np.ndarray((4, 100))
+    frequencies_expected[0, :] = frequencies0
+    frequencies_expected[1, :] = frequencies1
+    frequencies_expected[2, :] = frequencies0
+    frequencies_expected[3, :] = frequencies1
+    np.testing.assert_allclose(frequencies, frequencies_expected, atol=1.E-8)
+
+    # Test that it accepts an integer as single time point
+    frequencies = cm.get_frequencies_by_time(0)
+    np.testing.assert_allclose(frequencies, frequencies0, atol=1.E-8)
 
 
 def test_get_frequency_by_time():
