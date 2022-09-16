@@ -517,6 +517,10 @@ class EvaluationController(ImageController):
             np.nan * np.ones((len(spectra), len(rayleigh_regions), 1))
         # Loop over all measurement positions
         for idx, image_key in enumerate(image_keys):
+
+            if count is not None:
+                count.value += 1
+
             # Calculate the indices for the given key
             (ind_x, ind_y, ind_z) =\
                 self.get_indices_from_key(resolution, image_key)
@@ -642,9 +646,6 @@ class EvaluationController(ImageController):
                 rayleigh_peak_initial = rayleigh_peak_current
             shift = rayleigh_peak_current - rayleigh_peak_initial
             evm.results['rayleigh_shift'][ind_x, ind_y, ind_z, :, :, :] = shift
-
-            if count is not None:
-                count.value += 1
 
             # Calculate the derived values every ten steps
             if not (idx % 10):
