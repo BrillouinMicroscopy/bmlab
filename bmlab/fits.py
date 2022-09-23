@@ -141,6 +141,122 @@ def fit_double_lorentz(x, y, bounds_w0=None):
     return w0s, fwhms, intens, offset
 
 
+def fit_quadruple_lorentz(x, y, bounds_w0=None):
+    offset_guess = (y[0] + y[-1]) / 2.
+    # gam_guess = (w0_guess ** 2 * (np.max(y) - offset_guess)) ** -0.5
+    fwhm_guess = 10 * (x[-1] - x[0]) / x.shape[0]
+    intensity_guess = np.max(y) - offset_guess
+
+    # We run peak finding to get a good guess of the peak positions
+    # and use the four peaks with the highest prominence.
+    peaks, properties = find_peaks(y, prominence=1)
+    idx = np.argsort(properties['prominences'])[::-1]
+
+    # Return if we didn't find four peaks
+    if len(idx) < 4:
+        return
+
+    idx_sort = np.sort(peaks[idx[0:4]])
+    w0_guess = list(x[idx_sort])
+
+    def error(params, xdata, ydata):
+        return (ydata
+                - lorentz(xdata, *params[0:3])
+                - lorentz(xdata, *params[3:6])
+                - lorentz(xdata, *params[6:9])
+                - lorentz(xdata, *params[9:12])
+                - params[12]) ** 2
+
+    # Create the bounds array
+    if bounds_w0 is not None:
+        # Lower limits
+        bounds_lower = -np.Inf * np.ones(13)
+
+        # 1st peak:
+        # central position
+        bounds_lower[0] = bounds_w0[0][0]
+        # full-width-half-maximum
+        # The VIPA spectrometer has an instrument width of
+        # approx. 750 MHz for the FOB setup
+        # and 180 MHz for the 780 nm setup.
+        # This is far higher than the step size,
+        # so we limit it to this.
+        fwhm_lower_bound = (x[-1] - x[0]) / x.shape[0]
+
+        bounds_lower[1] = fwhm_lower_bound
+        # intensity
+        bounds_lower[2] = 0
+
+        # 2nd peak:
+        # central position
+        bounds_lower[3] = bounds_w0[1][0]
+        # full-width-half-maximum
+        bounds_lower[4] = fwhm_lower_bound
+        # intensity
+        bounds_lower[5] = 0
+
+        # 3rd peak:
+        # central position
+        bounds_lower[6] = bounds_w0[2][0]
+        # full-width-half-maximum
+        bounds_lower[7] = fwhm_lower_bound
+        # intensity
+        bounds_lower[8] = 0
+
+        # 4th peak:
+        # central position
+        bounds_lower[9] = bounds_w0[3][0]
+        # full-width-half-maximum
+        bounds_lower[10] = fwhm_lower_bound
+        # intensity
+        bounds_lower[11] = 0
+
+        # offset
+        bounds_lower[12] = 0
+
+        # Upper limits
+        bounds_upper = np.Inf * np.ones(13)
+
+        bounds_upper[0] = bounds_w0[0][1]
+        bounds_upper[3] = bounds_w0[1][1]
+        bounds_upper[6] = bounds_w0[2][1]
+        bounds_upper[9] = bounds_w0[3][1]
+        bounds = (bounds_lower, bounds_upper)
+
+        # Sort the guesses to the bounds
+        bounds_w0_center = [np.mean(
+            np.clip(bound, *x[::len(x) - 1])) for bound in bounds_w0]
+        w0_guess.sort(reverse=(bounds_w0_center[0] > bounds_w0_center[1]))
+
+        # Check that the initial guesses are within the bounds
+        w0_guess = [np.clip(
+            guess, *bounds_w0[idx]) for idx, guess in enumerate(w0_guess)]
+    else:
+        bounds = (-np.Inf, np.Inf)
+
+    opt_result = least_squares(
+        error,
+        x0=(w0_guess[0], fwhm_guess, intensity_guess,
+            w0_guess[1], fwhm_guess, intensity_guess,
+            w0_guess[2], fwhm_guess, intensity_guess,
+            w0_guess[3], fwhm_guess, intensity_guess,
+            offset_guess
+            ),
+        args=(x, y),
+        bounds=bounds
+    )
+
+    if not opt_result.success:
+        raise FitError('Lorentz fit failed.')
+
+    res = opt_result.x
+    w0s, fwhms, intens = (res[0], res[3], res[6], res[9]),\
+                         (res[1], res[4], res[7], res[10]),\
+                         (res[2], res[5], res[8], res[11])
+    offset = res[12]
+    return w0s, fwhms, intens, offset
+
+
 def fit_circle(points):
     """
     Fits a circle to a given set of points. Returnes the center and the radius
@@ -224,13 +340,17 @@ def fit_lorentz_region(region, xdata, ydata, nr_peaks=1, bounds_w0=None):
         idx_r = np.nanargmin(np.abs(xdata - region[1]))
         x = xdata[idx_l:idx_r]
         y = ydata[idx_l:idx_r]
-        if nr_peaks == 2:
+        if nr_peaks == 1:
+            w0s, fwhms, intensities, offset = fit_lorentz(
+                x, y)
+        elif nr_peaks == 2:
             w0s, fwhms, intensities, offset = fit_double_lorentz(
                 x, y,
                 bounds_w0=bounds_w0)
-        elif nr_peaks == 1:
-            w0s, fwhms, intensities, offset = fit_lorentz(
-                x, y)
+        elif nr_peaks == 4:
+            w0s, fwhms, intensities, offset = fit_quadruple_lorentz(
+                x, y,
+                bounds_w0=bounds_w0)
         else:
             return
     except Exception:
