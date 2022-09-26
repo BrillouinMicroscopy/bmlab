@@ -890,55 +890,43 @@ class EvaluationController(ImageController):
 
 def calculate_derived_values():
     """
-    We calculate the derived parameters here:
-    - Brillouin shift [GHz]
+    We calculate the Brillouin shift in GHz here
     """
     session = Session.get_instance()
     evm = session.evaluation_model()
     if not evm:
         return
 
-    if len(evm.results['time']) == 0:
+    if evm.results['brillouin_peak_position_f'].size == 0:
+        return
+
+    if evm.results['rayleigh_peak_position_f'].size == 0:
         return
 
     shape_brillouin = evm.results['brillouin_peak_position_f'].shape
     shape_rayleigh = evm.results['rayleigh_peak_position_f'].shape
-    # If we have the same number of Rayleigh and Brillouin regions,
-    # we can simply subtract the two arrays (regions are always
-    # sorted by center in the peak selection model, so corresponding
-    # regions should be at the same array index)
-    if shape_brillouin[4] == shape_rayleigh[4]:
-        evm.results['brillouin_shift_f'] = abs(
+
+    # We calculate every possible combination of
+    # Brillouin peak and Rayleigh peak position difference
+    # and then use the smallest absolute value.
+    # That saves us from sorting Rayleigh peaks to Brillouin peaks,
+    # because a Brillouin peak always belongs to the Rayleigh peak nearest.
+    brillouin_shift_f = np.NaN * np.ones((*shape_brillouin, shape_rayleigh[4]))
+    for idx in range(shape_rayleigh[4]):
+        brillouin_shift_f[:, :, :, :, :, :, idx] = abs(
             evm.results['brillouin_peak_position_f'] -
-            evm.results['rayleigh_peak_position_f']
+            np.tile(
+                evm.results['rayleigh_peak_position_f'][:, :, :, :, [idx], :],
+                (1, 1, 1, 1, 1, shape_brillouin[5])
+            )
         )
 
-    # Having a different number of Rayleigh and Brillouin regions
-    # doesn't really make sense. But in case I am missing something
-    # here, we assign each Brillouin region the nearest (by center)
-    # Rayleigh region.
-    else:
-        psm = session.peak_selection_model()
-        if not psm:
-            return
-        brillouin_centers = list(map(np.mean, psm.get_brillouin_regions()))
-        rayleigh_centers = list(map(np.mean, psm.get_rayleigh_regions()))
-
-        for idx in range(len(brillouin_centers)):
-            # Find corresponding (nearest) Rayleigh region
-            d = list(
-                map(
-                    lambda x: abs(x - brillouin_centers[idx]),
-                    rayleigh_centers
-                )
-            )
-            idx_r = d.index(min(d))
-            evm.results['brillouin_shift_f'][:, :, :, :, idx, :] = abs(
-                evm.results[
-                    'brillouin_peak_position_f'][:, :, :, :, idx, :] -
-                evm.results[
-                    'rayleigh_peak_position_f'][:, :, :, :, idx_r, :]
-            )
+    with warnings.catch_warnings():
+        warnings.filterwarnings(
+            action='ignore',
+            message='All-NaN slice encountered'
+        )
+        evm.results['brillouin_shift_f'] = np.nanmin(brillouin_shift_f, 6)
 
 
 class Controller(object):

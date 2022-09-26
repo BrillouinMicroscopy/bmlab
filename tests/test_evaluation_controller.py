@@ -118,7 +118,7 @@ def test_calculate_derived_values_equal_region_count():
 
     evm.results['brillouin_peak_position_f'][:, :, :, :, 0, :] = 1
     evm.results['brillouin_peak_position_f'][:, :, :, :, 1, :] = 4
-    evm.results['rayleigh_peak_position_f'][:, :, :, :, 0, :] = 3
+    evm.results['rayleigh_peak_position_f'][:, :, :, :, 0, :] = -1
     evm.results['rayleigh_peak_position_f'][:, :, :, :, 1, :] = 8
 
     calculate_derived_values()
@@ -159,14 +159,14 @@ def test_calculate_derived_values_equal_region_count_nr_peaks_2():
     evm.results['brillouin_peak_position_f'][:, :, :, :, 1, :] = 4
     evm.results['brillouin_peak_position_f'][:, :, :, :, 0, 1] = 2
     evm.results['brillouin_peak_position_f'][:, :, :, :, 1, 1] = 5
-    evm.results['rayleigh_peak_position_f'][:, :, :, :, 0, :] = 3
+    evm.results['rayleigh_peak_position_f'][:, :, :, :, 0, :] = -1
     evm.results['rayleigh_peak_position_f'][:, :, :, :, 1, :] = 8
 
     calculate_derived_values()
 
     assert (evm.results['brillouin_shift_f'][:, :, :, :, 0, 0] == 2).all()
     assert (evm.results['brillouin_shift_f'][:, :, :, :, 1, 0] == 4).all()
-    assert (evm.results['brillouin_shift_f'][:, :, :, :, 0, 1] == 1).all()
+    assert (evm.results['brillouin_shift_f'][:, :, :, :, 0, 1] == 3).all()
     assert (evm.results['brillouin_shift_f'][:, :, :, :, 1, 1] == 3).all()
 
 
@@ -193,22 +193,13 @@ def test_calculate_derived_values_different_region_count():
 
     evm.results['brillouin_peak_position_f'][:, :, :, :, 0, :] = 1
     evm.results['brillouin_peak_position_f'][:, :, :, :, 1, :] = 4
-    evm.results['rayleigh_peak_position_f'][:, :, :, :, 0, :] = 5
+    evm.results['rayleigh_peak_position_f'][:, :, :, :, 0, :] = -2
     evm.results['rayleigh_peak_position_f'][:, :, :, :, 1, :] = 9
     evm.results['rayleigh_peak_position_f'][:, :, :, :, 2, :] = 10
 
-    psm = evc.session.peak_selection_model()
-
-    psm.add_brillouin_region((1, 2))
-    psm.add_brillouin_region((4, 5))
-
-    psm.add_rayleigh_region((0, 1))
-    psm.add_rayleigh_region((6, 7))
-    psm.add_rayleigh_region((8, 9))
-
     calculate_derived_values()
 
-    assert (evm.results['brillouin_shift_f'][:, :, :, :, 0, :] == 4).all()
+    assert (evm.results['brillouin_shift_f'][:, :, :, :, 0, :] == 3).all()
     assert (evm.results['brillouin_shift_f'][:, :, :, :, 1, :] == 5).all()
 
 
@@ -237,25 +228,19 @@ def test_calculate_derived_values_different_region_count_nr_peaks_2():
     evm.results['brillouin_peak_position_f'][:, :, :, :, 1, :] = 4
     evm.results['brillouin_peak_position_f'][:, :, :, :, 0, 1] = 2
     evm.results['brillouin_peak_position_f'][:, :, :, :, 1, 1] = 5
-    evm.results['rayleigh_peak_position_f'][:, :, :, :, 0, :] = 5
+    evm.results['rayleigh_peak_position_f'][:, :, :, :, 0, :] = -2
     evm.results['rayleigh_peak_position_f'][:, :, :, :, 1, :] = 9
-    evm.results['rayleigh_peak_position_f'][:, :, :, :, 2, :] = 10
-
-    psm = evc.session.peak_selection_model()
-
-    psm.add_brillouin_region((1, 2))
-    psm.add_brillouin_region((4, 5))
-
-    psm.add_rayleigh_region((0, 1))
-    psm.add_rayleigh_region((6, 7))
-    psm.add_rayleigh_region((8, 9))
+    evm.results['rayleigh_peak_position_f'][0:4, :, :, :, 2, :] = 10
+    evm.results['rayleigh_peak_position_f'][4, :, :, :, 2, :] = 8
 
     calculate_derived_values()
 
-    assert (evm.results['brillouin_shift_f'][:, :, :, :, 0, 0] == 4).all()
-    assert (evm.results['brillouin_shift_f'][:, :, :, :, 1, 0] == 5).all()
-    assert (evm.results['brillouin_shift_f'][:, :, :, :, 0, 1] == 3).all()
-    assert (evm.results['brillouin_shift_f'][:, :, :, :, 1, 1] == 4).all()
+    assert (evm.results['brillouin_shift_f'][:, :, :, :, 0, 0] == 3).all()
+    assert (evm.results['brillouin_shift_f'][0:4, :, :, :, 1, 0] == 5).all()
+    assert (evm.results['brillouin_shift_f'][4, :, :, :, 1, 0] == 4).all()
+    assert (evm.results['brillouin_shift_f'][:, :, :, :, 0, 1] == 4).all()
+    assert (evm.results['brillouin_shift_f'][0:4, :, :, :, 1, 1] == 4).all()
+    assert (evm.results['brillouin_shift_f'][4, :, :, :, 1, 1] == 3).all()
 
 
 def test_get_data_0D(mocker):
