@@ -703,24 +703,49 @@ class EvaluationController(ImageController):
         if bounds is None:
             return None
 
-        # We need a Rayleigh peak position for
-        # every brillouin_region
-        if rayleigh_peaks.shape[0] != (len(brillouin_regions)):
+        # We need two Rayleigh peak positions to determine the FSR
+        # and decide whether a peak is Stokes or Anti-Stokes
+        if rayleigh_peaks.shape[0] != 2:
             return None
 
         w0_bounds = []
         # We have to create a separate bound for every region
         for region_idx, region in enumerate(brillouin_regions):
             local_time = []
-            for f_rayleigh in rayleigh_peaks[region_idx, :]:
-                # In case this is an Anti-Stokes peak, we find the peak
-                # with the higher frequency on the left hand side and
-                # have to flip the bounds
-                is_anti_stokes = np.mean(region) <\
-                                 f_rayleigh
+            for rayleigh_idx in range(rayleigh_peaks.shape[1]):
+                anti_stokes_limit = np.nanmean(rayleigh_peaks[:, rayleigh_idx])
+                # We need to figure out, whether a peak is a
+                # Stokes or Anti-Stokes peak in order to decide
+                # to which Rayleigh peak we need to relate to.
+                tmp = region >= anti_stokes_limit
+                is_pure_region = (tmp == tmp[0]).all()
+
+                is_anti_stokes_region = np.mean(region) >\
+                    anti_stokes_limit
 
                 local_bound = []
                 for bound in bounds:
+                    parsed_bound = []
+                    for limit in bound:
+                        try:
+                            parsed_bound.append(float(limit))
+                        except ValueError:
+                            parsed_bound.append(np.NaN)
+                    # We don't treat Inf as a value
+                    with warnings.catch_warnings():
+                        warnings.filterwarnings(
+                            action='ignore',
+                            message='Mean of empty slice'
+                        )
+                        is_anti_stokes_peak =\
+                            np.nanmean(
+                                np.array(parsed_bound)[
+                                    np.isfinite(parsed_bound)]
+                            ) < 0
+
+                    is_anti_stokes = is_anti_stokes_region if\
+                        is_pure_region else is_anti_stokes_peak
+
                     local_limit = []
                     for limit in bound:
                         if limit.lower() == 'min':
@@ -739,10 +764,11 @@ class EvaluationController(ImageController):
                             # a value in pixel depending on the time
                             try:
                                 val = ((-1) ** is_anti_stokes)\
-                                          * 1e9 * float(limit) + f_rayleigh
+                                          * 1e9 * abs(float(limit))\
+                                          + rayleigh_peaks[
+                                          int(is_anti_stokes), rayleigh_idx]
                             except BaseException:
                                 val = np.Inf
-                        # print(val)
                         local_limit.append(val)
                     # Check that the bounds are sorted ascendingly
                     # (for anti-stokes, they might not).
