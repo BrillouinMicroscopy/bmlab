@@ -118,7 +118,7 @@ def test_calculate_derived_values_equal_region_count():
 
     evm.results['brillouin_peak_position_f'][:, :, :, :, 0, :] = 1
     evm.results['brillouin_peak_position_f'][:, :, :, :, 1, :] = 4
-    evm.results['rayleigh_peak_position_f'][:, :, :, :, 0, :] = 3
+    evm.results['rayleigh_peak_position_f'][:, :, :, :, 0, :] = -1
     evm.results['rayleigh_peak_position_f'][:, :, :, :, 1, :] = 8
 
     calculate_derived_values()
@@ -159,14 +159,14 @@ def test_calculate_derived_values_equal_region_count_nr_peaks_2():
     evm.results['brillouin_peak_position_f'][:, :, :, :, 1, :] = 4
     evm.results['brillouin_peak_position_f'][:, :, :, :, 0, 1] = 2
     evm.results['brillouin_peak_position_f'][:, :, :, :, 1, 1] = 5
-    evm.results['rayleigh_peak_position_f'][:, :, :, :, 0, :] = 3
+    evm.results['rayleigh_peak_position_f'][:, :, :, :, 0, :] = -1
     evm.results['rayleigh_peak_position_f'][:, :, :, :, 1, :] = 8
 
     calculate_derived_values()
 
     assert (evm.results['brillouin_shift_f'][:, :, :, :, 0, 0] == 2).all()
     assert (evm.results['brillouin_shift_f'][:, :, :, :, 1, 0] == 4).all()
-    assert (evm.results['brillouin_shift_f'][:, :, :, :, 0, 1] == 1).all()
+    assert (evm.results['brillouin_shift_f'][:, :, :, :, 0, 1] == 3).all()
     assert (evm.results['brillouin_shift_f'][:, :, :, :, 1, 1] == 3).all()
 
 
@@ -193,22 +193,13 @@ def test_calculate_derived_values_different_region_count():
 
     evm.results['brillouin_peak_position_f'][:, :, :, :, 0, :] = 1
     evm.results['brillouin_peak_position_f'][:, :, :, :, 1, :] = 4
-    evm.results['rayleigh_peak_position_f'][:, :, :, :, 0, :] = 5
+    evm.results['rayleigh_peak_position_f'][:, :, :, :, 0, :] = -2
     evm.results['rayleigh_peak_position_f'][:, :, :, :, 1, :] = 9
     evm.results['rayleigh_peak_position_f'][:, :, :, :, 2, :] = 10
 
-    psm = evc.session.peak_selection_model()
-
-    psm.add_brillouin_region((1, 2))
-    psm.add_brillouin_region((4, 5))
-
-    psm.add_rayleigh_region((0, 1))
-    psm.add_rayleigh_region((6, 7))
-    psm.add_rayleigh_region((8, 9))
-
     calculate_derived_values()
 
-    assert (evm.results['brillouin_shift_f'][:, :, :, :, 0, :] == 4).all()
+    assert (evm.results['brillouin_shift_f'][:, :, :, :, 0, :] == 3).all()
     assert (evm.results['brillouin_shift_f'][:, :, :, :, 1, :] == 5).all()
 
 
@@ -237,25 +228,19 @@ def test_calculate_derived_values_different_region_count_nr_peaks_2():
     evm.results['brillouin_peak_position_f'][:, :, :, :, 1, :] = 4
     evm.results['brillouin_peak_position_f'][:, :, :, :, 0, 1] = 2
     evm.results['brillouin_peak_position_f'][:, :, :, :, 1, 1] = 5
-    evm.results['rayleigh_peak_position_f'][:, :, :, :, 0, :] = 5
+    evm.results['rayleigh_peak_position_f'][:, :, :, :, 0, :] = -2
     evm.results['rayleigh_peak_position_f'][:, :, :, :, 1, :] = 9
-    evm.results['rayleigh_peak_position_f'][:, :, :, :, 2, :] = 10
-
-    psm = evc.session.peak_selection_model()
-
-    psm.add_brillouin_region((1, 2))
-    psm.add_brillouin_region((4, 5))
-
-    psm.add_rayleigh_region((0, 1))
-    psm.add_rayleigh_region((6, 7))
-    psm.add_rayleigh_region((8, 9))
+    evm.results['rayleigh_peak_position_f'][0:4, :, :, :, 2, :] = 10
+    evm.results['rayleigh_peak_position_f'][4, :, :, :, 2, :] = 8
 
     calculate_derived_values()
 
-    assert (evm.results['brillouin_shift_f'][:, :, :, :, 0, 0] == 4).all()
-    assert (evm.results['brillouin_shift_f'][:, :, :, :, 1, 0] == 5).all()
-    assert (evm.results['brillouin_shift_f'][:, :, :, :, 0, 1] == 3).all()
-    assert (evm.results['brillouin_shift_f'][:, :, :, :, 1, 1] == 4).all()
+    assert (evm.results['brillouin_shift_f'][:, :, :, :, 0, 0] == 3).all()
+    assert (evm.results['brillouin_shift_f'][0:4, :, :, :, 1, 0] == 5).all()
+    assert (evm.results['brillouin_shift_f'][4, :, :, :, 1, 0] == 4).all()
+    assert (evm.results['brillouin_shift_f'][:, :, :, :, 0, 1] == 4).all()
+    assert (evm.results['brillouin_shift_f'][0:4, :, :, :, 1, 1] == 4).all()
+    assert (evm.results['brillouin_shift_f'][4, :, :, :, 1, 1] == 3).all()
 
 
 def test_get_data_0D(mocker):
@@ -650,6 +635,8 @@ def test_create_bounds(mocker):
     fit_bounds = EvaluationController().create_bounds(None, None)
     assert fit_bounds is None
 
+    # Test that we get correct bounds for regions
+    # that only contain one type of peaks (either Stokes or Anti-Stokes)
     evm.bounds = [['min', '5'], ['5.5', 'Inf'], ['-inf', 'max']]
 
     brillouin_regions = [(3.3e9, 7.0e9), (8.0e9, 12.1e9)]
@@ -665,5 +652,78 @@ def test_create_bounds(mocker):
             [[9.8e9, 12.1e9], [-np.inf, 9.3e9], [8.0e9, np.inf]],
             [[10.0e9, 12.1e9], [-np.inf, 9.5e9], [8.0e9, np.inf]],
             [[10.3e9, 12.1e9], [-np.inf, 9.8e9], [8.0e9, np.inf]]
+        ]
+    ], fit_bounds, atol=1e6)
+
+    # Test that we get the correct bounds for regions
+    # that contain both Stokes and Anti-Stokes peaks
+    evm.bounds = [['min', '5'], ['5.5', 'Inf'], ['-inf', 'max'],
+                  ['min', '-5'], ['-5.5', 'Inf'], ['-inf', 'max']]
+
+    brillouin_regions = [(2.3e9, 12.1e9), (3.3e9, 12.1e9)]
+    rayleigh_peaks = 1e9 * np.array([[0.0, 0.1, -0.2], [14.8, 15.0, 15.3]])
+    fit_bounds = evc.create_bounds(brillouin_regions, rayleigh_peaks)
+
+    np.testing.assert_allclose([
+        [
+            [[2.3e9, 5.0e9], [5.5e9, np.inf], [-np.inf, 12.1e9],
+             [9.8e9, 12.1e9], [-np.inf, 9.3e9], [-np.inf, 12.1e9]],
+            [[2.3e9, 5.1e9], [5.6e9, np.inf], [-np.inf, 12.1e9],
+             [10.0e9, 12.1e9], [-np.inf, 9.5e9], [-np.inf, 12.1e9]],
+            [[2.3e9, 4.8e9], [5.3e9, np.inf], [-np.inf, 12.1e9],
+             [10.3e9, 12.1e9], [-np.inf, 9.8e9], [-np.inf, 12.1e9]]
+        ],
+        [
+            [[3.3e9, 5.0e9], [5.5e9, np.inf], [-np.inf, 12.1e9],
+             [9.8e9, 12.1e9], [-np.inf, 9.3e9], [-np.inf, 12.1e9]],
+            [[3.3e9, 5.1e9], [5.6e9, np.inf], [-np.inf, 12.1e9],
+             [10.0e9, 12.1e9], [-np.inf, 9.5e9], [-np.inf, 12.1e9]],
+            [[3.3e9, 4.8e9], [5.3e9, np.inf], [-np.inf, 12.1e9],
+             [10.3e9, 12.1e9], [-np.inf, 9.8e9], [-np.inf, 12.1e9]]
+        ]
+    ], fit_bounds, atol=1e6)
+
+    # Test real values for a two peak fit
+    evm.bounds = [['3.5', '5'], ['5.0', '7.5']]
+
+    brillouin_regions = [(3.3e9, 7.5e9), (8.0e9, 12.1e9)]
+    rayleigh_peaks = 1e9 * np.array([[0.0, 0.1, -0.2], [14.8, 15.0, 15.3]])
+    fit_bounds = evc.create_bounds(brillouin_regions, rayleigh_peaks)
+
+    np.testing.assert_allclose([
+        [
+            [[3.5e9, 5.0e9], [5.0e9, 7.5e9]],
+            [[3.6e9, 5.1e9], [5.1e9, 7.6e9]],
+            [[3.3e9, 4.8e9], [4.8e9, 7.3e9]]
+        ], [
+            [[9.8e9, 11.3e9], [7.3e9, 9.8e9]],
+            [[10.0e9, 11.5e9], [7.5e9, 10.0e9]],
+            [[10.3e9, 11.8e9], [7.8e9, 10.3e9]]
+        ]
+    ], fit_bounds, atol=1e6)
+
+    # Test real values for a four peak fit over the whole spectrum
+    evm.bounds = [['3.5', '5'], ['5.0', '7.5'],
+                  ['-7.5', '-5.0'], ['-5', '-3.5']]
+
+    brillouin_regions = [(2.3e9, 12.1e9), (3.3e9, 12.1e9)]
+    rayleigh_peaks = 1e9 * np.array([[0.0, 0.1, -0.2], [14.8, 15.0, 15.3]])
+    fit_bounds = evc.create_bounds(brillouin_regions, rayleigh_peaks)
+
+    np.testing.assert_allclose([
+        [
+            [[3.5e9, 5.0e9], [5.0e9, 7.5e9],
+             [7.3e9, 9.8e9], [9.8e9, 11.3e9]],
+            [[3.6e9, 5.1e9], [5.1e9, 7.6e9],
+             [7.5e9, 10.0e9], [10.0e9, 11.5e9]],
+            [[3.3e9, 4.8e9], [4.8e9, 7.3e9],
+             [7.8e9, 10.3e9], [10.3e9, 11.8e9]]
+        ], [
+            [[3.5e9, 5.0e9], [5.0e9, 7.5e9],
+             [7.3e9, 9.8e9], [9.8e9, 11.3e9]],
+            [[3.6e9, 5.1e9], [5.1e9, 7.6e9],
+             [7.5e9, 10.0e9], [10.0e9, 11.5e9]],
+            [[3.3e9, 4.8e9], [4.8e9, 7.3e9],
+             [7.8e9, 10.3e9], [10.3e9, 11.8e9]]
         ]
     ], fit_bounds, atol=1e6)

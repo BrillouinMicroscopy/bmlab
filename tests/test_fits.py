@@ -4,7 +4,7 @@ import numpy as np
 
 from bmlab.fits import lorentz, fit_lorentz, fit_circle,\
     fit_double_lorentz, calculate_exact_circle, fit_vipa, VIPA,\
-    are_points_on_line
+    are_points_on_line, fit_quadruple_lorentz
 
 from bmlab.models.setup import AVAILABLE_SETUPS
 
@@ -71,6 +71,55 @@ def test_fit_double_lorentz():
     np.testing.assert_almost_equal(w0s[1], w0_right, decimal=3)
     np.testing.assert_almost_equal(fwhms[1], fwhm_right, decimal=3)
     np.testing.assert_almost_equal(intens[1], intensity_right, decimal=3)
+
+    np.testing.assert_almost_equal(actual_offset, offset, decimal=3)
+
+
+def test_fit_quadruple_lorentz():
+    # Arrange
+    x = np.linspace(0, 60, 200)
+
+    w0_0 = 10.
+    intensity_0 = 8.
+    fwhm_0 = 2.
+
+    w0_1 = 20.
+    intensity_1 = 12.
+    fwhm_1 = 4.
+
+    w0_2 = 30.
+    intensity_2 = 14.
+    fwhm_2 = 4.
+
+    w0_3 = 40.
+    intensity_3 = 16.
+    fwhm_3 = 4.
+
+    offset = 10.
+
+    y_data = lorentz(x, w0_0, fwhm_0, intensity_0)
+    y_data += lorentz(x, w0_1, fwhm_1, intensity_1)
+    y_data += lorentz(x, w0_2, fwhm_2, intensity_2)
+    y_data += lorentz(x, w0_3, fwhm_3, intensity_3) + offset
+
+    w0s, fwhms, intens, actual_offset\
+        = fit_quadruple_lorentz(x, y_data)
+
+    np.testing.assert_almost_equal(w0s[0], w0_0, decimal=3)
+    np.testing.assert_almost_equal(fwhms[0], fwhm_0, decimal=3)
+    np.testing.assert_almost_equal(intens[0], intensity_0, decimal=3)
+
+    np.testing.assert_almost_equal(w0s[1], w0_1, decimal=3)
+    np.testing.assert_almost_equal(fwhms[1], fwhm_1, decimal=3)
+    np.testing.assert_almost_equal(intens[1], intensity_1, decimal=3)
+
+    np.testing.assert_almost_equal(w0s[2], w0_2, decimal=3)
+    np.testing.assert_almost_equal(fwhms[2], fwhm_2, decimal=3)
+    np.testing.assert_almost_equal(intens[2], intensity_2, decimal=3)
+
+    np.testing.assert_almost_equal(w0s[3], w0_3, decimal=3)
+    np.testing.assert_almost_equal(fwhms[3], fwhm_3, decimal=3)
+    np.testing.assert_almost_equal(intens[3], intensity_3, decimal=3)
 
     np.testing.assert_almost_equal(actual_offset, offset, decimal=3)
 
