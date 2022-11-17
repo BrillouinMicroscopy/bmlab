@@ -49,14 +49,14 @@ def fit_lorentz(x, y):
     return w0, fwhm, intensity, offset
 
 
-def fit_double_lorentz(x, y, bounds_w0=None):
+def fit_double_lorentz(x, y, bounds_w0=None, bounds_fwhm=None):
     offset_guess = (y[0] + y[-1]) / 2.
     # gam_guess = (w0_guess ** 2 * (np.max(y) - offset_guess)) ** -0.5
-    fwhm_guess = 10 * (x[-1] - x[0]) / x.shape[0]
+    fwhm_guess = 10 * (x[-1] - x[0]) / x.shape[0] * np.ones(2)
     intensity_guess = np.max(y) - offset_guess
 
     # We run peak finding to get a good guess of the peak positions
-    # and use the two peaks with highest prominence.
+    # and use the two peaks with the highest prominence.
     peaks, properties = find_peaks(y, prominence=1)
     idx = np.argsort(properties['prominences'])[::-1]
 
@@ -74,13 +74,15 @@ def fit_double_lorentz(x, y, bounds_w0=None):
                 - params[6]) ** 2
 
     # Create the bounds array
-    if bounds_w0 is not None:
+    if bounds_w0 is None and bounds_fwhm is None:
+        bounds = (-np.Inf, np.Inf)
+    else:
+        # Initialize the bounds
         # Lower limits
         bounds_lower = -np.Inf * np.ones(7)
+        # Upper limits
+        bounds_upper = np.Inf * np.ones(7)
 
-        # 1st peak:
-        # central position
-        bounds_lower[0] = bounds_w0[0][0]
         # full-width-half-maximum
         # The VIPA spectrometer has an instrument width of
         # approx. 750 MHz for the FOB setup
@@ -89,13 +91,13 @@ def fit_double_lorentz(x, y, bounds_w0=None):
         # so we limit it to this.
         fwhm_lower_bound = (x[-1] - x[0]) / x.shape[0]
 
+        # 1st peak:
+        # full-width-half-maximum
         bounds_lower[1] = fwhm_lower_bound
         # intensity
         bounds_lower[2] = 0
 
         # 2nd peak:
-        # central position
-        bounds_lower[3] = bounds_w0[1][0]
         # full-width-half-maximum
         bounds_lower[4] = fwhm_lower_bound
         # intensity
@@ -104,28 +106,43 @@ def fit_double_lorentz(x, y, bounds_w0=None):
         # offset
         bounds_lower[6] = 0
 
-        # Upper limits
-        bounds_upper = np.Inf * np.ones(7)
+        # If we have w0 bounds, set them
+        if bounds_w0 is not None:
+            # 1st peak central position
+            bounds_lower[0] = bounds_w0[0][0]
+            bounds_upper[0] = bounds_w0[0][1]
+            # 2nd peak central position
+            bounds_lower[3] = bounds_w0[1][0]
+            bounds_upper[3] = bounds_w0[1][1]
 
-        bounds_upper[0] = bounds_w0[0][1]
-        bounds_upper[3] = bounds_w0[1][1]
+            # Sort the guesses to the bounds
+            bounds_w0_center = [np.mean(
+                np.clip(bound, *x[::len(x) - 1])) for bound in bounds_w0]
+            w0_guess.sort(reverse=(bounds_w0_center[0] > bounds_w0_center[1]))
+
+            # Check that the initial guesses are within the bounds
+            w0_guess = [np.clip(
+                guess, *bounds_w0[idx]) for idx, guess in enumerate(w0_guess)]
+
+        if bounds_fwhm is not None:
+            # 1st peak FWHM
+            bounds_lower[1] = bounds_fwhm[0][0]
+            bounds_upper[1] = bounds_fwhm[0][1]
+            # 2nd peak FWHM
+            bounds_lower[4] = bounds_fwhm[1][0]
+            bounds_upper[4] = bounds_fwhm[1][1]
+
+            # Check that the initial guesses are within the bounds
+            fwhm_guess = [np.clip(
+                guess, *bounds_fwhm[idx]) for
+                idx, guess in enumerate(fwhm_guess)]
+
         bounds = (bounds_lower, bounds_upper)
-
-        # Sort the guesses to the bounds
-        bounds_w0_center = [np.mean(
-            np.clip(bound, *x[::len(x) - 1])) for bound in bounds_w0]
-        w0_guess.sort(reverse=(bounds_w0_center[0] > bounds_w0_center[1]))
-
-        # Check that the initial guesses are within the bounds
-        w0_guess = [np.clip(
-            guess, *bounds_w0[idx]) for idx, guess in enumerate(w0_guess)]
-    else:
-        bounds = (-np.Inf, np.Inf)
 
     opt_result = least_squares(
         error,
-        x0=(w0_guess[0], fwhm_guess, intensity_guess,
-            w0_guess[1], fwhm_guess, intensity_guess,
+        x0=(w0_guess[0], fwhm_guess[0], intensity_guess,
+            w0_guess[1], fwhm_guess[1], intensity_guess,
             offset_guess
             ),
         args=(x, y),
