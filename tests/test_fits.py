@@ -201,6 +201,69 @@ def test_fit_double_lorentz_with_bounds():
     np.testing.assert_almost_equal(actual_offset, offset, decimal=1)
 
 
+def test_fit_quadruple_lorentz_with_bounds():
+    # Arrange
+    x = np.linspace(0, 60, 200)
+
+    w0_0 = 10.
+    intensity_0 = 8.
+    fwhm_0 = 2.
+
+    w0_1 = 20.
+    intensity_1 = 12.
+    fwhm_1 = 4.
+
+    w0_2 = 30.
+    intensity_2 = 14.
+    fwhm_2 = 4.
+
+    w0_3 = 40.
+    intensity_3 = 16.
+    fwhm_3 = 4.
+
+    offset = 10.
+
+    y_data = lorentz(x, w0_0, fwhm_0, intensity_0)
+    y_data += lorentz(x, w0_1, fwhm_1, intensity_1)
+    y_data += lorentz(x, w0_2, fwhm_2, intensity_2)
+    y_data += lorentz(x, w0_3, fwhm_3, intensity_3) + offset
+
+    bounds_w0 = (
+        (10.1, 11),
+        (-np.Inf, np.Inf),
+        (29.0, 29.9),
+        (-np.Inf, np.Inf)
+    )
+    bounds_fwhm = (
+        (-np.Inf, np.Inf),
+        (4.1, np.Inf),
+        (-np.Inf, np.Inf),
+        (-np.Inf, np.Inf)
+    )
+
+    w0s, fwhms, intens, actual_offset\
+        = fit_quadruple_lorentz(x, y_data,
+                                bounds_w0=bounds_w0, bounds_fwhm=bounds_fwhm)
+
+    np.testing.assert_almost_equal(w0s[0], 10.1, decimal=1)
+    np.testing.assert_almost_equal(fwhms[0], fwhm_0, decimal=1)
+    np.testing.assert_almost_equal(intens[0], intensity_0, decimal=1)
+
+    np.testing.assert_almost_equal(w0s[1], w0_1, decimal=1)
+    np.testing.assert_almost_equal(fwhms[1], 4.1, decimal=1)
+    np.testing.assert_almost_equal(intens[1], intensity_1, decimal=1)
+
+    np.testing.assert_almost_equal(w0s[2], 29.9, decimal=1)
+    np.testing.assert_almost_equal(fwhms[2], fwhm_2, decimal=1)
+    np.testing.assert_almost_equal(intens[2], intensity_2, decimal=1)
+
+    np.testing.assert_almost_equal(w0s[3], w0_3, decimal=1)
+    np.testing.assert_almost_equal(fwhms[3], fwhm_3, decimal=1)
+    np.testing.assert_almost_equal(intens[3], intensity_3, decimal=1)
+
+    np.testing.assert_almost_equal(actual_offset, offset, decimal=1)
+
+
 def test_circle_fit():
     expect_r = 550
     expect_c = (-200, -220)
