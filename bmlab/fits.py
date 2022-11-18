@@ -353,7 +353,7 @@ def _circle_opt(c, x_coord, y_coord):
          - c[2] ** 2) ** 2)
 
 
-def fit_lorentz_region(region, xdata, ydata, nr_peaks=1, bounds_w0=None):
+def fit_lorentz_region(region, xdata, ydata, nr_peaks=1, bounds_w0=None, bounds_fwhm=None):
     """
     Fits a lorentz or double lorentz fit to the given region
 
@@ -364,6 +364,7 @@ def fit_lorentz_region(region, xdata, ydata, nr_peaks=1, bounds_w0=None):
     ydata: The y-data to fit
     nr_peaks: The number of peaks to fit
     bounds_w0: The bounds for the lorentz fit value of the maximum position
+    bounds_fwhm: The bounds for the lorentz fit value of the peak width
 
     Returns
     -------
@@ -380,11 +381,13 @@ def fit_lorentz_region(region, xdata, ydata, nr_peaks=1, bounds_w0=None):
         elif nr_peaks == 2:
             w0s, fwhms, intensities, offset = fit_double_lorentz(
                 x, y,
-                bounds_w0=bounds_w0)
+                bounds_w0=bounds_w0,
+                bounds_fwhm=bounds_fwhm)
         elif nr_peaks == 4:
             w0s, fwhms, intensities, offset = fit_quadruple_lorentz(
                 x, y,
-                bounds_w0=bounds_w0)
+                bounds_w0=bounds_w0,
+                bounds_fwhm=bounds_fwhm)
         else:
             return
     except Exception:
