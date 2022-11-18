@@ -445,6 +445,12 @@ class EvaluationController(ImageController):
             return
         evm.bounds_w0 = bounds
 
+    def set_bounds_fwhm(self, bounds):
+        evm = self.session.evaluation_model()
+        if not evm:
+            return
+        evm.bounds_fwhm = bounds
+
     def evaluate(self, abort=None, count=None, max_count=None):
         em = self.session.extraction_model()
         if not em:
@@ -590,24 +596,38 @@ class EvaluationController(ImageController):
                 rayleigh_peaks = np.transpose(
                     evm.results['rayleigh_peak_position_f'][ind]
                 )
-                bounds = self.create_bounds(
+                bounds_w0 = self.create_bounds(
                     brillouin_regions,
                     rayleigh_peaks
                 )
-                if bounds is not None:
+                bounds_fwhm = self.create_bounds_fwhm(
+                    brillouin_regions,
+                    rayleigh_peaks
+                )
+                if bounds_w0 is None and bounds_fwhm is None:
                     packed_data_multi_peak =\
                         zip(irepeat(spectra),
                             irepeat(frequencies),
                             brillouin_regions,
                             irepeat(nr_brillouin_peaks),
-                            bounds)
+                            irepeat(bounds_w0),
+                            irepeat(bounds_fwhm))
+                elif bounds_fwhm is None:
+                    packed_data_multi_peak =\
+                        zip(irepeat(spectra),
+                            irepeat(frequencies),
+                            brillouin_regions,
+                            irepeat(nr_brillouin_peaks),
+                            bounds_w0,
+                            irepeat(bounds_fwhm))
                 else:
                     packed_data_multi_peak =\
                         zip(irepeat(spectra),
                             irepeat(frequencies),
                             brillouin_regions,
                             irepeat(nr_brillouin_peaks),
-                            irepeat(bounds))
+                            bounds_w0,
+                            bounds_fwhm)
                 # Process it
                 results_multi_peak = pool.starmap(
                     self.fit_spectra, packed_data_multi_peak)
@@ -788,6 +808,56 @@ class EvaluationController(ImageController):
             w0_bounds.append(local_time)
 
         return w0_bounds
+
+    def create_bounds_fwhm(self, brillouin_regions, rayleigh_peaks):
+        """
+        This function converts the fwhm bounds settings into
+        a fwhm bounds object for the fitting function
+        Allowed parameters for the bounds settings are
+        - 'min'/'max'   -> Will be converted to 0/np.Inf
+        - '-Inf', 'Inf' -> Will be converted to 0 or np.Inf
+        - number [GHz]  -> Will be converted into the value in Hz
+        Parameters
+        ----------
+        brillouin_regions
+        rayleigh_peaks
+
+        Returns
+        -------
+
+        """
+        evm = self.session.evaluation_model()
+        bounds_fwhm = evm.bounds_fwhm
+        if bounds_fwhm is None:
+            return None
+
+        fwhm_bounds = []
+        # We have to create a separate bound for every region
+        for region_idx, _ in enumerate(brillouin_regions):
+            region_bound = []
+            for rayleigh_idx in range(rayleigh_peaks.shape[1]):
+                peak_bound = []
+                for bound in bounds_fwhm:
+                    local_bound = []
+                    for limit in bound:
+                        if limit.lower() == 'min':
+                            val = 0
+                        elif limit.lower() == '-inf':
+                            val = 0
+                        elif limit.lower() == 'max':
+                            val = np.Inf
+                        elif limit.lower() == 'inf':
+                            val = np.Inf
+                        else:
+                            try:
+                                val = 1e9*abs(float(limit))
+                            except ValueError:
+                                val = np.Inf
+                        local_bound.append(val)
+                    peak_bound.append(local_bound)
+                region_bound.append(peak_bound)
+            fwhm_bounds.append(region_bound)
+        return fwhm_bounds
 
     def get_data(self, parameter_key, brillouin_peak_index=0):
         """
@@ -974,7 +1044,8 @@ class Controller(object):
     def evaluate(self, filepath, setup, orientation,
                  brillouin_regions, rayleigh_regions,
                  repetitions=None, nr_brillouin_peaks=1,
-                 multi_peak_bounds=None):
+                 multi_peak_bounds=None,
+                 multi_peak_bounds_fwhm=None):
         # Load data file
         self.session.set_file(filepath)
 
@@ -1013,6 +1084,7 @@ class Controller(object):
 
             evc.set_nr_brillouin_peaks(nr_brillouin_peaks)
             evc.set_bounds(multi_peak_bounds)
+            evc.set_bounds_fwhm(multi_peak_bounds_fwhm)
 
             evc.evaluate()
 
