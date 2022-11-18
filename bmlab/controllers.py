@@ -443,7 +443,7 @@ class EvaluationController(ImageController):
         evm = self.session.evaluation_model()
         if not evm:
             return
-        evm.bounds = bounds
+        evm.bounds_w0 = bounds
 
     def evaluate(self, abort=None, count=None, max_count=None):
         em = self.session.extraction_model()
@@ -699,7 +699,7 @@ class EvaluationController(ImageController):
 
         """
         evm = self.session.evaluation_model()
-        bounds = evm.bounds
+        bounds = evm.bounds_w0
         if bounds is None:
             return None
 
