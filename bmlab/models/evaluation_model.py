@@ -281,6 +281,7 @@ class EvaluationModel(Serializer):
         # We don't need any bounds for a single-peak fit
         if self.nr_brillouin_peaks == 1:
             self.bounds_w0 = None
+            self.bounds_fwhm = None
 
         # Initialize the bounds if necessary
         if self.nr_brillouin_peaks > 1 and\
@@ -288,3 +289,8 @@ class EvaluationModel(Serializer):
                  len(self.bounds_w0) is not self.nr_brillouin_peaks):
             self.bounds_w0 = [['min', 'max'] for _ in
                               range(self.nr_brillouin_peaks)]
+        if self.nr_brillouin_peaks > 1 and\
+                (self.bounds_fwhm is None or
+                 len(self.bounds_fwhm) is not self.nr_brillouin_peaks):
+            self.bounds_fwhm = [['0', 'inf'] for _ in
+                                range(self.nr_brillouin_peaks)]
