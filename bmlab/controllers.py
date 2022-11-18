@@ -658,15 +658,24 @@ class EvaluationController(ImageController):
         return
 
     @staticmethod
-    def fit_spectra(spectra, frequencies, region, nr_peaks=1, bounds_w0=None):
+    def fit_spectra(spectra, frequencies, region, nr_peaks=1,
+                    bounds_w0=None, bounds_fwhm=None):
         fits = []
         for frame_num, spectrum in enumerate(spectra):
-            if bounds_w0 is None:
+            if bounds_w0 is None and bounds_fwhm is None:
                 fit = fit_lorentz_region(
                     region,
                     frequencies[frame_num],
                     spectrum,
                     nr_peaks
+                )
+            elif bounds_fwhm is None:
+                fit = fit_lorentz_region(
+                    region,
+                    frequencies[frame_num],
+                    spectrum,
+                    nr_peaks,
+                    bounds_w0[frame_num]
                 )
             else:
                 fit = fit_lorentz_region(
@@ -674,7 +683,8 @@ class EvaluationController(ImageController):
                     frequencies[frame_num],
                     spectrum,
                     nr_peaks,
-                    bounds_w0[frame_num]
+                    bounds_w0[frame_num],
+                    bounds_fwhm[frame_num]
                 )
             fits.append(fit)
         return fits
