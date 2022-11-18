@@ -637,7 +637,7 @@ def test_create_bounds(mocker):
 
     # Test that we get correct bounds for regions
     # that only contain one type of peaks (either Stokes or Anti-Stokes)
-    evm.bounds = [['min', '5'], ['5.5', 'Inf'], ['-inf', 'max']]
+    evc.set_bounds([['min', '5'], ['5.5', 'Inf'], ['-inf', 'max']])
 
     brillouin_regions = [(3.3e9, 7.0e9), (8.0e9, 12.1e9)]
     rayleigh_peaks = 1e9 * np.array([[0.0, 0.1, -0.2], [14.8, 15.0, 15.3]])
@@ -657,8 +657,8 @@ def test_create_bounds(mocker):
 
     # Test that we get the correct bounds for regions
     # that contain both Stokes and Anti-Stokes peaks
-    evm.bounds = [['min', '5'], ['5.5', 'Inf'], ['-inf', 'max'],
-                  ['min', '-5'], ['-5.5', 'Inf'], ['-inf', 'max']]
+    evc.set_bounds([['min', '5'], ['5.5', 'Inf'], ['-inf', 'max'],
+                    ['min', '-5'], ['-5.5', 'Inf'], ['-inf', 'max']])
 
     brillouin_regions = [(2.3e9, 12.1e9), (3.3e9, 12.1e9)]
     rayleigh_peaks = 1e9 * np.array([[0.0, 0.1, -0.2], [14.8, 15.0, 15.3]])
@@ -684,7 +684,7 @@ def test_create_bounds(mocker):
     ], fit_bounds, atol=1e6)
 
     # Test real values for a two peak fit
-    evm.bounds = [['3.5', '5'], ['5.0', '7.5']]
+    evc.set_bounds([['3.5', '5'], ['5.0', '7.5']])
 
     brillouin_regions = [(3.3e9, 7.5e9), (8.0e9, 12.1e9)]
     rayleigh_peaks = 1e9 * np.array([[0.0, 0.1, -0.2], [14.8, 15.0, 15.3]])
@@ -703,8 +703,8 @@ def test_create_bounds(mocker):
     ], fit_bounds, atol=1e6)
 
     # Test real values for a four peak fit over the whole spectrum
-    evm.bounds = [['3.5', '5'], ['5.0', '7.5'],
-                  ['-7.5', '-5.0'], ['-5', '-3.5']]
+    evc.set_bounds([['3.5', '5'], ['5.0', '7.5'],
+                    ['-7.5', '-5.0'], ['-5', '-3.5']])
 
     brillouin_regions = [(2.3e9, 12.1e9), (3.3e9, 12.1e9)]
     rayleigh_peaks = 1e9 * np.array([[0.0, 0.1, -0.2], [14.8, 15.0, 15.3]])

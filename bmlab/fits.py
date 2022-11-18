@@ -353,7 +353,8 @@ def _circle_opt(c, x_coord, y_coord):
          - c[2] ** 2) ** 2)
 
 
-def fit_lorentz_region(region, xdata, ydata, nr_peaks=1, bounds_w0=None, bounds_fwhm=None):
+def fit_lorentz_region(region, xdata, ydata, nr_peaks=1,
+                       bounds_w0=None, bounds_fwhm=None):
     """
     Fits a lorentz or double lorentz fit to the given region
 
