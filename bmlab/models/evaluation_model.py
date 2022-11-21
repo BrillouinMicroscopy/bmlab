@@ -16,8 +16,10 @@ class EvaluationModel(Serializer):
 
         # @since 0.1.0
         self.parameters = self.get_default_parameters()
-        # @since 0.1.8
-        self.bounds = None
+        # @since 0.8.0
+        self.bounds_w0 = None
+        # @since 0.8.0
+        self.bounds_fwhm = None
 
         self.results = {}
         for key in self.parameters.keys():
@@ -78,6 +80,14 @@ class EvaluationModel(Serializer):
         for key in del_keys:
             if key in self.results:
                 del self.results[key]
+        # Migrations from 0.7.0 to 0.8.0
+        # @since 0.8.0
+        if not hasattr(self, 'bounds_w0'):
+            self.bounds_w0 = self.bounds
+        if hasattr(self, 'bounds'):
+            delattr(self, 'bounds')
+        if not hasattr(self, 'bounds_fwhm'):
+            self.bounds_fwhm = None
 
     def invalidate_results(self):
         for key in self.parameters:
@@ -262,7 +272,7 @@ class EvaluationModel(Serializer):
         self.check_bounds()
 
     def set_bounds(self, bounds):
-        self.bounds = bounds
+        self.bounds_w0 = bounds
 
         self.check_bounds()
 
@@ -270,11 +280,17 @@ class EvaluationModel(Serializer):
         # Check the bounds array for consistency
         # We don't need any bounds for a single-peak fit
         if self.nr_brillouin_peaks == 1:
-            self.bounds = None
+            self.bounds_w0 = None
+            self.bounds_fwhm = None
 
         # Initialize the bounds if necessary
         if self.nr_brillouin_peaks > 1 and\
-                (self.bounds is None or
-                 len(self.bounds) is not self.nr_brillouin_peaks):
-            self.bounds = [['min', 'max'] for _ in
-                           range(self.nr_brillouin_peaks)]
+                (self.bounds_w0 is None or
+                 len(self.bounds_w0) is not self.nr_brillouin_peaks):
+            self.bounds_w0 = [['min', 'max'] for _ in
+                              range(self.nr_brillouin_peaks)]
+        if self.nr_brillouin_peaks > 1 and\
+                (self.bounds_fwhm is None or
+                 len(self.bounds_fwhm) is not self.nr_brillouin_peaks):
+            self.bounds_fwhm = [['0', 'inf'] for _ in
+                                range(self.nr_brillouin_peaks)]
