@@ -87,8 +87,8 @@ class Setup(Serializer):
         methanol_shift = self.brillouin_shift(
             methanol_f(temperature), methanol_n)
 
-        self.calibration.shift_methanol = methanol_shift
-        self.calibration.shift_water = water_shift
+        self.calibration.set_shift_methanol(methanol_shift)
+        self.calibration.set_shift_water(water_shift)
         self.calibration.update_calibration()
 
     def brillouin_shift(self, v, n):
@@ -145,11 +145,13 @@ class Calibration(Serializer):
         self.update_calibration()
 
     def set_shift_water(self, shift_water):
-        self.shift_water = shift_water
+        if self.shift_water is not None:
+            self.shift_water = shift_water
         self.update_calibration()
 
     def set_shift_methanol(self, shift_methanol):
-        self.shift_methanol = shift_methanol
+        if self.shift_methanol is not None:
+            self.shift_methanol = shift_methanol
         self.update_calibration()
 
     def update_calibration(self):
