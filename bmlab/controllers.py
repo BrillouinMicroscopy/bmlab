@@ -896,7 +896,8 @@ class EvaluationController(ImageController):
         pos = self.session.get_payload_positions()
 
         positions = list(pos.values())
-        labels = list(map(lambda l: r'$' + l + '$ [$\\mu$m]', ['x', 'y', 'z']))
+        labels = list(map(lambda axis_label:
+                          r'$' + axis_label + '$ [$\\mu$m]', ['x', 'y', 'z']))
 
         evm = self.session.evaluation_model()
         data = evm.results[parameter_key]
