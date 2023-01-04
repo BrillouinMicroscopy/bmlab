@@ -65,7 +65,7 @@ class Circle(object):
         if integer:
             pt[0] = round(pt[0])
             pt[1] = round(pt[1])
-            return np.array(pt, dtype=np.int)
+            return np.array(pt, dtype=int)
         return pt, e_r
 
     def intersection(self, rect):
