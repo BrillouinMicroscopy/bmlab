@@ -34,7 +34,7 @@ Please read our `information for developers
 .. |bmlab| image:: https://raw.github.com/BrillouinMicroscopy/bmlab/main/docs/logo/bmlab.png
 .. |PyPI Version| image:: https://img.shields.io/pypi/v/bmlab.svg
    :target: https://pypi.python.org/pypi/bmlab
-.. |Build Status| image:: https://img.shields.io/github/workflow/status/BrillouinMicroscopy/bmlab/Checks
+.. |Build Status| image:: https://img.shields.io/github/actions/workflow/status/BrillouinMicroscopy/bmlab/check.yml
    :target: https://github.com/BrillouinMicroscopy/bmlab/actions?query=workflow%3AChecks
 .. |Coverage Status| image:: https://img.shields.io/codecov/c/github/BrillouinMicroscopy/bmlab/main.svg
    :target: https://codecov.io/gh/BrillouinMicroscopy/bmlab
