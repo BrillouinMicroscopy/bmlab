@@ -55,7 +55,7 @@ def session_file(tmp_dir):
         for p in points:
             ec.add_point(calib_key, p)
 
-        assert em.get_arc_by_calib_key(calib_key) != np.empty(0)
+        assert em.get_arc_by_calib_key(calib_key).size != 0
         assert cm.get_spectra(calib_key) is None
 
         cc.extract_spectra(calib_key)
@@ -93,7 +93,7 @@ def test_serialize_session(tmp_dir):
         for p in points:
             ec.add_point(calib_key, p)
 
-        assert em.get_arc_by_calib_key(calib_key) != np.empty(0)
+        assert em.get_arc_by_calib_key(calib_key).size != 0
         assert cm.get_spectra(calib_key) is None
 
         cc.extract_spectra(calib_key)
