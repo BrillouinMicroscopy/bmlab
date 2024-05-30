@@ -48,7 +48,7 @@ setup(
                       "shapely>=1.8.2"
                       ],
     # not to be confused with definitions in pyproject.toml [build-system]
-    python_requires=">=3.8",
+    python_requires=">=3.9",
     keywords=["Brillouin microscopy"],
     classifiers=['Operating System :: OS Independent',
                  'Programming Language :: Python :: 3',
