@@ -2,8 +2,8 @@ import pathlib
 
 import numpy as np
 
-from bmlab.fits import lorentz, fit_lorentz, fit_circle,\
-    fit_double_lorentz, calculate_exact_circle, fit_vipa, VIPA,\
+from bmlab.fits import lorentz, fit_lorentz, fit_circle, \
+    fit_double_lorentz, calculate_exact_circle, fit_vipa, VIPA, \
     are_points_on_line, fit_quadruple_lorentz
 
 from bmlab.models.setup import AVAILABLE_SETUPS

@@ -2,7 +2,7 @@ import pathlib
 
 import pytest
 
-from bmlab.session import Session, get_valid_source,\
+from bmlab.session import Session, get_valid_source, \
     get_source_file_path, get_session_file_path, BmlabInvalidFileError
 
 
