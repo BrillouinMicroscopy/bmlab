@@ -2,7 +2,7 @@ import pytest
 import pathlib
 import datetime
 
-from bmlab.file import BrillouinFile,\
+from bmlab.file import BrillouinFile, \
     BadFileException, is_source_file, is_session_file
 
 

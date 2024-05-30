@@ -284,8 +284,8 @@ def fit_quadruple_lorentz(x, y, bounds_w0=None, bounds_fwhm=None):
         raise FitError('Lorentz fit failed.')
 
     res = opt_result.x
-    w0s, fwhms, intens = (res[0], res[3], res[6], res[9]),\
-                         (res[1], res[4], res[7], res[10]),\
+    w0s, fwhms, intens = (res[0], res[3], res[6], res[9]), \
+                         (res[1], res[4], res[7], res[10]), \
                          (res[2], res[5], res[8], res[11])
     offset = res[12]
     return w0s, fwhms, intens, offset

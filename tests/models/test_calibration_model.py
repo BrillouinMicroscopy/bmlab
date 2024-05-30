@@ -1,4 +1,4 @@
-from bmlab.models.calibration_model import CalibrationModel,\
+from bmlab.models.calibration_model import CalibrationModel, \
     FitSet, BrillouinFit
 
 import numpy as np
