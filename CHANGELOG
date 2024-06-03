@@ -60,7 +60,7 @@
 
 ### Fixed
 - Don't fail on empty arc #138
-- Fix issues with flake8 v5, lock scipy version #139
+- Fix issues with flake8 --exclude _version.py .5, lock scipy version #139
 
 ## 0.2.3 - 2022-07-01
 
