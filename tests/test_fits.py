@@ -137,7 +137,7 @@ def test_fit_double_lorentz_with_bounds():
     y_data = lorentz(x, w0_left, fwhm_left, intensity_left)
     y_data += lorentz(x, w0_right, fwhm_right, intensity_right) + offset
 
-    bounds_w0 = ((19, 19.9), (-np.Inf, np.Inf))
+    bounds_w0 = ((19, 19.9), (-np.inf, np.inf))
 
     w0s, fwhms, intens, actual_offset \
         = fit_double_lorentz(x, y_data, bounds_w0)
@@ -152,7 +152,7 @@ def test_fit_double_lorentz_with_bounds():
 
     np.testing.assert_almost_equal(actual_offset, offset, decimal=1)
 
-    bounds_w0 = ((-np.Inf, np.Inf), (20.1, 21))
+    bounds_w0 = ((-np.inf, np.inf), (20.1, 21))
 
     w0s, fwhms, intens, actual_offset \
         = fit_double_lorentz(x, y_data, bounds_w0)
@@ -167,8 +167,8 @@ def test_fit_double_lorentz_with_bounds():
 
     np.testing.assert_almost_equal(actual_offset, offset, decimal=1)
 
-    bounds_w0 = ((20.1, 21), (-np.Inf, np.Inf))
-    bounds_fwhm = ((-np.Inf, np.Inf), (5.1, np.Inf))
+    bounds_w0 = ((20.1, 21), (-np.inf, np.inf))
+    bounds_fwhm = ((-np.inf, np.inf), (5.1, np.inf))
 
     w0s, fwhms, intens, actual_offset \
         = fit_double_lorentz(x, y_data,
@@ -184,7 +184,7 @@ def test_fit_double_lorentz_with_bounds():
 
     np.testing.assert_almost_equal(actual_offset, offset, decimal=1)
 
-    bounds_fwhm = ((-np.Inf, np.Inf), (5.1, np.Inf))
+    bounds_fwhm = ((-np.inf, np.inf), (5.1, np.inf))
 
     w0s, fwhms, intens, actual_offset \
         = fit_double_lorentz(x, y_data,
@@ -230,15 +230,15 @@ def test_fit_quadruple_lorentz_with_bounds():
 
     bounds_w0 = (
         (10.1, 11),
-        (-np.Inf, np.Inf),
+        (-np.inf, np.inf),
         (29.0, 29.9),
-        (-np.Inf, np.Inf)
+        (-np.inf, np.inf)
     )
     bounds_fwhm = (
-        (-np.Inf, np.Inf),
-        (4.1, np.Inf),
-        (-np.Inf, np.Inf),
-        (-np.Inf, np.Inf)
+        (-np.inf, np.inf),
+        (4.1, np.inf),
+        (-np.inf, np.inf),
+        (-np.inf, np.inf)
     )
 
     w0s, fwhms, intens, actual_offset\
