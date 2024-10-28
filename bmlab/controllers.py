@@ -716,7 +716,7 @@ class EvaluationController(ImageController):
         Allowed parameters for the bounds settings are
         - 'min'/'max'   -> Will be converted to the respective
             lower or upper limit of the given region
-        - '-Inf', 'Inf' -> Will be converted to -np.Inf or np.Inf
+        - '-Inf', 'Inf' -> Will be converted to -np.inf or np.inf
         - number [GHz]  -> Will be converted into the pixel
             position of the given frequency
         Parameters
@@ -760,7 +760,7 @@ class EvaluationController(ImageController):
                         try:
                             parsed_bound.append(float(limit))
                         except ValueError:
-                            parsed_bound.append(np.NaN)
+                            parsed_bound.append(np.nan)
                     # We don't treat Inf as a value
                     with warnings.catch_warnings():
                         warnings.filterwarnings(
@@ -785,10 +785,10 @@ class EvaluationController(ImageController):
                             val = region[int(not is_anti_stokes)]
                         elif limit.lower() == '-inf':
                             val = -((-1) ** is_anti_stokes)\
-                                          * np.Inf
+                                          * np.inf
                         elif limit.lower() == 'inf':
                             val = ((-1) ** is_anti_stokes)\
-                                          * np.Inf
+                                          * np.inf
                         else:
                             # Try to convert the value in GHz into
                             # a value in pixel depending on the time
@@ -798,7 +798,7 @@ class EvaluationController(ImageController):
                                           + rayleigh_peaks[
                                           int(is_anti_stokes), rayleigh_idx]
                             except BaseException:
-                                val = np.Inf
+                                val = np.inf
                         local_limit.append(val)
                     # Check that the bounds are sorted ascendingly
                     # (for anti-stokes, they might not).
@@ -814,8 +814,8 @@ class EvaluationController(ImageController):
         This function converts the fwhm bounds settings into
         a fwhm bounds object for the fitting function
         Allowed parameters for the bounds settings are
-        - 'min'/'max'   -> Will be converted to 0/np.Inf
-        - '-Inf', 'Inf' -> Will be converted to 0 or np.Inf
+        - 'min'/'max'   -> Will be converted to 0/np.inf
+        - '-Inf', 'Inf' -> Will be converted to 0 or np.inf
         - number [GHz]  -> Will be converted into the value in Hz
         Parameters
         ----------
@@ -845,14 +845,14 @@ class EvaluationController(ImageController):
                         elif limit.lower() == '-inf':
                             val = 0
                         elif limit.lower() == 'max':
-                            val = np.Inf
+                            val = np.inf
                         elif limit.lower() == 'inf':
-                            val = np.Inf
+                            val = np.inf
                         else:
                             try:
                                 val = 1e9*abs(float(limit))
                             except ValueError:
-                                val = np.Inf
+                                val = np.inf
                         local_bound.append(val)
                     peak_bound.append(local_bound)
                 region_bound.append(peak_bound)
@@ -1018,7 +1018,7 @@ def calculate_derived_values():
     # and then use the smallest absolute value.
     # That saves us from sorting Rayleigh peaks to Brillouin peaks,
     # because a Brillouin peak always belongs to the Rayleigh peak nearest.
-    brillouin_shift_f = np.NaN * np.ones((*shape_brillouin, shape_rayleigh[4]))
+    brillouin_shift_f = np.nan * np.ones((*shape_brillouin, shape_rayleigh[4]))
     for idx in range(shape_rayleigh[4]):
         brillouin_shift_f[:, :, :, :, :, :, idx] = abs(
             evm.results['brillouin_peak_position_f'] -

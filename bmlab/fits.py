@@ -75,13 +75,13 @@ def fit_double_lorentz(x, y, bounds_w0=None, bounds_fwhm=None):
 
     # Create the bounds array
     if bounds_w0 is None and bounds_fwhm is None:
-        bounds = (-np.Inf, np.Inf)
+        bounds = (-np.inf, np.inf)
     else:
         # Initialize the bounds
         # Lower limits
-        bounds_lower = -np.Inf * np.ones(7)
+        bounds_lower = -np.inf * np.ones(7)
         # Upper limits
-        bounds_upper = np.Inf * np.ones(7)
+        bounds_upper = np.inf * np.ones(7)
 
         # full-width-half-maximum
         # The VIPA spectrometer has an instrument width of
@@ -186,13 +186,13 @@ def fit_quadruple_lorentz(x, y, bounds_w0=None, bounds_fwhm=None):
 
     # Create the bounds array
     if bounds_w0 is None and bounds_fwhm is None:
-        bounds = (-np.Inf, np.Inf)
+        bounds = (-np.inf, np.inf)
     else:
         # Initialize the bounds
         # Lower limits
-        bounds_lower = -np.Inf * np.ones(13)
+        bounds_lower = -np.inf * np.ones(13)
         # Upper limits
-        bounds_upper = np.Inf * np.ones(13)
+        bounds_upper = np.inf * np.ones(13)
 
         # The VIPA spectrometer has an instrument width of
         # approx. 750 MHz for the FOB setup
