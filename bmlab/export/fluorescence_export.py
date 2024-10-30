@@ -54,10 +54,17 @@ class FluorescenceExport(object):
                 img_data = repetition.payload.get_image(image_key)
 
                 # Average all images acquired if grayscale
-                image_class = repetition.payload.get_class(image_key).casefold()
+                image_class = (repetition.payload
+                               .get_class(image_key).casefold())
                 if (image_class and image_class.casefold()
                         == 'image_grayscale'):
                     img_data = np.nanmean(img_data, axis=0).astype(np.ubyte)
+
+                # Swap dimensions if interlace is "plane"
+                image_mode = repetition.payload.get_mode(image_key)
+                if (image_mode and image_mode.casefold()
+                        == 'interlace_plane'):
+                    img_data = np.transpose(img_data, (1, 2, 0))
 
                 # Construct export path and create it if necessary
                 if self.file.path.parent.name == 'RawData':

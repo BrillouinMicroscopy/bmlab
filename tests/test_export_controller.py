@@ -91,6 +91,31 @@ def test_export_color_images(tmp_dir):
         assert os.path.exists(plots_dir / image)
 
 
+def test_export_color_images_plane(tmp_dir):
+    shutil.copy(
+        data_file_path('ColorImagePlane.h5'),
+        Path.cwd() / 'ColorImagePlane.h5')
+
+    session = Session.get_instance()
+    session.set_file(Path('ColorImagePlane.h5'))
+
+    ec = ExportController()
+    config = ec.get_configuration()
+    config['fluorescenceCombined']['export'] = False
+    config['brillouin']['export'] = False
+    ec.export(config)
+
+    session.clear()
+
+    plots_dir = tmp_dir.parent / 'Plots'
+    images = [
+        'ColorImagePlane_FLrep0_channelbrightfield.png',
+        'ColorImagePlane_FLrep0_channelbrightfield_aligned.png',
+    ]
+    for image in images:
+        assert os.path.exists(plots_dir / image)
+
+
 def test_export_fluorescence_combined(tmp_dir):
     shutil.copy(
         data_file_path('Fluorescence.h5'), Path.cwd() / 'Fluorescence.h5')
