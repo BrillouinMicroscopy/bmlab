@@ -54,7 +54,8 @@ class FluorescenceExport(object):
                 img_data = repetition.payload.get_image(image_key)
 
                 # Average all images acquired if grayscale
-                if (repetition.payload.get_class(image_key).casefold()
+                image_class = repetition.payload.get_class(image_key).casefold()
+                if (image_class and image_class.casefold()
                         == 'image_grayscale'):
                     img_data = np.nanmean(img_data, axis=0).astype(np.ubyte)
 
