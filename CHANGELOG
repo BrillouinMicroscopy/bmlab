@@ -3,9 +3,13 @@
 ### Added
 - Support for RGB bright-field images #179
 - Support Python 3.13
+- Add dependabot for action workflows 7637e0c50a8c4f9df85fc0e4bd6111e05607ae89
 
 ### Fixed
 - Adapt to Numpy 2.0
+
+### Changed
+- Updated actions dependencies
 
 ## 0.9.1 - 2024-06-03
 - maintenance release
