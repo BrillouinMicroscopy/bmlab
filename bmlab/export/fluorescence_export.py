@@ -52,8 +52,19 @@ class FluorescenceExport(object):
             for image_key in image_keys:
                 channel = repetition.payload.get_channel(image_key)
                 img_data = repetition.payload.get_image(image_key)
-                # Average all images acquired
-                img_data = np.nanmean(img_data, axis=0).astype(np.ubyte)
+
+                # Average all images acquired if grayscale
+                image_class = (repetition.payload
+                               .get_class(image_key).casefold())
+                if (image_class and image_class.casefold()
+                        == 'image_grayscale'):
+                    img_data = np.nanmean(img_data, axis=0).astype(np.ubyte)
+
+                # Swap dimensions if interlace is "plane"
+                image_mode = repetition.payload.get_mode(image_key)
+                if (image_mode and image_mode.casefold()
+                        == 'interlace_plane'):
+                    img_data = np.transpose(img_data, (1, 2, 0))
 
                 # Construct export path and create it if necessary
                 if self.file.path.parent.name == 'RawData':
@@ -162,8 +173,10 @@ class FluorescenceExport(object):
                     image_warped =\
                         Image.merge("RGB", (blank, blank, image_warped))
                 image_alpha = Image.fromarray(
-                    (255 * np.logical_not(
-                        np.isnan(image_data_warped))).astype(np.ubyte))
+                    np.nanmean(255 * np.logical_not(
+                        np.isnan(image_data_warped)),
+                               axis=tuple(range(2, image_data_warped.ndim)))
+                    .astype(np.ubyte))
                 image_warped.putalpha(image_alpha)
 
                 filename = path / f"{self.file.path.stem}" \

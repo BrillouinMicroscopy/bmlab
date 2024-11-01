@@ -364,6 +364,28 @@ class MeasurementData(object):
         except Exception:
             return None
 
+    def get_class(self, image_key):
+        """"
+        Returns the image class of a payload image
+        with the given key
+        """
+        try:
+            return self.data.get(image_key).attrs\
+                .get('IMAGE_SUBCLASS')[0].decode('utf-8')
+        except Exception:
+            return None
+
+    def get_mode(self, image_key):
+        """"
+        Returns the interlace mode of a payload image
+        with the given key
+        """
+        try:
+            return self.data.get(image_key).attrs\
+                .get('INTERLACE_MODE')[0].decode('utf-8')
+        except Exception:
+            return None
+
     def get_ROI(self, image_key):
         """
         Returns the region of interest of a payload image
