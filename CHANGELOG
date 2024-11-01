@@ -1,9 +1,34 @@
+## 0.10.0 - 2024-11-01
+
+### Added
+- Support for RGB bright-field images #179
+- Support Python 3.13
+
+### Fixed
+- Adapt to Numpy 2.0
+
 ## 0.9.1 - 2024-06-03
 - maintenance release
 
+### Fixed
+- Update CI pipeline 4ef1f11f38abc5d927f8a8502ffc45d68e662f44
+
 ## 0.9.0
 
+### Breaking
+- Drop support for Python 3.7 & 3.8, add 3.11 & 3.12 #173 #176
+
+### Fixed
+- Adjust tests to changed numpy behaviour #177
+- Fix issue occurring with flake8-6.0.0 #174
+
 ## 0.8.0
+
+### Added
+- Allow to restrict the peak width fitted #169
+
+### Fixed
+- Only set shifts if setup has respective sample #171
 
 ## 0.7.0 - 2022-09-28
 
