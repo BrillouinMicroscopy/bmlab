@@ -208,6 +208,11 @@ class FluorescenceExport(object):
                                (y_mm_warped <= y_max)
                     idx = np.nonzero(idx_mask)
 
+                    # Continue if the fluorescence and Brillouin ROI
+                    # don't overlap
+                    if not (idx[1].size and idx[0].size):
+                        continue
+
                     # Crop the Fluorescence image to the Brillouin ROI
                     image_warped_bm = image_warped.crop(
                         (
