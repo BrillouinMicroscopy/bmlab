@@ -118,7 +118,8 @@ def fit_double_lorentz(x, y, bounds_w0=None, bounds_fwhm=None):
             # Sort the guesses to the bounds
             bounds_w0_center = [np.mean(
                 np.clip(bound, *x[::len(x) - 1])) for bound in bounds_w0]
-            w0_guess.sort(reverse=(bounds_w0_center[0] > bounds_w0_center[1]))
+            w0_guess.sort(
+                reverse=bool(bounds_w0_center[0] > bounds_w0_center[1]))
 
             # Check that the initial guesses are within the bounds
             w0_guess = [np.clip(
