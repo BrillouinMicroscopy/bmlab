@@ -7,9 +7,6 @@ from skimage.morphology import closing, disk
 
 from math import floor
 
-import multiprocessing as mp
-from itertools import repeat as irepeat
-
 from bmlab import Session
 from bmlab.fits import fit_vipa, VIPA, fit_lorentz_region
 from bmlab.image import extract_lines_along_arc, find_max_in_radius
@@ -515,8 +512,6 @@ class EvaluationController(ImageController):
             'nr_rayleigh_regions': len(rayleigh_regions),
         })
 
-        pool_size = mp.cpu_count() * 2
-        pool = mp.Pool(processes=pool_size)
         # Initialize the Rayleigh shift
         # used for compensating drifts
         rayleigh_peak_initial =\
@@ -551,39 +546,33 @@ class EvaluationController(ImageController):
                 continue
             frequencies = list(frequencies)
 
-            # Pack the data for parallel processing
-            regions = brillouin_regions + rayleigh_regions
-            packed_data = zip(irepeat(spectra), irepeat(frequencies), regions)
-            # Process it
-            results = pool.starmap(self.fit_spectra, packed_data)
-
-            # Unpack the results
-            for frame_num, spectrum in enumerate(spectra):
-                for region_key, _ in enumerate(brillouin_regions):
+            for region_key, region in enumerate(brillouin_regions):
+                results = self.fit_spectra(spectra, frequencies, region)
+                for frame_num, _ in enumerate(spectra):
                     ind = (ind_x, ind_y, ind_z,
                            frame_num, region_key, 0)
                     evm.results['brillouin_peak_position_f'][ind] =\
-                        results[region_key][frame_num][0]
+                        results[frame_num][0]
                     evm.results['brillouin_peak_fwhm_f'][ind] =\
-                        results[region_key][frame_num][1]
+                        results[frame_num][1]
                     evm.results['brillouin_peak_intensity'][ind] =\
-                        results[region_key][frame_num][2]
+                        results[frame_num][2]
                     evm.results['brillouin_peak_offset'][ind] =\
-                        results[region_key][frame_num][3]
+                        results[frame_num][3]
 
-                for region_key, _ \
-                        in enumerate(rayleigh_regions,
-                                     start=len(brillouin_regions)):
+            for region_key, region in enumerate(rayleigh_regions,):
+                results = self.fit_spectra(spectra, frequencies, region)
+                for frame_num, _ in enumerate(spectra):
                     ind = (ind_x, ind_y, ind_z, frame_num,
                            region_key - len(brillouin_regions))
                     evm.results['rayleigh_peak_position_f'][ind] =\
-                        results[region_key][frame_num][0]
+                        results[frame_num][0]
                     evm.results['rayleigh_peak_fwhm_f'][ind] =\
-                        results[region_key][frame_num][1]
+                        results[frame_num][1]
                     evm.results['rayleigh_peak_intensity'][ind] =\
-                        results[region_key][frame_num][2]
+                        results[frame_num][2]
                     evm.results['rayleigh_peak_offset'][ind] =\
-                        results[region_key][frame_num][3]
+                        results[frame_num][3]
 
             # We can only do a multi-peak fit after the single-peak
             # Rayleigh fit is done, because we have to know the
@@ -604,56 +593,32 @@ class EvaluationController(ImageController):
                     brillouin_regions,
                     rayleigh_peaks
                 )
-                if bounds_w0 is None and bounds_fwhm is None:
-                    packed_data_multi_peak =\
-                        zip(irepeat(spectra),
-                            irepeat(frequencies),
-                            brillouin_regions,
-                            irepeat(nr_brillouin_peaks),
-                            irepeat(bounds_w0),
-                            irepeat(bounds_fwhm))
-                elif bounds_fwhm is None:
-                    packed_data_multi_peak =\
-                        zip(irepeat(spectra),
-                            irepeat(frequencies),
-                            brillouin_regions,
-                            irepeat(nr_brillouin_peaks),
-                            bounds_w0,
-                            irepeat(bounds_fwhm))
-                else:
-                    packed_data_multi_peak =\
-                        zip(irepeat(spectra),
-                            irepeat(frequencies),
-                            brillouin_regions,
-                            irepeat(nr_brillouin_peaks),
-                            bounds_w0,
-                            bounds_fwhm)
-                # Process it
-                results_multi_peak = pool.starmap(
-                    self.fit_spectra, packed_data_multi_peak)
 
-                for frame_num, spectrum in enumerate(spectra):
-                    for region_key, _ in enumerate(
-                            brillouin_regions):
+                for region_key, region in enumerate(
+                        brillouin_regions):
+                    results_multi_peak\
+                        = self.fit_spectra(spectra,
+                                           frequencies,
+                                           region,
+                                           nr_brillouin_peaks,
+                                           bounds_w0[region_key],
+                                           bounds_fwhm[region_key])
+                    for frame_num, spectrum in enumerate(spectra):
                         ind = (ind_x, ind_y, ind_z,
                                frame_num, region_key,
                                slice(1, nr_brillouin_peaks+1))
                         evm.results[
                             'brillouin_peak_position_f'][ind] = \
-                            results_multi_peak[
-                                region_key][frame_num][0]
+                            results_multi_peak[frame_num][0]
                         evm.results[
                             'brillouin_peak_fwhm_f'][ind] = \
-                            results_multi_peak[
-                                region_key][frame_num][1]
+                            results_multi_peak[frame_num][1]
                         evm.results[
                             'brillouin_peak_intensity'][ind] = \
-                            results_multi_peak[
-                                region_key][frame_num][2]
+                            results_multi_peak[frame_num][2]
                         evm.results[
                             'brillouin_peak_offset'][ind] = \
-                            results_multi_peak[
-                                region_key][frame_num][3]
+                            results_multi_peak[frame_num][3]
 
             # Calculate the shift of the Rayleigh peaks,
             # in order to follow the peaks in case of a drift
@@ -671,8 +636,6 @@ class EvaluationController(ImageController):
             if not (idx % 10):
                 calculate_derived_values()
 
-        pool.close()
-        pool.join()
         calculate_derived_values()
 
         return
