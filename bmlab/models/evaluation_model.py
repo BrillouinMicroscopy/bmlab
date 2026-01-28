@@ -13,6 +13,7 @@ class EvaluationModel(Serializer):
 
         self.nr_brillouin_peaks = 1
         self.spectra = {}
+        self.frequencies = {}
 
         # @since 0.1.0
         self.parameters = self.get_default_parameters()
@@ -88,6 +89,11 @@ class EvaluationModel(Serializer):
             delattr(self, 'bounds')
         if not hasattr(self, 'bounds_fwhm'):
             self.bounds_fwhm = None
+
+        # Migrations from 0.11.0 to 0.12.0
+        # @since 0.12.0
+        if not hasattr(self, 'frequencies'):
+            self.frequencies = {}
 
     def invalidate_results(self):
         for key in self.parameters:
@@ -243,6 +249,15 @@ class EvaluationModel(Serializer):
         spectra = self.spectra.get(image_key)
         if spectra:
             return spectra
+        return None
+
+    def set_frequencies(self, image_key, frequencies):
+        self.frequencies[image_key] = frequencies
+
+    def get_frequencies(self, image_key):
+        frequencies = self.frequencies.get(image_key)
+        if frequencies:
+            return frequencies
         return None
 
     def get_fits(self, ind_x, ind_y, ind_z):
