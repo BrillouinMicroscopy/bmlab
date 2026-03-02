@@ -545,6 +545,7 @@ class EvaluationController(ImageController):
             if frequencies is None:
                 continue
             frequencies = list(frequencies)
+            evm.set_frequencies(image_key, frequencies)
 
             for region_key, region in enumerate(brillouin_regions):
                 results = self.fit_spectra(spectra, frequencies, region)
