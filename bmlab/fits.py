@@ -35,10 +35,15 @@ def fit_lorentz(x, y):
                 - lorentz(xdata, *params[0:3])
                 - params[3]) ** 2
 
+    bounds_lower = (-np.inf, 0, 0, 0)
+    bounds_upper = np.inf * np.ones(4)
+    bounds = (bounds_lower, bounds_upper)
+
     opt_result = least_squares(
         error,
         x0=(w0_guess, fwhm_guess, intensity_guess, offset_guess),
-        args=(x, y)
+        args=(x, y),
+        bounds=bounds
     )
 
     if not opt_result.success:
