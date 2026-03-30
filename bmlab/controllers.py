@@ -154,6 +154,8 @@ class ImageController(object):
             return None, None, None
 
         imgs = self.get_image(image_key)
+        if imgs is None:
+            return None, None, None
         if frame_num is not None:
             imgs = imgs[frame_num:frame_num+1]
 

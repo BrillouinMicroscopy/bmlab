@@ -281,12 +281,16 @@ class MeasurementData(object):
         out: numpy.ndarray
             Array representing the image.
         """
+        if self.data is None:
+            return None
         imgs = self.data.get(image_key)
         if imgs is None:
             return None
         return np.array(imgs)
 
     def get_image_count(self, image_key):
+        if self.data is None:
+            return 0
         imgs = self.data.get(image_key)
         if imgs is None:
             return 0
