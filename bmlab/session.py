@@ -304,6 +304,8 @@ class Session(Serializer):
         if self.current_repetition() is None:
             return None
         imgs = self.current_repetition().payload.get_image(image_key)
+        if imgs is None:
+            return None
         if frame_num is not None:
             imgs = imgs[frame_num, ...]
         return self.orientation.apply(imgs)
