@@ -28,15 +28,15 @@ def fit_lorentz(x, y):
     # (it might fail if the peak is not symmetric and its maximum is the
     # first value higher than offset_guess + intensity_guess/2)
     if fwhm_guess <= 0.0:
-        fwhm_guess = 10 * (x[-1] - x[0]) / x.shape[0]
+        fwhm_guess = 2 * (x[-1] - x[0]) / x.shape[0]
 
     def error(params, xdata, ydata):
         return (ydata
                 - lorentz(xdata, *params[0:3])
                 - params[3]) ** 2
 
-    bounds_lower = (-np.inf, 0, 0, 0)
-    bounds_upper = np.inf * np.ones(4)
+    bounds_lower = (x[0], (x[-1] - x[0]) / x.shape[0], 0, 0)
+    bounds_upper = (x[-1], (x[-1] - x[0]), 2 * np.max(y), 2 * np.max(y))
     bounds = (bounds_lower, bounds_upper)
 
     opt_result = least_squares(
